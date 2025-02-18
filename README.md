@@ -11,30 +11,47 @@
 
 
 
-Frontend Setup (React + Vite + Tailwind)
+# Frontend Setup (React + Vite + Tailwind)
 
-Navigate to the Frontend Folder
+## Navigate to the Frontend Folder
 
-Assuming you’re in the backend/ folder, go up one level (or directly open a new terminal):
+Assuming you are in the `backend/` folder, go up one level (or directly open a new terminal):
 
+```sh
 cd ../frontend
+```
 
-If the frontend folder has a subfolder for the React project (e.g. my-react-app), then navigate into that folder.
+If the frontend folder has a subfolder for the React project (e.g., `my-react-app`), navigate into that folder:
 
-Install Node Dependencies
+```sh
+cd my-react-app
+```
 
+## Install Node Dependencies
+
+Run the following command to install dependencies:
+
+```sh
 npm install
+```
 
-(Use yarn or pnpm if that’s your team’s preference.)
+(Use `yarn` or `pnpm` if that’s your team’s preference.)
 
-Run the Development Server
+## Run the Development Server
 
+Start the development server with:
+
+```sh
 npm run dev
+```
 
-By default, Vite serves the React app on http://127.0.0.1:5173.
+By default, Vite serves the React app on [http://127.0.0.1:5173](http://127.0.0.1:5173).
 
-Project Structure
+---
 
+## Project Structure
+
+```
 frontend/
   ├── public/              # Static assets
   ├── src/                 # Source code
@@ -49,15 +66,24 @@ frontend/
   ├── tailwind.config.js   # Tailwind configuration
   ├── postcss.config.js    # PostCSS configuration
   ├── README.md            # Project documentation
+```
 
-Tailwind CSS Configuration
+---
 
-Tailwind CSS is already set up in this project. If needed, modify tailwind.config.js to customize your styles.
+## Tailwind CSS Configuration
 
-Building for Production
+Tailwind CSS is already set up in this project. If needed, modify `tailwind.config.js` to customize your styles.
+
+---
+
+## Building for Production
 
 To build the project for production, run:
 
-npm run dev
+```sh
+npm run build
+```
 
-The output files will be generated in the dist/ directory.
+The output files will be generated in the `dist/` directory.
+
+
