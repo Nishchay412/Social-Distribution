@@ -18,14 +18,15 @@
 Assuming you are in the `backend/` folder, go up one level (or directly open a new terminal):
 
 ```sh
-cd ../frontend
+cd  frontend
 ```
 
 If the frontend folder has a subfolder for the React project (e.g., `my-react-app`), navigate into that folder:
 
 ```sh
-cd my-react-app
+cd my-react-app 
 ```
+# In our case we dont , so follow the step below without moving to any sub-folder
 
 ## Install Node Dependencies
 
