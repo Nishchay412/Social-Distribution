@@ -81,7 +81,7 @@ Tailwind CSS is already set up in this project. If needed, modify `tailwind.conf
 To build the project for production, run:
 
 ```sh
-npm run build
+npm run dev
 ```
 
 The output files will be generated in the `dist/` directory.
