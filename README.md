@@ -88,3 +88,107 @@ npm run dev
 The output files will be generated in the `dist/` directory.
 
 
+
+
+
+# Django Project Setup
+
+## Navigate to the Backend Folder
+
+Assuming you’re in the root directory of the project, move to the backend folder:
+```sh
+cd backend
+```
+
+## Create and Activate a Virtual Environment
+Ensure you have Python installed, then run:
+```sh
+python3 -m venv venv
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate  # Windows
+```
+
+## Install Dependencies
+Install the required Python packages:
+```sh
+pip install -r requirements.txt
+```
+
+## Apply Migrations
+Before running the server, apply the database migrations:
+```sh
+python manage.py migrate
+```
+
+## Create a Superuser (Optional)
+To access the Django admin panel, create a superuser:
+```sh
+python manage.py createsuperuser
+```
+Follow the prompts to set up your admin credentials.
+
+## Run the Development Server
+Start the Django server:
+```sh
+python manage.py runserver
+```
+By default, the server runs at `http://127.0.0.1:8000/`.
+
+## Project Structure
+```
+backend/
+  ├── django404/           # Main Django project folder
+  │   ├── __init__.py      # Python package indicator
+  │   ├── asgi.py          # ASGI configuration
+  │   ├── settings.py      # Project settings
+  │   ├── urls.py          # URL routing
+  │   ├── wsgi.py          # WSGI configuration
+  ├── myapp/               # Django application
+  │   ├── migrations/      # Database migrations
+  │   ├── admin.py         # Admin panel configuration
+  │   ├── apps.py          # App configuration
+  │   ├── models.py        # Database models
+  │   ├── serializers.py   # API serializers
+  │   ├── tests.py         # Test cases
+  │   ├── urls.py          # App-specific URL routing
+  │   ├── views.py         # Application views
+  ├── db.sqlite3           # SQLite database (default)
+  ├── manage.py            # Django management script
+```
+
+## API Testing (Optional)
+If using Django REST Framework, you can test API endpoints via:
+- `http://127.0.0.1:8000/api/`
+- Using tools like [Postman](https://www.postman.com/) or `curl`
+
+## Deployment
+To deploy the Django application, consider platforms like:
+- Heroku
+- DigitalOcean
+- AWS EC2
+- Railway
+
+Example deployment on Heroku:
+```sh
+heroku create
+heroku config:set DJANGO_SETTINGS_MODULE=django404.settings
+heroku addons:create heroku-postgresql:hobby-dev
+```
+
+## License
+This project is open-source and available under the MIT License.
+
+---
+
+### Happy Coding! 🚀
+
+
+
+
+
+
+
+
+
+
+
