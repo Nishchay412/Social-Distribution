@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.jsx';
 import Signup from './authentication/Signup';
+import { dashboard } from './dashboard/dashboard';
 import Login from './authentication/Login';
 import {
   createBrowserRouter,
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login/>,
+  },
+  {
+    path: "/dashboard",
+    element: <dashboard/>,
   },
 ]);
 

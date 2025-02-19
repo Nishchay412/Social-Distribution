@@ -16,6 +16,9 @@ export default function Login() {
     const navigate_login = () => {
         navigate("/sign-up");  // ✅ Call navigate to go to /login
     };
+    const navigate_dashboard = () => {
+        navigate("/dashboard");  // ✅ Call navigate to go to /login
+    };
 
 
     // Handle input changes
@@ -45,6 +48,8 @@ export default function Login() {
                 setError(data.error || "Login failed. Please check your credentials.");
             } else {
                 setSuccess("Login successful! 🎉");
+                navigate_dashboard();
+
 
                 // Store JWT Tokens in localStorage for authentication
                 localStorage.setItem("access_token", data.access);
