@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
     const [formData, setFormData] = useState({
@@ -8,6 +9,14 @@ export default function Login() {
 
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+
+    const navigate = useNavigate();  // Hook at the top level
+
+    // ✅ Correct navigate_signup function
+    const navigate_login = () => {
+        navigate("/sign-up");  // ✅ Call navigate to go to /login
+    };
+
 
     // Handle input changes
     const handleChange = (e) => {
@@ -83,6 +92,17 @@ export default function Login() {
                     >
                         Login
                     </button>
+                    <div className="flex items-center justify-center gap-2 ">
+                        <h1 className="mt-2">
+                            New User?
+                        </h1>
+                        <button 
+                            className="py-2 mt-2 text-blue-500 cursor-pointer"
+                            onClick={navigate_login}   // ✅ Correct use of navigate_signup
+                        >
+                            Log In
+                        </button>
+                        </div>
                 </form>
             </div>
         </div>
