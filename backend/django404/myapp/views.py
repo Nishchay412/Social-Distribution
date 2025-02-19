@@ -59,3 +59,23 @@ def logout_user(request):
         return Response({"message": "Logout successful."}, status=200)
     except Exception as e:
         return Response({"error": "Invalid token."}, status=400)
+    
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # ✅ Publicly accessible profile
+def user_profile_by_username(request, username):
+    try:
+        # ✅ Fetch user by username
+        user = User.objects.get(username=username)
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name
+        })
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
