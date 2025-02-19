@@ -48,7 +48,12 @@ export default function Login() {
                 setError(data.error || "Login failed. Please check your credentials.");
             } else {
                 setSuccess("Login successful! 🎉");
+                console.log(data)
                 navigate_dashboard();
+                localStorage.setItem("username",data.user.username)
+                localStorage.setItem("firstname",data.user.first_name)
+                localStorage.setItem("lastname",data.user.last_name)
+                localStorage.setItem("email",data.user.email)
 
 
                 // Store JWT Tokens in localStorage for authentication
