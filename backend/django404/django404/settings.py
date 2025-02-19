@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',  # If using CORS for React
     'myapp',  
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 
