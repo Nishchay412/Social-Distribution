@@ -6,6 +6,7 @@ import Signup from './authentication/Signup';
 import { Dashboard } from './dashboard/dashboard';
 import Login from './authentication/Login';
 import { User_Profile } from './dashboard/user_profile';
+import { Friend_Profile } from './dashboard/friend_user_profile';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
   {
     path: "/profile",
     element: <User_Profile/>,
+  },
+  {
+    path: "/profile/:username",  // ✅ Dynamic Route for User Profile
+    element: <Friend_Profile/>
   },
 ]);
 

@@ -59,3 +59,64 @@ def logout_user(request):
         return Response({"message": "Logout successful."}, status=200)
     except Exception as e:
         return Response({"error": "Invalid token."}, status=400)
+    
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # ✅ Publicly accessible profile
+def user_profile_by_username(request, username):
+    try:
+        # ✅ Fetch user by username
+        user = User.objects.get(username=username)
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "profile_picture": request.build_absolute_uri(user.profile_image.url) if user.profile_image else None
+        })
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+    
+
+    
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser  # ✅ For handling image uploads
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])  # ✅ Only logged-in users can update their info
+def update_user_profile(request):
+    user = request.user  # ✅ Get logged-in user
+
+    # ✅ Extract fields from request data
+    data = request.data
+    username = data.get("username", user.username)
+    email = data.get("email", user.email)
+    first_name = data.get("first_name", user.first_name)
+    last_name = data.get("last_name", user.last_name)
+    profile_picture = request.FILES.get("profile_picture", user.profile_image)  # ✅ Handle image upload
+
+    # ✅ Update fields in the database
+    user.username = username
+    user.email = email
+    user.first_name = first_name
+    user.last_name = last_name
+    user.profile_image = profile_picture  # ✅ Store new profile image
+
+    # ✅ Save changes
+    user.save()
+
+    return Response({
+        "message": "Profile updated successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "profile_picture": user.profile_image.url if user.profile_image else None
+        }
+    })
