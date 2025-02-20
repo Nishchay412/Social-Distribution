@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createPost } from './profileService';
+import axios from 'axios';
 
 function CreatePost() {
   const [title, setTitle] = useState('');
@@ -8,10 +8,38 @@ function CreatePost() {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
 
+  const API_BASE_URL = "http://127.0.0.1:8000/posts/create/";
+
+  const getAuthToken = () => {
+    const token = localStorage.getItem("access_token");
+    console.log("Auth Token:", token); // Debugging
+    return token;
+  };
+
+  const createPost = async (postData) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await axios.post(API_BASE_URL, postData, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Error creating post:", error.response ? error.response.data : error.message);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // If we have an image upload, use FormData
       const formData = new FormData();
       formData.append('title', title);
       formData.append('content', content);
@@ -19,13 +47,12 @@ function CreatePost() {
         formData.append('image', selectedFile);
       }
 
-      const newPost = await createPost(formData); 
+      const newPost = await createPost(formData);
       setMessage(`Post created successfully! ID: ${newPost.id}`);
       setTitle('');
       setContent('');
       setSelectedFile(null);
     } catch (err) {
-      console.error(err);
       setError('Failed to create post.');
     }
   };
@@ -37,16 +64,16 @@ function CreatePost() {
       {message && <p style={{ color: 'green' }}>{message}</p>}
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Title:</label><br/>
-          <input 
-            type="text" 
-            value={title} 
+          <label>Title:</label><br />
+          <input
+            type="text"
+            value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
           />
         </div>
         <div>
-          <label>Content (plain text or markdown):</label><br/>
+          <label>Content (plain text or markdown):</label><br />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -55,8 +82,8 @@ function CreatePost() {
           />
         </div>
         <div>
-          <label>Image (optional):</label><br/>
-          <input 
+          <label>Image (optional):</label><br />
+          <input
             type="file"
             accept="image/*"
             onChange={(e) => setSelectedFile(e.target.files[0])}

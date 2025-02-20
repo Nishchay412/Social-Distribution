@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import Post  # ✅ Import Post model
 
 User = get_user_model()
 
@@ -8,14 +9,14 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username", "email", "password", "first_name", "last_name"]  # ✅ Include additional fields
+        fields = ["username", "email", "password", "first_name", "last_name"]
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # ✅ Uses create_user() to hash passwords
 
-"""We add a author_username read‐only field so clients see who authored it, but can’t change it."""
+""" Serializer for Post model with author_username as a read-only field. """
 class PostSerializer(serializers.ModelSerializer):
-    author_username = serializers.ReadOnlyField(source='author.username', read_only=True)
+    author_username = serializers.ReadOnlyField(source='author.username')
 
     class Meta:
         model = Post
