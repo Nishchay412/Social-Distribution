@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 export function Friend_Profile() {
     const { username } = useParams();  // ✅ Get username from URL
-    const [userData, setUserData] = useState({});
+    const [userData, setUserData] = useState(null);
     const [error, setError] = useState(null);
 
     // ✅ Fetch user data by username
@@ -26,25 +26,45 @@ export function Friend_Profile() {
         fetchUserProfile();
     }, [username]);  // ✅ Refetch when the username in the URL changes
 
+    if (error) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
+                    <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
+                    <p>{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!userData) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
+                    <h2 className="text-2xl font-bold text-gray-500 mb-4">Loading...</h2>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex justify-center items-center min-h-screen">
             <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
-                {error ? (
-                    <div className="text-red-500">
-                        <h2 className="text-2xl font-bold mb-4">Error</h2>
-                        <p>{error}</p>
-                    </div>
-                ) : (
-                    <>
-                        <h2 className="text-2xl font-bold mb-4">{userData.username}'s Profile</h2>
-                        <div className="text-left w-full space-y-2">
-                            <p><strong>Username:</strong> {userData.username}</p>
-                            <p><strong>First Name:</strong> {userData.first_name}</p>
-                            <p><strong>Last Name:</strong> {userData.last_name}</p>
-                            <p><strong>Email:</strong> {userData.email}</p>
-                        </div>
-                    </>
-                )}
+                {/* ✅ Profile Image */}
+                <img
+                    src={userData.profile_picture || "https://via.placeholder.com/150?text=User"}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full border-2 border-gray-300 mb-4"
+                />
+
+                <h2 className="text-2xl font-bold mb-4">{userData.username}'s Profile</h2>
+
+                <div className="text-left w-full space-y-2">
+                    <p><strong>Username:</strong> {userData.username}</p>
+                    <p><strong>First Name:</strong> {userData.first_name}</p>
+                    <p><strong>Last Name:</strong> {userData.last_name}</p>
+                    <p><strong>Email:</strong> {userData.email}</p>
+                </div>
             </div>
         </div>
     );
