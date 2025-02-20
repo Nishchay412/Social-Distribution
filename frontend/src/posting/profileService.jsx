@@ -5,10 +5,13 @@ function getAuthToken() {
   return localStorage.getItem('access') || null;
 }
 
-// Create an Axios instance
-const apiClient = axios.create({
-  baseURL: 'http://127.0.0.1:8000', // or your Django domain
-  // e.g. if Django runs at http://localhost:8000
+const token = getAuthToken();
+const response = await fetch("http://127.0.0.1:8000/posts/create/", {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${token}`,
+  },
+  body: someFormDataOrJson,
 });
 
 // Add an interceptor to attach Authorization headers
