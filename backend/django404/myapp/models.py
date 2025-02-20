@@ -23,6 +23,8 @@ class Post(models.Model):
     - A 'published' datetime
     - A 'visibility' field so we can do 'PUBLIC' or 'DELETED' if we like
     """
+    image = models.ImageField(upload_to='images/', blank=True, null=True)
+
     VISIBILITY_CHOICES = [
         ('PUBLIC', 'Public'),
         ('DELETED', 'Deleted'),
