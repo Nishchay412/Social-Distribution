@@ -194,3 +194,12 @@ def delete_post(request, post_id):
     post.delete()  # physically remove from DB
     return Response({"message": "Post deleted"}, status=status.HTTP_200_OK)
 
+@api_view(['GET'])  # List Posts by Logged-in User
+@permission_classes([IsAuthenticated])
+def list_user_posts(request):
+    """
+    Lists all posts created by the authenticated user.
+    """
+    user_posts = Post.objects.filter(author=request.user).order_by('-published')
+    serializer = PostSerializer(user_posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

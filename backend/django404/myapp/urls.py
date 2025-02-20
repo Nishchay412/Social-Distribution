@@ -9,7 +9,8 @@ from .views import (
     list_posts,
     retrieve_post,
     update_post,
-    delete_post
+    delete_post,
+    list_user_posts
 )
 urlpatterns = [
     path('register/', register_user, name='register'),
@@ -22,4 +23,5 @@ urlpatterns = [
     path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
     path('posts/<uuid:post_id>/update/', update_post, name='update-post'),
     path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),
+    path('posts/my/', list_user_posts, name='list-user-posts'),
 ]
