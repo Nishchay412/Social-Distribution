@@ -1,7 +1,7 @@
+import uuid  # Import uuid
+from django.conf import settings  # Import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.conf import settings
-import uuid
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
@@ -10,9 +10,7 @@ class User(AbstractUser):
     profile_image = models.ImageField(upload_to='profile_pics/', blank=True, null=True)  # Image field
 
     def __str__(self):
-      return f"{self.username}"
-
-
+        return f"{self.username}"
 
 class Post(models.Model):
     """
@@ -23,8 +21,6 @@ class Post(models.Model):
     - A 'published' datetime
     - A 'visibility' field so we can do 'PUBLIC' or 'DELETED' if we like
     """
-    image = models.ImageField(upload_to='images/', blank=True, null=True)
-
     VISIBILITY_CHOICES = [
         ('PUBLIC', 'Public'),
         ('DELETED', 'Deleted'),
@@ -38,7 +34,7 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=100)
     content = models.TextField(blank=True)
-    image = models.ImageField(upload_to='images/', blank=True, null=True)
+    image = models.ImageField(upload_to='images/', blank=True, null=True)  # Keep only one image field
     visibility = models.CharField(
         max_length=10,
         choices=VISIBILITY_CHOICES,
@@ -48,4 +44,3 @@ class Post(models.Model):
 
     def __str__(self):
         return f"{self.title} by {self.author.username}"
-

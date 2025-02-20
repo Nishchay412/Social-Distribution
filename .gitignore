@@ -1,0 +1,9 @@
+db.sqlite3
+
+*.pyc
+db.sqlite3
+/backend/django404/venv/
+*.pyc
+__pycache__/
+db.sqlite3
+/venv/
