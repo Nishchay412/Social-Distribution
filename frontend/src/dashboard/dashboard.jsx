@@ -1,11 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import CreatePost from "../posting/CreatePost";
+import { Header } from "./leftpanel";
 
 export function Dashboard() {
     const navigate = useNavigate();
 
     const navigateToProfile = () => navigate("/profile");
+    const profile_pic =localStorage.getItem("profilepic")
+    console.log(profile_pic)
 
     const handleLogout = async () => {
         try {
@@ -30,24 +33,28 @@ export function Dashboard() {
         }
     };
 
-    return (
-        <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4">
-            <h1 className="text-2xl font-bold mb-6">Welcome to the Dashboard!</h1>
-            <div className="flex gap-4 mb-6">
-                <button 
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                    onClick={navigateToProfile}
-                >
-                    User Profile
-                </button>
-                <button 
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                    onClick={handleLogout}
-                >
-                    Logout
-                </button>
+        return (
+          <div className="flex h-screen justify-between">
+            {/* Sidebar Header (1/3 width) */}
+            <div className="w-1/4 border-r border-gray-300 p-4">
+              <Header />
             </div>
-            <CreatePost />
-        </div>
-    );
-}
+      
+            {/* Main Content (2/3 width) */}
+            <div className="flex flex-col  justify-center w-2/4 p-6">
+              <h1 className="text-2xl font-bold mb-6">Welcome to the Dashboard!</h1>
+      
+              {/* Buttons */}
+              
+              
+      
+              {/* Create Post Component */}
+              <CreatePost />
+            </div>
+            <div className="">
+                <img src= {profile_pic} className="w-12 h-12 rounded-4xl">
+                </img>
+            </div>
+          </div>
+        );
+      }
