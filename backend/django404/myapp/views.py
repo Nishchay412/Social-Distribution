@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser  # For handling image uploads
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterUserSerializer, PostSerializer
-from .models import Post
+from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer
+from .models import Post, Comment, Like
 
 User = get_user_model()
 
@@ -207,4 +207,62 @@ def list_public_posts_excluding_user(request):
 
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_comments(request, post_id):
+    """
+    List all comments for a given post (post_id).
+    """
+    comments = Comment.objects.filter(post__id=post_id).order_by('-created')
+    serializer = CommentSerializer(comments, many=True)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_comment(request, post_id):
+    """
+    Create a new comment on the specified post.
+    """
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = CommentSerializer(data=request.data)
+    if serializer.is_valid():
+        # Set the post and author manually
+        serializer.save(post=post, author=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_likes(request, post_id):
+    """
+    List all likes for a given post.
+    """
+    likes = Like.objects.filter(post__id=post_id).order_by('-created')
+    serializer = LikeSerializer(likes, many=True)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_like(request, post_id):
+    """
+    Create a like for a given post, if not already liked by the user.
+    """
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check if user already liked the post
+    existing_like = Like.objects.filter(post=post, author=request.user).first()
+    if existing_like:
+        return Response({"error": "Already liked"}, status=status.HTTP_400_BAD_REQUEST)
+
+    like = Like.objects.create(post=post, author=request.user)
+    serializer = LikeSerializer(like)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
