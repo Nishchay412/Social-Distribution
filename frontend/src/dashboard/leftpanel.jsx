@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-
+import { useState, useEffect } from "react";
 export function Header() {
     const navigate = useNavigate();
 
@@ -40,6 +40,43 @@ export function Header() {
 
     ];
 
+    const [users, setUsers] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const accessToken = localStorage.getItem("access_token"); // Get token from localStorage
+
+      if (!accessToken) {
+        setError("No access token found. Please log in.");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/users/exclude-self/", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setUsers(data); // Store fetched users in state
+
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setError("Failed to fetch users. Please try again.");
+      }
+    };
+
+    fetchUsers();
+  }, []); // Runs once when the component mounts
+
     return (
       <div className="w-full border-b border-gray-300">
         <div className="flex flex-col gap-2 w-full cursor-pointer">
@@ -56,7 +93,20 @@ export function Header() {
         </div>
   
         {/* Friends Section */}
-        <div className="mt-4 font-bold">My Friends</div>
+        <div className="mt-4 font-bold">People you may know</div>
+        {error ? (
+        <p className="text-red-500">{error}</p>
+      ) : users.length === 0 ? (
+        <p className="text-gray-500">No users found.</p>
+      ) : (
+        <ul className="space-y-3">
+          {users.map((user) => (
+            <li key={user.id} className="p-2 bg-gray-100 rounded-lg">
+              <strong>{user.username}</strong> - {user.email}
+            </li>
+          ))}
+        </ul>
+      )}
       </div>
     );
 }
