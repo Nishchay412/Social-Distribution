@@ -5,10 +5,11 @@ function CreatePost() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [visibility, setVisibility] = useState('PUBLIC');  // ✅ Default to PUBLIC
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
 
-  const API_BASE_URL = "http://127.0.0.1:8000/posts/create/";
+  const API_BASE_URL = "http://127.0.0.1:8000/posts/create/";  // ✅ Ensure correct API endpoint
 
   const getAuthToken = () => localStorage.getItem("access_token");
 
@@ -37,6 +38,7 @@ function CreatePost() {
       const formData = new FormData();
       formData.append('title', title);
       formData.append('content', content);
+      formData.append('visibility', visibility);  // ✅ Include visibility option
       if (selectedFile) formData.append('image', selectedFile);
 
       const newPost = await createPost(formData);
@@ -44,6 +46,7 @@ function CreatePost() {
       setTitle('');
       setContent('');
       setSelectedFile(null);
+      setVisibility('PUBLIC');  // ✅ Reset to default visibility
       setError(null);
     } catch (err) {
       setError('Failed to create post.');
@@ -88,6 +91,17 @@ function CreatePost() {
               onChange={(e) => setSelectedFile(e.target.files[0])}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none"
             />
+          </div>
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Visibility</label>
+            <select
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="PUBLIC">Public</option>
+              <option value="PRIVATE">Private</option>
+            </select>
           </div>
           <button
             type="submit"
