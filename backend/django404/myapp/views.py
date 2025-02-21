@@ -218,3 +218,20 @@ def list_public_posts_excluding_user(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])  # Only authenticated users can delete
+def delete_post(request, post_id):
+    """
+    Allows the author of the post to delete it.
+    """
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if post.author != request.user:
+        return Response({"error": "You are not authorized to delete this post"}, status=status.HTTP_403_FORBIDDEN)
+
+    post.delete()
+    return Response({"message": "Post deleted successfully"}, status=status.HTTP_200_OK)

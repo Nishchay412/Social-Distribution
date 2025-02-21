@@ -28,9 +28,9 @@ urlpatterns = [
     # ✅ Post Endpoints
     path('posts/', list_posts, name='list-posts'),
     path('posts/create/', create_post, name='create-post'),
-    path('api/posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
-    path("api/posts/<uuid:post_id>/update/", update_post, name="update-post"),  
-    path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),
+    path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
+    path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  
+    path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),  # ✅ Corrected path
 
     # ✅ User-specific Post Endpoints
     path('posts/my/', list_user_posts, name='list-user-posts'),  # Posts by logged-in user
