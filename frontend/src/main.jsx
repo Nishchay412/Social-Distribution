@@ -9,6 +9,7 @@ import { User_Profile } from './dashboard/user_profile';
 import { Friend_Profile } from './dashboard/friend_user_profile';
 import AuthorList from './posting/AuthorList';
 import EditPost from './posting/EditPost';
+import UserPosts from './posting/UserPosts';
 
 import CreatePost from './posting/CreatePost';
 import {
@@ -50,9 +51,14 @@ const router = createBrowserRouter([
     element: <CreatePost/>
   },
   {
-    path: "/editpost/:id",  // ✅ Dynamic Route for User Profile
+    path: "/posts/:id/edit",
     element: <EditPost/>
-  },
+},
+{
+  path: "/posts/:username",
+  element: <UserPosts/>
+}
+
 ]);
 
 createRoot(document.getElementById('root')).render(

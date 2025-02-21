@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 
 function EditPost() {
-  const { postId } = useParams(); // Ensure this is being extracted properly
+  const { id } = useParams(); // ✅ Extract post ID from the URL
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [existingImageUrl, setExistingImageUrl] = useState(null);
@@ -11,85 +11,45 @@ function EditPost() {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
 
-  const API_BASE_URL = "http://127.0.0.1:8000";
-
-  const getAuthToken = () => {
-    const token = localStorage.getItem("access_token");
-    return token;
-  };
-
-  const fetchPost = async (id) => {
-    if (!id) {
-      console.error("fetchPost called with undefined postId");
-      setError("Invalid post ID.");
-      return;
-    }
-
-    try {
-      console.log("Fetching post with ID:", id);
-      const response = await axios.get(`${API_BASE_URL}/posts/${id}/`, {
-        headers: {
-          "Authorization": `Bearer ${getAuthToken()}`,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching post ${id}:`, error.response?.data || error.message);
-      setError("Could not load post data.");
-    }
-  };
-
-  const updatePost = async (id, postData) => {
-    if (!id) {
-      console.error("updatePost called with undefined postId");
-      setError("Invalid post ID.");
-      return;
-    }
-
-    try {
-      console.log("Updating post with ID:", id);
-      const response = await axios.put(`${API_BASE_URL}/posts/${id}/update/`, postData, {
-        headers: {
-          "Authorization": `Bearer ${getAuthToken()}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating post ${id}:`, error.response?.data || error.message);
-      setError("Failed to update post.");
-    }
-  };
-
   useEffect(() => {
-    if (!postId) {
-      console.error("No postId found in route params.");
-      setError("Invalid post ID.");
-      return;
-    }
-
     async function loadPost() {
-      const postData = await fetchPost(postId);
-      if (postData) {
-        setTitle(postData.title);
-        setContent(postData.content);
-        if (postData.image) {
-          setExistingImageUrl(postData.image);
+      try {
+        if (!id) {
+          throw new Error("Post ID is missing!");
         }
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          throw new Error("No authentication token found.");
+        }
+
+        const response = await axios.get(`http://127.0.0.1:8000/posts/${id}/`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        setTitle(response.data.title);
+        setContent(response.data.content);
+        if (response.data.image) {
+          setExistingImageUrl(response.data.image);
+        }
+      } catch (err) {
+        console.error("Error loading post:", err);
+        setError('Could not load post data.');
       }
     }
     loadPost();
-  }, [postId]);
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!postId) {
-      console.error("Attempted to submit with undefined postId");
-      setError("Invalid post ID.");
-      return;
-    }
-
     try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error("No authentication token found.");
+      }
+
       const formData = new FormData();
       formData.append('title', title);
       formData.append('content', content);
@@ -97,24 +57,28 @@ function EditPost() {
         formData.append('image', newImage);
       }
 
-      await updatePost(postId, formData);
+      await axios.put(`http://127.0.0.1:8000/posts/${id}/update/`, formData, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        }
+      });
+
       setMessage('Post updated successfully!');
     } catch (err) {
+      console.error("Error updating post:", err);
       setError('Failed to update post.');
     }
   };
 
-  if (error) {
-    return <div>{error}</div>;
-  }
-
   return (
     <div>
-      <h2>Edit Post (ID: {postId || "N/A"})</h2>
+      <h2>Edit Post (ID: {id})</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       {message && <p style={{ color: 'green' }}>{message}</p>}
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Title:</label><br />
+          <label>Title:</label><br/>
           <input 
             type="text"
             value={title}
@@ -122,7 +86,7 @@ function EditPost() {
           />
         </div>
         <div>
-          <label>Content:</label><br />
+          <label>Content:</label><br/>
           <textarea
             rows="5"
             value={content}
@@ -132,11 +96,11 @@ function EditPost() {
         {existingImageUrl && (
           <div>
             <p>Current Image:</p>
-            <img src={existingImageUrl} alt="Current" style={{ maxWidth: '200px' }} />
+            <img src={existingImageUrl} alt="Current" style={{ maxWidth: '200px' }}/>
           </div>
         )}
         <div>
-          <label>New Image (optional):</label><br />
+          <label>New Image (optional):</label><br/>
           <input
             type="file"
             accept="image/*"
