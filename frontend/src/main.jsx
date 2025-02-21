@@ -13,6 +13,7 @@ import UserPosts from './posting/UserPosts';
 import MyPosts from './posting/Personalposts';
 import CreatePost from './posting/CreatePost';
 import PublicPosts from './posting/publicposts';
+import { Header } from './dashboard/header';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -57,7 +58,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/posts/:username",
-    element: <UserPosts />,
+    element: <UserPosts/>,
   },
   {
     path: "/my-posts",  // ✅ Cleaner URL for user's posts
@@ -67,6 +68,11 @@ const router = createBrowserRouter([
     path: "/publicposts",  // ✅ Cleaner URL for user's posts
     element: <PublicPosts />,
   },
+  {
+    path: "/Header",  // ✅ Cleaner URL for user's posts
+    element: <Header/>,
+  },
+  
 ]);
 
 createRoot(document.getElementById('root')).render(
