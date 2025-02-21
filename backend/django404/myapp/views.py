@@ -198,7 +198,7 @@ def list_user_posts_by_username(request, username):
 
     # Serialize the posts to JSON format
     serializer = PostSerializer(user_posts, many=True)
-    
+
     # Return the JSON response
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -219,6 +219,7 @@ def list_public_posts_excluding_user(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])  # Only authenticated users can delete
 def delete_post(request, post_id):
@@ -235,3 +236,18 @@ def delete_post(request, post_id):
 
     post.delete()
     return Response({"message": "Post deleted successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # ✅ Requires authentication
+def list_users_excluding_self(request):
+    """
+    Lists all users excluding the authenticated user.
+    """
+    # Get all users except the currently logged-in user
+    users = User.objects.exclude(id=request.user.id)
+
+    # Serialize user data
+    serializer = RegisterUserSerializer(users, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)

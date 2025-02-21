@@ -12,7 +12,8 @@ from .views import (
     delete_post,
     list_user_posts,
     list_user_posts_by_username,
-    list_public_posts_excluding_user
+    list_public_posts_excluding_user,
+    list_users_excluding_self
 )
 
 urlpatterns = [
@@ -36,4 +37,5 @@ urlpatterns = [
     path('posts/my/', list_user_posts, name='list-user-posts'),  # Posts by logged-in user
     path('posts/user/<str:username>/', list_user_posts_by_username, name='list-user-posts-by-username'),  # Posts by any user
     path('api/posts/public/', list_public_posts_excluding_user, name='list-public-posts-excluding-user'),
+    path('users/exclude-self/', list_users_excluding_self, name='list_users_excluding_self'),
 ]
