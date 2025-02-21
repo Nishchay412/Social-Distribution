@@ -43,6 +43,15 @@ export function Header() {
     const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
 
+  const userprofile = async (username) => {
+    if (!username) {
+      console.error("Username is undefined!");
+      return;
+    }
+    console.log("Navigating to profile:", username);
+    navigate(`/profile/${username}`);
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
       const accessToken = localStorage.getItem("access_token"); // Get token from localStorage
@@ -101,9 +110,14 @@ export function Header() {
       ) : (
         <ul className="space-y-3">
           {users.map((user) => (
-            <li key={user.id} className="p-2 bg-gray-100 rounded-lg">
-              <strong>{user.username}</strong> - {user.email}
-            </li>
+            <li 
+            key={user.username} 
+            className="p-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition"
+            onClick={() => userprofile(user.username)} // ✅ Pass username instead of ID
+          >
+            <strong>{user.username}</strong> - {user.email}
+          </li>
+          
           ))}
         </ul>
       )}
