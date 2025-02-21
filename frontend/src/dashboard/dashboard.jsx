@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import CreatePost from "../posting/CreatePost";
-import { Header } from "./header";
+import { Header } from "./leftpanel";
 
 export function Dashboard() {
     const navigate = useNavigate();
@@ -45,20 +45,8 @@ export function Dashboard() {
               <h1 className="text-2xl font-bold mb-6">Welcome to the Dashboard!</h1>
       
               {/* Buttons */}
-              <div className="flex gap-4 mb-6">
-                <button 
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                  onClick={navigateToProfile}
-                >
-                  User Profile
-                </button>
-                <button 
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </div>
+              
+              
       
               {/* Create Post Component */}
               <CreatePost />

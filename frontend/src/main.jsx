@@ -13,7 +13,7 @@ import UserPosts from './posting/UserPosts';
 import MyPosts from './posting/Personalposts';
 import CreatePost from './posting/CreatePost';
 import PublicPosts from './posting/publicposts';
-import { Header } from './dashboard/header';
+import { Header } from './dashboard/leftpanel';
 import {
   createBrowserRouter,
   RouterProvider,
