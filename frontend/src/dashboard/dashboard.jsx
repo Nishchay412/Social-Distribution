@@ -2,7 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import CreatePost from "../posting/CreatePost";
 import { Header } from "./leftpanel";
-
+import { TopPanel } from "./toppanel";
+import PublicPosts from "../posting/publicposts";
 export function Dashboard() {
     const navigate = useNavigate();
 
@@ -33,28 +34,34 @@ export function Dashboard() {
         }
     };
 
-        return (
-          <div className="flex h-screen justify-between">
-            {/* Sidebar Header (1/3 width) */}
-            <div className="w-1/4 border-r border-gray-300 p-4">
+    return (
+        <div className=" min-h-screen">
+          {/* Top Panel (Navigation, Search, Profile) */}
+          <TopPanel />
+    
+          {/* Main Layout */}
+          <div className="flex mt-4">
+            {/* Sidebar (Navigation, Contacts) */}
+            <div className="w-1/4 border-r border-gray-300 px-4">
               <Header />
             </div>
-      
-            {/* Main Content (2/3 width) */}
-            <div className="flex flex-col  justify-center w-2/4 p-6">
-              <h1 className="text-2xl font-bold mb-6">Welcome to the Dashboard!</h1>
-      
-              {/* Buttons */}
-              
-              
-      
-              {/* Create Post Component */}
-              <CreatePost />
-            </div>
-            <div className="">
-                <img src= {profile_pic} className="w-12 h-12 rounded-4xl">
-                </img>
+    
+            {/* Main Content (Feed) */}
+            <div className="flex flex-col w-3/4 mx-auto max-w-3xl">
+              {/* Create Post at the Top */}
+              <div className="mb-6">
+                <CreatePost />
+              </div>
+    
+              {/* Placeholder for Feed Posts */}
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <h2 className="text-lg font-semibold">Recent Posts</h2>
+                <p className="text-gray-500">Posts will appear here...</p>
+                <PublicPosts/>
+                
+              </div>
             </div>
           </div>
-        );
-      }
+        </div>
+      );
+    }
