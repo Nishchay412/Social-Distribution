@@ -218,3 +218,18 @@ def list_public_posts_excluding_user(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # ✅ Requires authentication
+def list_users_excluding_self(request):
+    """
+    Lists all users excluding the authenticated user.
+    """
+    # Get all users except the currently logged-in user
+    users = User.objects.exclude(id=request.user.id)
+    
+    # Serialize user data
+    serializer = RegisterUserSerializer(users, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)

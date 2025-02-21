@@ -14,6 +14,7 @@ import MyPosts from './posting/Personalposts';
 import CreatePost from './posting/CreatePost';
 import PublicPosts from './posting/publicposts';
 import { Header } from './dashboard/leftpanel';
+import { CreatePost1 } from './posting/CreatePost1';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
   {
     path: "/Header",  // ✅ Cleaner URL for user's posts
     element: <Header/>,
+  },
+  {
+    path: "/createpost1",  // ✅ Cleaner URL for user's posts
+    element: <CreatePost1/>,
   },
   
 ]);
