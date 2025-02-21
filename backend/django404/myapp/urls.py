@@ -1,24 +1,39 @@
 from django.urls import path
 from .views import (
-    register_user, login_user, logout_user,
-    user_profile_by_username, update_user_profile,
-    create_post, list_posts, retrieve_post, update_post, delete_post
+    register_user,
+    login_user,
+    logout_user,
+    user_profile_by_username,
+    update_user_profile,
+    create_post,
+    list_posts,
+    retrieve_post,
+    update_post,
+    delete_post,
+    list_user_posts,
+    list_user_posts_by_username,
+    list_public_posts_excluding_user
 )
 
 urlpatterns = [
-    # Authentication Endpoints
-    path("register/", register_user, name="register"),
-    path("login/", login_user, name="login"),
-    path("logout/", logout_user, name="logout"),
+    # ✅ Authentication Endpoints
+    path('register/', register_user, name='register'),
+    path('login/', login_user, name='login'),
+    path('logout/', logout_user, name='logout'),
 
-    # User Profile Endpoints
-    path("profile/<str:username>/", user_profile_by_username, name="profile-by-username"),
-    path("profile/update/", update_user_profile, name="update-profile"),
+    # ✅ User Profile Endpoints
+    path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
+    path('update-profile/', update_user_profile, name='update-profile'),
 
-    # Post Management Endpoints
-    path("posts/", list_posts, name="list-posts"),
-    path("posts/create/", create_post, name="create-post"),
-    path("posts/<uuid:post_id>/", retrieve_post, name="retrieve-post"),
+    # ✅ Post Endpoints
+    path('posts/', list_posts, name='list-posts'),
+    path('posts/create/', create_post, name='create-post'),
+    path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
     path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  #Changed from 'update' to 'edit'
-    path("posts/<uuid:post_id>/delete/", delete_post, name="delete-post"),
+    path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),
+
+    # ✅ User-specific Post Endpoints
+    path('posts/my/', list_user_posts, name='list-user-posts'),  # Posts by logged-in user
+    path('posts/user/<str:username>/', list_user_posts_by_username, name='list-user-posts-by-username'),  # Posts by any user
+    path('api/posts/public/', list_public_posts_excluding_user, name='list-public-posts-excluding-user'),
 ]

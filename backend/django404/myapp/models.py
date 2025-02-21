@@ -1,7 +1,7 @@
-import uuid  # Import uuid
-from django.conf import settings  # Import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings
+import uuid
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
@@ -10,20 +10,28 @@ class User(AbstractUser):
     profile_image = models.ImageField(upload_to='profile_pics/', blank=True, null=True)  # Image field
 
     def __str__(self):
-        return f"{self.username}"
+      return f"{self.username}"
+
+
+
+from django.db import models
+from django.conf import settings
+import uuid
 
 class Post(models.Model):
     """
-    A simple Post model demonstrating:
-    - 'author' linked to custom User model
-    - A 'content' field that can hold plain text or markdown
+    A Post model demonstrating:
+    - 'author' linked to the custom User model
+    - 'content' field that can hold plain text or markdown
     - An optional 'image' field for images
     - A 'published' datetime
-    - A 'visibility' field so we can do 'PUBLIC' or 'DELETED' if we like
+    - A 'visibility' field with options: 'PUBLIC', 'PRIVATE', 'DRAFT', 'DELETED'
     """
     VISIBILITY_CHOICES = [
-        ('PUBLIC', 'Public'),
-        ('DELETED', 'Deleted'),
+        ('PUBLIC', 'Public'),      # Visible to everyone
+        ('PRIVATE', 'Private'),    # Only visible to the author
+        ('DRAFT', 'Draft'),        # Not published yet
+        ('DELETED', 'Deleted'),    # Soft delete (not actually removed)
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -34,7 +42,7 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=100)
     content = models.TextField(blank=True)
-    image = models.ImageField(upload_to='images/', blank=True, null=True)  # Keep only one image field
+    image = models.ImageField(upload_to='images/', blank=True, null=True)
     visibility = models.CharField(
         max_length=10,
         choices=VISIBILITY_CHOICES,

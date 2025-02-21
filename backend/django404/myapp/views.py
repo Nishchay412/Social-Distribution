@@ -160,3 +160,51 @@ def delete_post(request, post_id):
 
     post.delete()  
     return Response({"message": "Post deleted"}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])  # List Posts by Logged-in User
+@permission_classes([IsAuthenticated])
+def list_user_posts(request):
+    """
+    Lists all posts created by the authenticated user.
+    """
+    user_posts = Post.objects.filter(author=request.user).order_by('-published')
+    serializer = PostSerializer(user_posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])  # Only allows GET requests
+@permission_classes([IsAuthenticated])  # Requires authentication
+def list_user_posts_by_username(request, username):
+    """
+    Lists all posts created by a specific user (identified by their username).
+    """
+    try:
+        user = User.objects.get(username=username)  # Fetch the user by username
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Fetch PUBLIC posts only (so users can't see deleted/private posts)
+    user_posts = Post.objects.filter(author=user, visibility="PUBLIC").order_by('-published')
+
+    # Serialize the posts to JSON format
+    serializer = PostSerializer(user_posts, many=True)
+    
+    # Return the JSON response
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Requires user authentication
+def list_public_posts_excluding_user(request):
+    """
+    Fetch all PUBLIC posts, excluding posts made by the authenticated user.
+    """
+    user = request.user  # Get the authenticated user
+
+    # Fetch public posts excluding those created by the user
+    posts = Post.objects.filter(visibility="PUBLIC").exclude(author=user).order_by('-published')
+
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
