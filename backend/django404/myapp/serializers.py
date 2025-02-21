@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import Post
 
 User = get_user_model()
 
@@ -12,3 +13,8 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # ✅ Uses create_user() to hash passwords
+
+class PostSerializer(serializers.ModelSerializer): #Includes all fields from Post model
+    class Meta:
+        model = Post
+        fields = '__all__' 
