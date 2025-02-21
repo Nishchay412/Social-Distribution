@@ -12,6 +12,7 @@ import EditPost from './posting/EditPost';
 import UserPosts from './posting/UserPosts';
 import MyPosts from './posting/Personalposts';
 import CreatePost from './posting/CreatePost';
+import PublicPosts from './posting/publicposts';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
   {
     path: "/my-posts",  // ✅ Cleaner URL for user's posts
     element: <MyPosts />,
+  },
+  {
+    path: "/publicposts",  // ✅ Cleaner URL for user's posts
+    element: <PublicPosts />,
   },
 ]);
 
