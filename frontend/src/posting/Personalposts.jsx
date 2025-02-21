@@ -34,7 +34,7 @@ const MyPosts = () => {
     }, []);
 
     const handleEdit = (postId) => {
-        navigate(`/post/${postId}/edit`);  // Redirects to the edit page
+        navigate(`/posts/${postId}/edit`);  // Redirects to the edit page
     };
 
     if (loading) return <p>Loading your posts...</p>;

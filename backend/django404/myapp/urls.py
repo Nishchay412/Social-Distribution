@@ -28,8 +28,8 @@ urlpatterns = [
     # ✅ Post Endpoints
     path('posts/', list_posts, name='list-posts'),
     path('posts/create/', create_post, name='create-post'),
-    path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
-    path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  #Changed from 'update' to 'edit'
+    path('api/posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
+    path("api/posts/<uuid:post_id>/update/", update_post, name="update-post"),  
     path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),
 
     # ✅ User-specific Post Endpoints
