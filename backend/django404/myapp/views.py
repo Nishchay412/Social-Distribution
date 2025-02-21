@@ -224,3 +224,19 @@ def list_user_posts_by_username(request, username):
     
     # Return the JSON response
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Requires user authentication
+def list_public_posts_excluding_user(request):
+    """
+    Fetch all PUBLIC posts, excluding posts made by the authenticated user.
+    """
+    user = request.user  # Get the authenticated user
+
+    # Fetch public posts excluding those created by the user
+    posts = Post.objects.filter(visibility="PUBLIC").exclude(author=user).order_by('-published')
+
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
