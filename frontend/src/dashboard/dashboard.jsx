@@ -10,6 +10,7 @@ export function Dashboard() {
     const navigateToProfile = () => navigate("/profile");
     const profile_pic =localStorage.getItem("profilepic")
     console.log(profile_pic)
+    const navigateToMyPosts = () => navigate("/my-posts");
 
     const handleLogout = async () => {
         try {
@@ -52,6 +53,15 @@ export function Dashboard() {
               <div className="mb-6">
                 <CreatePost />
               </div>
+
+            <div className="mb-6 text-center">
+            <button
+              onClick={navigateToMyPosts}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              View My Posts
+            </button>
+          </div>
     
               {/* Placeholder for Feed Posts */}
               <div className="bg-white rounded-lg shadow-md p-4">
