@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Post  # ✅ Import Post model
+from .models import Post, Comment, Like
 
 
 User = get_user_model()
@@ -20,6 +20,8 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 """ Serializer for Post model with author_username as a read-only field. """
 class PostSerializer(serializers.ModelSerializer):
     author_username = serializers.ReadOnlyField(source='author.username')
+    likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -31,5 +33,29 @@ class PostSerializer(serializers.ModelSerializer):
             'image',
             'visibility',
             'published',
+            'likes_count', 
+            'comments_count'
         ]
-        read_only_fields = ['id', 'author_username', 'published']  # ✅ Prevents modification of these fields
+        read_only_fields = ['id', 'author_username', 'published', 'likes_count', 'comments_count']  # ✅ Prevents modification of these fields
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+class CommentSerializer(serializers.ModelSerializer):
+    author_username = serializers.ReadOnlyField(source='author.username')
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'post', 'author_username', 'text', 'created']
+        read_only_fields = ['id','post','author_username', 'created']
+
+class LikeSerializer(serializers.ModelSerializer):
+    author_username = serializers.ReadOnlyField(source='author.username')
+    
+    class Meta:
+        model = Like
+        fields = ['id', 'post', 'author_username', 'created']
+        read_only_fields = ['id', 'author_username', 'created']
+

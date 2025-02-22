@@ -6,20 +6,21 @@ const PublicPosts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Store the current draft comment text for each post
+  const [commentTextByPostId, setCommentTextByPostId] = useState({});
+  // *** NEW: Store new comments added locally for each post ***
+  const [commentsByPostId, setCommentsByPostId] = useState({});
+
   const API_URL = "http://127.0.0.1:8000/api/posts/public/";
+  const token = localStorage.getItem("access_token");
 
   useEffect(() => {
     const fetchPublicPosts = async () => {
       setLoading(true);
-      const token = localStorage.getItem("access_token"); // Get JWT token
-
       try {
         const response = await axios.get(API_URL, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         setPosts(response.data);
       } catch (err) {
         setError("Failed to fetch public posts.");
@@ -30,7 +31,62 @@ const PublicPosts = () => {
     };
 
     fetchPublicPosts();
-  }, []);
+  }, [token]);
+
+  // Handle the like button
+  const handleLike = async (postId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:8000/posts/${postId}/likes/create/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Option: Re-fetch posts to update like counts
+      const response = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPosts(response.data);
+    } catch (err) {
+      console.error("Error liking post:", err.response?.data || err.message);
+    }
+  };
+
+  // Handle comment text changes
+  const handleCommentChange = (postId, value) => {
+    setCommentTextByPostId({
+      ...commentTextByPostId,
+      [postId]: value,
+    });
+  };
+
+  // Handle comment submit: post new comment and update local comments state
+  const handleCommentSubmit = async (postId) => {
+    const commentText = commentTextByPostId[postId] || "";
+    if (!commentText.trim()) return;
+
+    try {
+      const res = await axios.post(
+        `http://127.0.0.1:8000/posts/${postId}/comments/create/`,
+        { text: commentText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Clear the input for this post
+      setCommentTextByPostId({
+        ...commentTextByPostId,
+        [postId]: "",
+      });
+
+      // Update local comments for this post so the new comment shows immediately.
+      const newComment = res.data; // Assume response returns the new comment object.
+      setCommentsByPostId((prev) => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), newComment],
+      }));
+    } catch (err) {
+      console.error("Error creating comment:", err.response?.data || err.message);
+    }
+  };
 
   if (loading) return <p className="text-center text-lg">Loading public posts...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -54,13 +110,19 @@ const PublicPosts = () => {
                     className="w-10 h-10 rounded-full"
                   />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800">{post.author_username}</h3>
-                    <p className="text-sm text-gray-500">{new Date(post.published).toLocaleString()}</p>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {post.author_username || "Unknown User"}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(post.published).toLocaleString()}
+                    </p>
                   </div>
                 </div>
 
                 {/* Post Content */}
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{post.title}</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {post.title}
+                </h3>
                 <p className="text-gray-700">{post.content}</p>
 
                 {/* Post Image */}
@@ -72,10 +134,32 @@ const PublicPosts = () => {
                   />
                 )}
 
+                {/* Display Comments */}
+                <div className="mt-4 text-left">
+                  <h4 className="text-sm font-semibold">Comments:</h4>
+                  {post.comments && post.comments.length > 0 && (
+                    <div>
+                      {post.comments.map((comment) => (
+                        <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 inline-block">
+                          <strong>{comment.author_username}:</strong> {comment.text}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {(commentsByPostId[post.id] || []).map((comment) => (
+                    <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 inline-block">
+                      <strong>{comment.author_username}:</strong> {comment.text}
+                    </div>
+                  ))}
+                </div>
+
                 {/* Social Actions */}
                 <div className="flex justify-between items-center mt-4 text-gray-500 text-sm">
                   <div className="flex gap-4">
-                    <button className="flex items-center gap-1 hover:text-pink-500 transition">
+                    <button
+                      onClick={() => handleLike(post.id)}
+                      className="flex items-center gap-1 hover:text-pink-500 transition"
+                    >
                       ❤️ Like
                     </button>
                     <button className="flex items-center gap-1 hover:text-blue-500 transition">
@@ -85,7 +169,7 @@ const PublicPosts = () => {
                       🔄 Share
                     </button>
                   </div>
-                  <span>{post.likes} Likes</span>
+                  <span>{post.likes_count || 0} Likes</span>
                 </div>
 
                 {/* Comment Input */}
@@ -99,8 +183,13 @@ const PublicPosts = () => {
                     type="text"
                     placeholder="Write a comment..."
                     className="w-full p-2 bg-gray-100 rounded-full outline-none"
+                    value={commentTextByPostId[post.id] || ""}
+                    onChange={(e) => handleCommentChange(post.id, e.target.value)}
                   />
-                  <button className="text-pink-500 hover:text-pink-600 transition">
+                  <button
+                    onClick={() => handleCommentSubmit(post.id)}
+                    className="text-pink-500 hover:text-pink-600 transition"
+                  >
                     ➤
                   </button>
                 </div>
@@ -111,5 +200,6 @@ const PublicPosts = () => {
       </div>
     </div>
   );
-}
-export default PublicPosts
+};
+
+export default PublicPosts;
