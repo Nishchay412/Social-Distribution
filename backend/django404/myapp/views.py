@@ -30,6 +30,12 @@ def login_user(request):
 
     if user:
         refresh = RefreshToken.for_user(user)
+
+        # ✅ Convert ImageField to Full URL
+        profile_image_url = (
+            request.build_absolute_uri(user.profile_image.url) if user.profile_image else None
+        )
+
         return Response({
             "access": str(refresh.access_token),
             "refresh": str(refresh),
@@ -38,10 +44,14 @@ def login_user(request):
                 "username": user.username,
                 "email": user.email,
                 "first_name": user.first_name,
-                "last_name": user.last_name
+                "last_name": user.last_name,
+                "profile_image": profile_image_url,  # ✅ Full URL now
             }
         })
+
     return Response({"error": "Invalid username or password"}, status=400)
+
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
@@ -208,3 +218,18 @@ def list_public_posts_excluding_user(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # ✅ Requires authentication
+def list_users_excluding_self(request):
+    """
+    Lists all users excluding the authenticated user.
+    """
+    # Get all users except the currently logged-in user
+    users = User.objects.exclude(id=request.user.id)
+    
+    # Serialize user data
+    serializer = RegisterUserSerializer(users, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)

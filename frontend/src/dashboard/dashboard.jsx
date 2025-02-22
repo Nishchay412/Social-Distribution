@@ -1,11 +1,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import CreatePost from "../posting/CreatePost";
-
+import { Header } from "./leftpanel";
+import { TopPanel } from "./toppanel";
+import PublicPosts from "../posting/publicposts";
 export function Dashboard() {
     const navigate = useNavigate();
 
     const navigateToProfile = () => navigate("/profile");
+    const profile_pic =localStorage.getItem("profilepic")
+    console.log(profile_pic)
 
     const handleLogout = async () => {
         try {
@@ -31,23 +35,33 @@ export function Dashboard() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4">
-            <h1 className="text-2xl font-bold mb-6">Welcome to the Dashboard!</h1>
-            <div className="flex gap-4 mb-6">
-                <button 
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                    onClick={navigateToProfile}
-                >
-                    User Profile
-                </button>
-                <button 
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                    onClick={handleLogout}
-                >
-                    Logout
-                </button>
+        <div className=" min-h-screen">
+          {/* Top Panel (Navigation, Search, Profile) */}
+          <TopPanel />
+    
+          {/* Main Layout */}
+          <div className="flex mt-4">
+            {/* Sidebar (Navigation, Contacts) */}
+            <div className="w-1/4 border-r border-gray-300 px-4">
+              <Header />
             </div>
-            <CreatePost />
+    
+            {/* Main Content (Feed) */}
+            <div className="flex flex-col w-3/4 mx-auto max-w-3xl">
+              {/* Create Post at the Top */}
+              <div className="mb-6">
+                <CreatePost />
+              </div>
+    
+              {/* Placeholder for Feed Posts */}
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <h2 className="text-lg font-semibold">Recent Posts</h2>
+                <p className="text-gray-500">Posts will appear here...</p>
+                <PublicPosts/>
+                
+              </div>
+            </div>
+          </div>
         </div>
-    );
-}
+      );
+    }
