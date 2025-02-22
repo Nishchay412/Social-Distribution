@@ -7,7 +7,15 @@ const apiClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-
+export async function toggleLike(postId) {
+  try {
+    const response = await apiClient.post(`/posts/${postId}/likes/toggle/`, {});
+    return response.data;
+  } catch (error) {
+    console.error(`Error toggling like for post ${postId}:`, error.response?.data || error.message);
+    throw error;
+  }
+}
 // Helper function to get JWT token from localStorage
 function getAuthToken() {
   return localStorage.getItem('access') || null;

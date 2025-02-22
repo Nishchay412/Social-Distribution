@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser  # For handling image uploads
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterUserSerializer, PostSerializer
-from .models import Post
+from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer
+from .models import Post, Comment, Like
 
 User = get_user_model()
 
@@ -233,3 +233,80 @@ def list_users_excluding_self(request):
     serializer = RegisterUserSerializer(users, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_comments(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id, visibility="PUBLIC")
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    comments = post.comments.all().order_by('-created')
+    serializer = CommentSerializer(comments, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_comment(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id, visibility="PUBLIC")
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = CommentSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(post=post, author=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_likes(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id, visibility="PUBLIC")
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    likes = post.likes.all().order_by('-created')
+    serializer = LikeSerializer(likes, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_like(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id, visibility="PUBLIC")
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if the user already liked the post
+    if Like.objects.filter(post=post, author=request.user).exists():
+        return Response({"error": "Already liked"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    like = Like.objects.create(post=post, author=request.user)
+    serializer = LikeSerializer(like)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_like(request, post_id):
+    """
+    Toggles a like on a post: if the user has already liked it, cancel the like.
+    Otherwise, create a new like.
+    """
+    try:
+        post = Post.objects.get(id=post_id, visibility="PUBLIC")
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    existing_like = Like.objects.filter(post=post, author=request.user).first()
+    if existing_like:
+        # If like exists, delete it (cancel like)
+        existing_like.delete()
+        return Response({"message": "Like removed"}, status=status.HTTP_200_OK)
+    else:
+        # Otherwise, create a new like
+        like = Like.objects.create(post=post, author=request.user)
+        serializer = LikeSerializer(like)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
