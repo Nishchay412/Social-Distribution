@@ -12,11 +12,7 @@ from .views import (
     delete_post,
     list_user_posts,
     list_user_posts_by_username,
-    list_public_posts_excluding_user,
-    list_comments, 
-    create_comment,
-    list_likes, 
-    create_like,
+    list_public_posts_excluding_user
 )
 
 urlpatterns = [
@@ -35,10 +31,6 @@ urlpatterns = [
     path('api/posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
     path("api/posts/<uuid:post_id>/update/", update_post, name="update-post"),  
     path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),
-    path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
-    path('posts/<uuid:post_id>/comments/create/', create_comment, name='create-comment'),
-    path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
-    path('posts/<uuid:post_id>/likes/create/', create_like, name='create-like'),
 
     # ✅ User-specific Post Endpoints
     path('posts/my/', list_user_posts, name='list-user-posts'),  # Posts by logged-in user

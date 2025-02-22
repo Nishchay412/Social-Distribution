@@ -52,39 +52,3 @@ class Post(models.Model):
 
     def __str__(self):
         return f"{self.title} by {self.author.username}"
-
-
-class Comment(models.Model):
-    """
-    A comment belongs to a single post, and has an author (User).
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='comments'
-    )
-    text = models.TextField()
-    created = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Comment by {self.author.username} on post {self.post.id}"
-    
-class Like(models.Model):
-    """
-    A like belongs to a single post and has an author (User).
-    If you want 'likes on comments', you can add a separate field or a separate model.
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='likes'
-    )
-    created = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.author.username} liked post {self.post.id}"
-    

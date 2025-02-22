@@ -17,7 +17,6 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import PostDetail from './posting/PostDetail';
 
 const router = createBrowserRouter([
   {
@@ -68,10 +67,6 @@ const router = createBrowserRouter([
     path: "/publicposts",  // ✅ Cleaner URL for user's posts
     element: <PublicPosts />,
   },
-  {
-    path:"/posts/:postId",
-    element:<PostDetail/>,
-  }
 ]);
 
 createRoot(document.getElementById('root')).render(
