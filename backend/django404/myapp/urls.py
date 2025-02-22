@@ -13,7 +13,10 @@ from .views import (
     list_user_posts,
     list_user_posts_by_username,
     list_public_posts_excluding_user,
-    list_users_excluding_self
+    list_users_excluding_self,
+    list_comments, create_comment,
+    list_likes, create_like,
+    toggle_like,
 )
 
 urlpatterns = [
@@ -32,6 +35,16 @@ urlpatterns = [
     path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
     path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  
     path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),  # ✅ Corrected path
+
+    # ✅ Comments Endpoints
+    path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
+    path('posts/<uuid:post_id>/comments/create/', create_comment, name='create-comment'),
+
+    # ✅ Likes Endpoints
+    path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
+    path('posts/<uuid:post_id>/likes/create/', create_like, name='create-like'),
+    path('posts/<uuid:post_id>/likes/toggle/', toggle_like, name='toggle-like'),
+
 
     # ✅ User-specific Post Endpoints
     path('posts/my/', list_user_posts, name='list-user-posts'),  # Posts by logged-in user
