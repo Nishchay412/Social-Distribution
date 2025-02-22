@@ -10,12 +10,10 @@ from .views import (
     retrieve_post,
     update_post,
     delete_post,
-    list_user_posts,
-    list_user_posts_by_username,
-    list_public_posts_excluding_user,
     list_users_excluding_self,
-    list_comments, create_comment,
-    list_likes, create_like,
+    list_comments, 
+    create_comment,
+    list_likes, 
     toggle_like,
 )
 
@@ -32,9 +30,9 @@ urlpatterns = [
     # ✅ Post Endpoints
     path('posts/', list_posts, name='list-posts'),
     path('posts/create/', create_post, name='create-post'),
-    path('api/posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
-    path("api/posts/<uuid:post_id>/update/", update_post, name="update-post"),  
-    path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),
+    path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
+    path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  
+    path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),  
 
     # ✅ Comments Endpoints
     path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
@@ -42,13 +40,8 @@ urlpatterns = [
 
     # ✅ Likes Endpoints
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
-    path('posts/<uuid:post_id>/likes/create/', create_like, name='create-like'),
     path('posts/<uuid:post_id>/likes/toggle/', toggle_like, name='toggle-like'),
 
-
-    # ✅ User-specific Post Endpoints
-    path('posts/my/', list_user_posts, name='list-user-posts'),  # Posts by logged-in user
-    path('posts/user/<str:username>/', list_user_posts_by_username, name='list-user-posts-by-username'),  # Posts by any user
-    path('api/posts/public/', list_public_posts_excluding_user, name='list-public-posts-excluding-user'),
+    # ✅ User Management
     path('users/exclude-self/', list_users_excluding_self, name='list_users_excluding_self'),
 ]
