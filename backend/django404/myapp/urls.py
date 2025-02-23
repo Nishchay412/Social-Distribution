@@ -15,7 +15,8 @@ from .views import (
     create_comment,
     list_likes, 
     toggle_like,
-    list_public_posts_excluding_user
+    list_public_posts_excluding_user,
+    list_user_posts,
 )
 
 urlpatterns = [
@@ -42,6 +43,7 @@ urlpatterns = [
     # ✅ Likes Endpoints
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
     path('posts/<uuid:post_id>/likes/toggle/', toggle_like, name='toggle-like'),
+     path('posts/my/', list_user_posts, name='list-user-posts'),
     path('api/posts/public/', list_public_posts_excluding_user, name='public-posts-excluding-user'),
 
     # ✅ User Management
