@@ -37,7 +37,7 @@ const MyPosts = () => {
   const handleLike = async (postId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/likes/create/`,
+        `http://127.0.0.1:8000/posts/${postId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
