@@ -15,13 +15,20 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # ✅ Uses create_user() to hash passwords
 
-
+class CommentSerializer(serializers.ModelSerializer):
+    author_username = serializers.ReadOnlyField(source='author.username')
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'post', 'author_username', 'text', 'created']
+        read_only_fields = ['id','post','author_username', 'created']
 
 """ Serializer for Post model with author_username as a read-only field. """
 class PostSerializer(serializers.ModelSerializer):
     author_username = serializers.ReadOnlyField(source='author.username')
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
@@ -34,22 +41,15 @@ class PostSerializer(serializers.ModelSerializer):
             'visibility',
             'published',
             'likes_count', 
-            'comments_count'
+            'comments_count',
+            'comments',
         ]
-        read_only_fields = ['id', 'author_username', 'published', 'likes_count', 'comments_count']  # ✅ Prevents modification of these fields
+        read_only_fields = ['id', 'author_username', 'published', 'likes_count', 'comments_count','comments']  # ✅ Prevents modification of these fields
     def get_likes_count(self, obj):
         return obj.likes.count()
 
     def get_comments_count(self, obj):
         return obj.comments.count()
-
-class CommentSerializer(serializers.ModelSerializer):
-    author_username = serializers.ReadOnlyField(source='author.username')
-    
-    class Meta:
-        model = Comment
-        fields = ['id', 'post', 'author_username', 'text', 'created']
-        read_only_fields = ['id','post','author_username', 'created']
 
 class LikeSerializer(serializers.ModelSerializer):
     author_username = serializers.ReadOnlyField(source='author.username')
