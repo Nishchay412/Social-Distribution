@@ -140,14 +140,14 @@ const PublicPosts = () => {
                   {post.comments && post.comments.length > 0 && (
                     <div>
                       {post.comments.map((comment) => (
-                        <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 inline-block">
+                        <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
                           <strong>{comment.author_username}:</strong> {comment.text}
                         </div>
                       ))}
                     </div>
                   )}
                   {(commentsByPostId[post.id] || []).map((comment) => (
-                    <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 inline-block">
+                    <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
                       <strong>{comment.author_username}:</strong> {comment.text}
                     </div>
                   ))}
