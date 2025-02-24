@@ -106,11 +106,12 @@ def update_user_profile(request):
         }
     })
 
-# Post Management Views
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
 def create_post(request):
+    """
+    Creates a new Post. The authenticated user is set as the author.
+    """
     serializer = PostSerializer(data=request.data)
     if serializer.is_valid():
         post = serializer.save(author=request.user)
@@ -120,6 +121,10 @@ def create_post(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  
 def list_posts(request):
+    """
+    Lists all existing posts (except those marked 'DELETED'), ordered by newest first.
+    This endpoint is accessible only to logged-in users.
+    """
     posts = Post.objects.exclude(visibility='DELETED').order_by('-published')
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -127,6 +132,10 @@ def list_posts(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  
 def retrieve_post(request, post_id):
+    """
+    Retrieves a single Post by its ID. Respects privacy settings:
+    - If the Post is marked 'PRIVATE', only the author can view it.
+    """
     try:
         post = Post.objects.get(id=post_id)
         
@@ -143,6 +152,10 @@ def retrieve_post(request, post_id):
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_post(request, post_id):
+    """
+    Updates an existing Post. Only the post's author can modify it.
+    Supports full ('PUT') or partial ('PATCH') updates.
+    """
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
@@ -160,6 +173,9 @@ def update_post(request, post_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_post(request, post_id):
+    """
+    Deletes a post if the requesting user is the author. 
+    """
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
@@ -237,6 +253,10 @@ def list_users_excluding_self(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_comments(request, post_id):
+    """
+    Lists all comments for a given PUBLIC post, in descending order by creation date.
+    If the post doesn't exist or isn't PUBLIC, returns a 404.
+    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
@@ -249,6 +269,10 @@ def list_comments(request, post_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_comment(request, post_id):
+    """
+    Creates a new Comment on a PUBLIC post. 
+    Ensures the post exists and sets the comment's author to the requesting user.
+    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
@@ -263,6 +287,10 @@ def create_comment(request, post_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_likes(request, post_id):
+    """
+    Lists all likes on a PUBLIC post, in descending order of creation date.
+    If the post is not found or isn't PUBLIC, returns a 404.
+    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
@@ -275,6 +303,10 @@ def list_likes(request, post_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_like(request, post_id):
+    """
+    Creates a Like on a PUBLIC post if the user has not already liked it.
+    Returns 400 if the user already liked the post.
+    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
