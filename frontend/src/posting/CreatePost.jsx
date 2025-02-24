@@ -5,12 +5,14 @@ export function CreatePost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [isPublic, setIsPublic] = useState(true); // ✅ Default visibility as PUBLIC
+  // Use a dropdown state for visibility. Default is "PUBLIC".
+  const [visibility, setVisibility] = useState("PUBLIC");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
 
   const API_BASE_URL = "http://127.0.0.1:8000/posts/create/";
 
+  // Retrieve user's profile picture and first name from local storage
   const profilePic = localStorage.getItem("profilepic") || "/default-avatar.png";
   const firstName = localStorage.getItem("firstname") || "User";
 
@@ -23,14 +25,17 @@ export function CreatePost() {
 
       const response = await axios.post(API_BASE_URL, postData, {
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
 
       return response.data;
     } catch (error) {
-      console.error("Error creating post:", error.response ? error.response.data : error.message);
+      console.error(
+        "Error creating post:",
+        error.response ? error.response.data : error.message
+      );
       throw error;
     }
   };
@@ -41,7 +46,8 @@ export function CreatePost() {
       const formData = new FormData();
       formData.append("title", title);
       formData.append("content", content);
-      formData.append("visibility", isPublic ? "PUBLIC" : "PRIVATE"); // ✅ Toggle between PUBLIC/PRIVATE
+      // Append the selected visibility option (e.g., PUBLIC, UNLISTED, FRIENDS, PRIVATE, DRAFT)
+      formData.append("visibility", visibility);
       if (selectedFile) formData.append("image", selectedFile);
 
       const newPost = await createPost(formData);
@@ -49,7 +55,7 @@ export function CreatePost() {
       setTitle("");
       setContent("");
       setSelectedFile(null);
-      setIsPublic(true); // ✅ Reset visibility toggle
+      setVisibility("PUBLIC"); // Reset visibility to default
       setError(null);
     } catch (err) {
       setError("Failed to create post.");
@@ -60,7 +66,6 @@ export function CreatePost() {
   return (
     <div className="flex flex-col items-center w-full bg-gray-100 p-4">
       <div className="bg-white p-5 rounded-2xl shadow-lg max-w-lg w-full">
-        
         {/* Profile Picture & Input Fields */}
         <div className="flex items-center gap-3">
           <img src={profilePic} alt="User" className="w-12 h-12 rounded-full" />
@@ -84,7 +89,7 @@ export function CreatePost() {
           </div>
         </div>
 
-        {/* Upload Button & Visibility Toggle */}
+        {/* Upload Button & Visibility Dropdown */}
         <div className="flex justify-between items-center mt-4">
           {/* Image Upload Button */}
           <label className="cursor-pointer bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
@@ -97,15 +102,19 @@ export function CreatePost() {
             />
           </label>
 
-          {/* Visibility Toggle (Public/Private) */}
+          {/* Visibility Dropdown */}
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={() => setIsPublic(!isPublic)}
-              className="w-5 h-5 cursor-pointer"
-            />
-            <span className="text-gray-600">{isPublic ? "Public" : "Private"}</span>
+            <select
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value)}
+              className="p-2 border border-gray-300 rounded-lg outline-none"
+            >
+              <option value="PUBLIC">Public</option>
+              <option value="UNLISTED">Unlisted</option>
+              <option value="FRIENDS">Friends Only</option>
+              <option value="PRIVATE">Private</option>
+              <option value="DRAFT">Draft</option>
+            </select>
           </div>
 
           {/* Post Button */}
@@ -119,10 +128,19 @@ export function CreatePost() {
         </div>
 
         {/* Error & Success Messages */}
-        {error && <p className="text-red-600 bg-red-100 p-2 rounded-md text-sm mt-3">{error}</p>}
-        {message && <p className="text-green-600 bg-green-100 p-2 rounded-md text-sm mt-3">{message}</p>}
+        {error && (
+          <p className="text-red-600 bg-red-100 p-2 rounded-md text-sm mt-3">
+            {error}
+          </p>
+        )}
+        {message && (
+          <p className="text-green-600 bg-green-100 p-2 rounded-md text-sm mt-3">
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );
 }
-export default CreatePost
+
+export default CreatePost;

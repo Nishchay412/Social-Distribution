@@ -28,11 +28,14 @@ class Post(models.Model):
     - A 'visibility' field with options: 'PUBLIC', 'PRIVATE', 'DRAFT', 'DELETED'
     """
     VISIBILITY_CHOICES = [
-        ('PUBLIC', 'Public'),      # Visible to everyone
-        ('PRIVATE', 'Private'),    # Only visible to the author
-        ('DRAFT', 'Draft'),        # Not published yet
-        ('DELETED', 'Deleted'),    # Soft delete (not actually removed)
-    ]
+    ('PUBLIC', 'Public'),       # Visible to everyone
+    ('UNLISTED', 'Unlisted'),   # Visible to followers and anyone with the link
+    ('FRIENDS', 'Friends Only'),# Visible to friends (and the author)
+    ('PRIVATE', 'Private'),     # Visible only to the author
+    ('DRAFT', 'Draft'),         # Not published yet
+    ('DELETED', 'Deleted'),     # Soft delete (not actually removed, only node admin can see)
+]
+
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(
