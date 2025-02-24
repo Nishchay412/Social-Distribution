@@ -46,6 +46,7 @@ def login_user(request):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "profile_image": profile_image_url,  # ✅ Full URL now
+                "admin": user.is_staff, # Admin Property to login to correct dashboard
             }
         })
 
@@ -82,6 +83,28 @@ def user_profile_by_username(request, username):
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
 
+# Delete user
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated]) 
+def delete_user_by_username(request, username):
+    """
+    Delete a user.
+
+    """
+    # TODO Double check user is an admin
+    admin = request.user
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND);
+
+    if user.is_superuser or user.is_staff:
+        return Response({"error": "You cannot delete another Admin."}, status=status.HTTP_403_FORBIDDEN)
+
+    user.delete()
+    return Response({"message": "User has been deleted"}, status=status.HTTP_200_OK)
+
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])  
 def update_user_profile(request):
@@ -105,6 +128,7 @@ def update_user_profile(request):
             "profile_picture": user.profile_image.url if user.profile_image else None
         }
     })
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
