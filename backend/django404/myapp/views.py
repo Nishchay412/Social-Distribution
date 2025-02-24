@@ -109,8 +109,8 @@ def delete_user_by_username(request, username):
 @permission_classes([IsAuthenticated])  
 def update_user_profile(request, username=None):
     user = request.data
-    if username != None:
-        user = User.objects.get(username=username)
+    # if username != None:
+    #     user = User.objects.get(username=username)
     data = request.data
 
     user.username = data.get("username", user.username)
