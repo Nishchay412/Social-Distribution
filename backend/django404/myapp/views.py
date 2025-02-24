@@ -238,7 +238,14 @@ def add_friend(request, username):
     request.user.friends.add(target_user)
     target_user.friends.add(request.user)
 
-    return Response({"message": "Friend added successfully!"}, status=200)
+from .serializers import RegisterUserSerializer
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_friends(request):
+    # Get the friends of the authenticated user
+    friends = request.user.friends.all()
+    serializer = RegisterUserSerializer(friends, many=True, context={'request': request})
+    return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # ✅ Requires authentication
