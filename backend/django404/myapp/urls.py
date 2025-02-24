@@ -16,6 +16,7 @@ from .views import (
     list_likes, 
     toggle_like,
     list_public_posts_excluding_user,
+    list_user_posts_by_username,
     list_user_posts,
 )
 
@@ -28,6 +29,9 @@ urlpatterns = [
     # ✅ User Profile Endpoints
     path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
     path('update-profile/', update_user_profile, name='update-profile'),
+    # User Posts by Username
+    path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),
+
 
     # ✅ Post Endpoints
     path('posts/', list_posts, name='list-posts'),
