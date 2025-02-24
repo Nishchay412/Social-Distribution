@@ -15,6 +15,11 @@ User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])  
 def register_user(request):
+    """
+    Registers user and creates a serilizer for it
+    Needs username, first name, last name, email, and password
+    Saves user to database
+    """
     serializer = RegisterUserSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -24,6 +29,10 @@ def register_user(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])  
 def login_user(request):
+    """
+    User login
+    Takes username and password
+    """
     username = request.data.get("username")
     password = request.data.get("password")
     user = authenticate(username=username, password=password)
@@ -90,7 +99,7 @@ def delete_user_by_username(request, username):
     """
     Delete a user. 
     Expects username of user to be deleted.
-
+    Cannot delete admin/superusers
     """
     # TODO Double check user is an admin
     admin = request.user
@@ -117,6 +126,11 @@ from rest_framework.response import Response
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_profile(request, username):
+    """
+    Update user profile
+    This can either be edited by an admin or the logged in user.
+    Takes username to edit user's info in database.
+    """
     try:
         user = get_object_or_404(User, username=username)  # Ensure user exists
         data = request.data
@@ -289,6 +303,9 @@ from django.shortcuts import get_object_or_404
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_friend(request, username):
+    """
+    Add friend, takes in username of user to be befriended.
+    """
     # Get the target user by username
     target_user = get_object_or_404(User, username=username)
 
@@ -308,7 +325,9 @@ from .serializers import RegisterUserSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friends(request):
-    # Get the friends of the authenticated user
+    """
+    Get the friends of the authenticated user
+    """
     friends = request.user.friends.all()
     serializer = RegisterUserSerializer(friends, many=True, context={'request': request})
     return Response(serializer.data)
@@ -316,6 +335,9 @@ def list_friends(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def friends_posts(request):
+    """
+    Get the posts made by friends of the authenticated user
+    """
     user = request.user
     # Get all your friends
     friends = user.friends.all()
