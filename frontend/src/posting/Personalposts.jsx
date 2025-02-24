@@ -2,22 +2,39 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+// Helper function to build the full image URL
+function getImageUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http")) {
+    return path;
+  }
+  if (path.startsWith("/media") || path.startsWith("media")) {
+    const normalized = path.replace(/^\/+/, ""); // remove leading slash
+    return `http://127.0.0.1:8000/${normalized}`;
+  }
+  // Fallback: assume we need "/media/" in front
+  return `http://127.0.0.1:8000/media/${path}`;
+}
+
+
 const MyPosts = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   // For storing comment input per post
   const [commentTextByPostId, setCommentTextByPostId] = useState({});
-  // For storing newly added comments (if you want to display them immediately)
+  // For storing newly added comments so they appear immediately
   const [commentsByPostId, setCommentsByPostId] = useState({});
-  // NEW: For inline editing mode
+
+  // For inline editing
   const [editingPostId, setEditingPostId] = useState(null);
   const [editingData, setEditingData] = useState({ title: "", content: "" });
 
   const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
 
-  // Fetch posts created by logged-in user
+  // Fetch posts created by the logged-in user
   useEffect(() => {
     const fetchMyPosts = async () => {
       setLoading(true);
@@ -36,7 +53,7 @@ const MyPosts = () => {
     fetchMyPosts();
   }, [token]);
 
-  // Handle like toggle for a post
+  // Handle like toggle
   const handleLike = async (postId) => {
     try {
       await axios.post(
@@ -44,7 +61,7 @@ const MyPosts = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Optionally, re-fetch posts to update like counts:
+      // Re-fetch posts to update like counts
       const response = await axios.get("http://127.0.0.1:8000/posts/my/", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -54,28 +71,29 @@ const MyPosts = () => {
     }
   };
 
-  // Handle comment text changes for a given post
+  // Handle comment input changes
   const handleCommentChange = (postId, value) => {
-    setCommentTextByPostId({
-      ...commentTextByPostId,
+    setCommentTextByPostId((prev) => ({
+      ...prev,
       [postId]: value,
-    });
+    }));
   };
 
-  // Handle comment submit for a given post
+  // Submit a new comment
   const handleCommentSubmit = async (postId) => {
     const commentText = commentTextByPostId[postId] || "";
     if (!commentText.trim()) return;
+
     try {
       const res = await axios.post(
         `http://127.0.0.1:8000/posts/${postId}/comments/create/`,
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Clear input
-      setCommentTextByPostId({ ...commentTextByPostId, [postId]: "" });
-      // Add the new comment to local state so it appears immediately
-      const newComment = res.data; // expected to include id, author_username, text, etc.
+      // Clear the input
+      setCommentTextByPostId((prev) => ({ ...prev, [postId]: "" }));
+      // Add the new comment to local state
+      const newComment = res.data;
       setCommentsByPostId((prev) => ({
         ...prev,
         [postId]: [...(prev[postId] || []), newComment],
@@ -85,7 +103,7 @@ const MyPosts = () => {
     }
   };
 
-  // Enter edit mode for a post (populate editingData with the current values)
+  // Enter edit mode
   const handleEdit = (post) => {
     setEditingPostId(post.id);
     setEditingData({ title: post.title, content: post.content });
@@ -97,7 +115,7 @@ const MyPosts = () => {
     setEditingData({ title: "", content: "" });
   };
 
-  // Save the edited post by sending a PATCH request
+  // Save changes (PATCH request)
   const handleSaveEdit = async (postId) => {
     try {
       const response = await axios.patch(
@@ -105,11 +123,11 @@ const MyPosts = () => {
         editingData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Update the local post list with the edited post data
+      // Update local state
       setPosts((prevPosts) =>
-        prevPosts.map((post) => (post.id === postId ? response.data : post))
+        prevPosts.map((p) => (p.id === postId ? response.data : p))
       );
-      // Exit editing mode
+      // Exit edit mode
       setEditingPostId(null);
       setEditingData({ title: "", content: "" });
     } catch (err) {
@@ -118,7 +136,7 @@ const MyPosts = () => {
     }
   };
 
-  // Handle Delete button click – sends a DELETE request and updates local state
+  // Delete a post
   const handleDelete = async (postId) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
     try {
@@ -127,8 +145,8 @@ const MyPosts = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status === 200) {
-        // Remove the deleted post from the state
-        setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+        // Remove post from local state
+        setPosts((prevPosts) => prevPosts.filter((p) => p.id !== postId));
       } else {
         throw new Error(response.data.error || "Failed to delete post");
       }
@@ -144,9 +162,13 @@ const MyPosts = () => {
   return (
     <div className="flex flex-col items-center bg-gray-100 p-6">
       <div className="max-w-3xl w-full bg-white rounded-lg shadow-md p-4">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">My Posts</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          My Posts
+        </h2>
         {posts.length === 0 ? (
-          <p className="text-center text-gray-500">You haven't posted anything yet.</p>
+          <p className="text-center text-gray-500">
+            You haven't posted anything yet.
+          </p>
         ) : (
           <ul className="space-y-6">
             {posts.map((post) => (
@@ -168,7 +190,7 @@ const MyPosts = () => {
                   </div>
                 </div>
 
-                {/* If this post is being edited, show input fields */}
+                {/* Inline Edit vs. Normal View */}
                 {editingPostId === post.id ? (
                   <div className="mb-4">
                     <input
@@ -205,7 +227,6 @@ const MyPosts = () => {
                     </div>
                   </div>
                 ) : (
-                  // Otherwise, display the post normally
                   <>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       {post.title}
@@ -213,7 +234,7 @@ const MyPosts = () => {
                     <p className="text-gray-700">{post.content}</p>
                     {post.image && (
                       <img
-                        src={post.image}
+                        src={getImageUrl(post.image)}
                         alt="Post"
                         className="mt-3 w-full h-auto rounded-lg shadow-md"
                       />
@@ -221,17 +242,18 @@ const MyPosts = () => {
                   </>
                 )}
 
-                {/* Display Comments */}
+                {/* Comments */}
                 <div className="mt-4 text-left">
                   <h4 className="text-sm font-semibold">Comments:</h4>
-                  {post.comments && post.comments.length > 0 && (
+                  {post.comments?.length > 0 && (
                     <div>
                       {post.comments.map((comment) => (
                         <div
                           key={comment.id}
                           className="bg-gray-50 p-2 rounded-md mb-1"
                         >
-                          <strong>{comment.author_username}:</strong> {comment.text}
+                          <strong>{comment.author_username}:</strong>{" "}
+                          {comment.text}
                         </div>
                       ))}
                     </div>
@@ -289,7 +311,7 @@ const MyPosts = () => {
                   </button>
                 </div>
 
-                {/* Edit and Delete Buttons (only if not in editing mode) */}
+                {/* Edit and Delete Buttons */}
                 {editingPostId !== post.id && (
                   <div className="mt-4 flex gap-4">
                     <button
