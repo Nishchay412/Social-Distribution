@@ -105,29 +105,54 @@ def delete_user_by_username(request, username):
     user.delete()
     return Response({"message": "User has been deleted"}, status=status.HTTP_200_OK)
 
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])  
-def update_user_profile(request):
-    user = request.user  
-    data = request.data
-    user.username = data.get("username", user.username)
-    user.email = data.get("email", user.email)
-    user.first_name = data.get("first_name", user.first_name)
-    user.last_name = data.get("last_name", user.last_name)
-    user.profile_image = request.FILES.get("profile_picture", user.profile_image)  
+import base64
+import uuid
+from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-    user.save()
-    return Response({
-        "message": "Profile updated successfully",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "profile_picture": user.profile_image.url if user.profile_image else None
-        }
-    })
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_user_profile(request, username):
+    try:
+        user = get_object_or_404(User, username=username)  # Ensure user exists
+        data = request.data
+
+        user.username = data.get("username", user.username)
+        user.email = data.get("email", user.email)
+        user.first_name = data.get("first_name", user.first_name)
+        user.last_name = data.get("last_name", user.last_name)
+
+        # Handle Profile Picture
+        profile_picture = data.get("profile_picture", None)
+        if "profile_picture" in request.FILES:
+            user.profile_image = request.FILES["profile_picture"]
+
+        elif profile_picture and profile_picture.startswith("data:image"):  # Handle Base64 images
+            format, imgstr = profile_picture.split(";base64,")
+            ext = format.split("/")[-1]
+            file_name = f"profile_{uuid.uuid4()}.{ext}"
+            user.profile_image.save(file_name, ContentFile(base64.b64decode(imgstr)), save=True)
+
+        user.save()
+
+        return Response({
+            "message": "Profile updated successfully",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "profile_picture": user.profile_image.url if user.profile_image else None
+            }
+        }, status=200)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)  # ✅ Return exact error in response
+
 
 
 @api_view(['POST'])
