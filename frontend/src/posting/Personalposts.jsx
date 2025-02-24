@@ -87,6 +87,27 @@ const MyPosts = () => {
     navigate(`/posts/${postId}/edit`);
   };
 
+  // Handle Delete button click – sends a DELETE request and updates local state
+  const handleDelete = async (postId) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+
+    try {
+      const response = await axios.delete(
+        `http://127.0.0.1:8000/posts/${postId}/delete/`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.status === 200) {
+        // Remove the deleted post from the state
+        setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+      } else {
+        throw new Error(response.data.error || "Failed to delete post");
+      }
+    } catch (err) {
+      console.error("Error deleting post:", err.response?.data || err.message);
+      alert(err.message || "Error deleting post");
+    }
+  };
+
   if (loading) return <p>Loading your posts...</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -139,7 +160,7 @@ const MyPosts = () => {
                   {/* Display locally added comments */}
                   {(commentsByPostId[post.id] || []).map((comment) => (
                     <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
-                        <p>
+                      <p>
                         <strong>{comment.author_username}:</strong> {comment.text}
                       </p>
                     </div>
@@ -187,13 +208,19 @@ const MyPosts = () => {
                   </button>
                 </div>
 
-                {/* Edit Button */}
-                <div className="mt-4">
+                {/* Edit and Delete Buttons */}
+                <div className="mt-4 flex gap-4">
                   <button
                     onClick={() => handleEdit(post.id)}
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                   >
                     ✏️ Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(post.id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  >
+                    🗑️ Delete
                   </button>
                 </div>
               </li>
