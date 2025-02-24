@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Admin_Edit_User from "./AdminEditUser";
 
+```
+USER MANAGEMENT
+Retrieves list of users (execept current user) and allows for editing and deleting users.
+Appears on Admin Dashboard.
+```
+
 const User_Management = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
