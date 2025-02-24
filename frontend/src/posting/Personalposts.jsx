@@ -10,6 +10,9 @@ const MyPosts = () => {
   const [commentTextByPostId, setCommentTextByPostId] = useState({});
   // For storing newly added comments (if you want to display them immediately)
   const [commentsByPostId, setCommentsByPostId] = useState({});
+  // NEW: For inline editing mode
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editingData, setEditingData] = useState({ title: "", content: "" });
 
   const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
@@ -82,15 +85,42 @@ const MyPosts = () => {
     }
   };
 
-  // Handle Edit button click – navigates to the edit page for that post
-  const handleEdit = (postId) => {
-    navigate(`/posts/${postId}/edit`);
+  // Enter edit mode for a post (populate editingData with the current values)
+  const handleEdit = (post) => {
+    setEditingPostId(post.id);
+    setEditingData({ title: post.title, content: post.content });
+  };
+
+  // Cancel edit mode
+  const handleCancelEdit = () => {
+    setEditingPostId(null);
+    setEditingData({ title: "", content: "" });
+  };
+
+  // Save the edited post by sending a PATCH request
+  const handleSaveEdit = async (postId) => {
+    try {
+      const response = await axios.patch(
+        `http://127.0.0.1:8000/posts/${postId}/edit/`,
+        editingData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Update the local post list with the edited post data
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => (post.id === postId ? response.data : post))
+      );
+      // Exit editing mode
+      setEditingPostId(null);
+      setEditingData({ title: "", content: "" });
+    } catch (err) {
+      console.error("Error updating post:", err.response?.data || err.message);
+      alert("Failed to update post");
+    }
   };
 
   // Handle Delete button click – sends a DELETE request and updates local state
   const handleDelete = async (postId) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
-
     try {
       const response = await axios.delete(
         `http://127.0.0.1:8000/posts/${postId}/delete/`,
@@ -129,37 +159,88 @@ const MyPosts = () => {
                     className="w-10 h-10 rounded-full"
                   />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800">{post.author_username || "You"}</h3>
-                    <p className="text-sm text-gray-500">{new Date(post.published).toLocaleString()}</p>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {post.author_username || "You"}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(post.published).toLocaleString()}
+                    </p>
                   </div>
                 </div>
 
-                {/* Post Content */}
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{post.title}</h3>
-                <p className="text-gray-700">{post.content}</p>
-                {post.image && (
-                  <img
-                    src={post.image}
-                    alt="Post"
-                    className="mt-3 w-full h-auto rounded-lg shadow-md"
-                  />
+                {/* If this post is being edited, show input fields */}
+                {editingPostId === post.id ? (
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      value={editingData.title}
+                      onChange={(e) =>
+                        setEditingData({ ...editingData, title: e.target.value })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded mb-2"
+                      placeholder="Edit title"
+                    />
+                    <textarea
+                      value={editingData.content}
+                      onChange={(e) =>
+                        setEditingData({ ...editingData, content: e.target.value })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded"
+                      placeholder="Edit content"
+                      rows="4"
+                    />
+                    <div className="mt-2 flex gap-3">
+                      <button
+                        onClick={() => handleSaveEdit(post.id)}
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // Otherwise, display the post normally
+                  <>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-gray-700">{post.content}</p>
+                    {post.image && (
+                      <img
+                        src={post.image}
+                        alt="Post"
+                        className="mt-3 w-full h-auto rounded-lg shadow-md"
+                      />
+                    )}
+                  </>
                 )}
 
-                {/* Display any existing comments from backend */}
+                {/* Display Comments */}
                 <div className="mt-4 text-left">
                   <h4 className="text-sm font-semibold">Comments:</h4>
                   {post.comments && post.comments.length > 0 && (
                     <div>
                       {post.comments.map((comment) => (
-                        <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
+                        <div
+                          key={comment.id}
+                          className="bg-gray-50 p-2 rounded-md mb-1"
+                        >
                           <strong>{comment.author_username}:</strong> {comment.text}
                         </div>
                       ))}
                     </div>
                   )}
-                  {/* Display locally added comments */}
                   {(commentsByPostId[post.id] || []).map((comment) => (
-                    <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
+                    <div
+                      key={comment.id}
+                      className="bg-gray-50 p-2 rounded-md mb-1"
+                    >
                       <p>
                         <strong>{comment.author_username}:</strong> {comment.text}
                       </p>
@@ -208,21 +289,23 @@ const MyPosts = () => {
                   </button>
                 </div>
 
-                {/* Edit and Delete Buttons */}
-                <div className="mt-4 flex gap-4">
-                  <button
-                    onClick={() => handleEdit(post.id)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(post.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
+                {/* Edit and Delete Buttons (only if not in editing mode) */}
+                {editingPostId !== post.id && (
+                  <div className="mt-4 flex gap-4">
+                    <button
+                      onClick={() => handleEdit(post)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(post.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
