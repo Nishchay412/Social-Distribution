@@ -15,6 +15,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # ✅ Uses create_user() to hash passwords
 
+#QingqiuTan
 class CommentSerializer(serializers.ModelSerializer):
     author_username = serializers.ReadOnlyField(source='author.username')
     
@@ -28,6 +29,7 @@ class CommentSerializer(serializers.ModelSerializer):
         # Marking these fields as read-only prevents clients from manipulating identifiers or timestamps.
         read_only_fields = ['id','post','author_username', 'created']
 
+#QingqiuTan/Nishchay Ranjan/Riyasat Zaman
 """ Serializer for Post model with author_username as a read-only field. """
 class PostSerializer(serializers.ModelSerializer):
     # Expose the author's username in the serialized output, but don't let it be modified by the client.
@@ -66,7 +68,7 @@ class PostSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         # Returns the total number of comments on this post, also for quick reference
         return obj.comments.count()
-
+#QingqiuTan
 class LikeSerializer(serializers.ModelSerializer):
     # Display the username of the user who liked the post, but don't allow manual edits.
     author_username = serializers.ReadOnlyField(source='author.username')

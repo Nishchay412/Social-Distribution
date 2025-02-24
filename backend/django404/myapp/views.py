@@ -88,7 +88,8 @@ def user_profile_by_username(request, username):
 @permission_classes([IsAuthenticated]) 
 def delete_user_by_username(request, username):
     """
-    Delete a user.
+    Delete a user. 
+    Expects username of user to be deleted.
 
     """
     # TODO Double check user is an admin

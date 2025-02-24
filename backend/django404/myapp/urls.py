@@ -40,14 +40,14 @@ urlpatterns = [
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),
 
 
-    # ✅ Post Endpoints
+    # ✅ Post Endpoints QingqiuTan/Nishchay Ranjan/Riyasat Zaman
     path('posts/', list_posts, name='list-posts'),
     path('posts/create/', create_post, name='create-post'),
     path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
     path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  
     path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),  
 
-    # ✅ Comments Endpoints
+    # ✅ Comments Endpoints QingqiuTan
     path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
     path('posts/<uuid:post_id>/comments/create/', create_comment, name='create-comment'),
     path('friends/add/<str:username>/', add_friend, name='add_friend'),
@@ -55,7 +55,7 @@ urlpatterns = [
     path('friends/', list_friends, name='list-friends'),
     path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),  # ✅ Corrected endpoint
 
-    # ✅ Likes Endpoints
+    # ✅ Likes Endpoints QingqiuTan
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
     path('posts/<uuid:post_id>/likes/toggle/', toggle_like, name='toggle-like'),
      path('posts/my/', list_user_posts, name='list-user-posts'),
