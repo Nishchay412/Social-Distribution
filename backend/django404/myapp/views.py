@@ -107,12 +107,9 @@ def delete_user_by_username(request, username):
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])  
-def update_user_profile(request, username=None):
-    user = request.data
-    # if username != None:
-    #     user = User.objects.get(username=username)
+def update_user_profile(request):
+    user = request.user  
     data = request.data
-
     user.username = data.get("username", user.username)
     user.email = data.get("email", user.email)
     user.first_name = data.get("first_name", user.first_name)
@@ -131,6 +128,7 @@ def update_user_profile(request, username=None):
             "profile_picture": user.profile_image.url if user.profile_image else None
         }
     })
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
