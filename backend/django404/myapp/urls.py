@@ -20,7 +20,8 @@ from .views import (
     list_user_posts,
     add_friend,
     friends_posts,
-    list_friends
+    list_friends,
+    list_non_friend_users
 )
 
 urlpatterns = [
@@ -49,6 +50,7 @@ urlpatterns = [
     path('friends/add/<str:username>/', add_friend, name='add_friend'),
     path('friends/posts/', friends_posts, name='friends-posts'),
     path('friends/', list_friends, name='list-friends'),
+    path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),  # ✅ Corrected endpoint
 
     # ✅ Likes Endpoints
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),

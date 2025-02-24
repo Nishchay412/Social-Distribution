@@ -64,7 +64,7 @@ export function Header() {
       }
 
       try {
-        const response = await fetch("http://127.0.0.1:8000/users/exclude-self/", {
+        const response = await fetch("http://127.0.0.1:8000/users/non-friends", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,

@@ -316,6 +316,23 @@ def list_users_excluding_self(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])  # ✅ Requires authentication
+def list_non_friend_users(request):
+    """
+    Lists all users excluding the authenticated user and their friends.
+    """
+    # Get all friends of the authenticated user
+    friends = request.user.friends.all()
+
+    # Exclude the authenticated user and their friends from the user list
+    non_friends = User.objects.exclude(id__in=friends.values_list('id', flat=True)).exclude(id=request.user.id)
+
+    # Serialize user data
+    serializer = RegisterUserSerializer(non_friends, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_comments(request, post_id):
     """
