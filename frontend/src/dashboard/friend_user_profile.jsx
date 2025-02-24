@@ -8,6 +8,7 @@ export function Friend_Profile() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
   const [friendStatus, setFriendStatus] = useState(""); // To display result of adding friend
+  const [loading, setLoading] = useState(true);
 
   // Retrieve the token from localStorage for authenticated requests
   const token = localStorage.getItem("access_token");
@@ -26,6 +27,8 @@ export function Friend_Profile() {
         }
       } catch (err) {
         setError("Something went wrong fetching the user profile.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -56,7 +59,6 @@ export function Friend_Profile() {
       }
     };
 
-    // Only fetch posts if we have a token
     if (token) {
       fetchUserPosts();
     } else {
@@ -67,7 +69,6 @@ export function Friend_Profile() {
   // Handle adding friend
   const handleAddFriend = async () => {
     try {
-      // Example endpoint: /friends/add/<username>/
       const response = await fetch(`http://127.0.0.1:8000/friends/add/${username}/`, {
         method: "POST",
         headers: {
@@ -77,46 +78,45 @@ export function Friend_Profile() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add friend");
+        const errData = await response.json();
+        throw new Error(errData.error || "Failed to add friend");
       }
 
       setFriendStatus("Friend added successfully!");
     } catch (err) {
       console.error("Error adding friend:", err);
-      setFriendStatus("Failed to add friend.");
+      setFriendStatus(err.message);
     }
   };
 
-  // Error State
+  // Show loading state while profile data is being fetched
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // If there's an error, display it
   if (error) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
-          <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
-          <p>{error}</p>
-        </div>
+        <p className="text-red-500">{error}</p>
       </div>
     );
   }
 
-  // Loading State (userData is null initially)
-  if (!userData) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
-          <h2 className="text-2xl font-bold text-gray-500 mb-4">Loading...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  // Render the profile and the user’s posts
+  // Render the profile and the user's posts (userData is guaranteed to exist here)
   return (
     <div className="flex justify-center items-center min-h-screen">
       <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
         {/* Profile Image */}
         <img
-          src={userData.profile_picture || "https://via.placeholder.com/150?text=User"}
+          src={
+            userData.profile_picture ||
+            "https://via.placeholder.com/150?text=User"
+          }
           alt="Profile"
           className="w-24 h-24 rounded-full border-2 border-gray-300 mb-4"
         />

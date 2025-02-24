@@ -223,14 +223,18 @@ from django.shortcuts import get_object_or_404
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_friend(request, username):
-    # 'request.user' is the logged-in user who is adding a friend
+    # Get the target user by username
     target_user = get_object_or_404(User, username=username)
 
-    # Avoid adding yourself
+    # Prevent a user from friending themselves
     if request.user == target_user:
-        return Response({"error": "You cannot friend yourself."}, status=400)
+        return Response({"error": "Cannot add yourself as a friend."}, status=400)
 
-    # Add each other to the friends M2M
+    # Check if they are already friends
+    if target_user in request.user.friends.all():
+        return Response({"error": "You are already friends with this user."}, status=400)
+
+    # Create the mutual friendship
     request.user.friends.add(target_user)
     target_user.friends.add(request.user)
 
