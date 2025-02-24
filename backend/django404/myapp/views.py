@@ -310,3 +310,5 @@ def toggle_like(request, post_id):
         like = Like.objects.create(post=post, author=request.user)
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+

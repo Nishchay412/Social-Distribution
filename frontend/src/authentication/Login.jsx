@@ -54,6 +54,7 @@ export default function Login() {
                 localStorage.setItem("firstname",data.user.first_name)
                 localStorage.setItem("lastname",data.user.last_name)
                 localStorage.setItem("email",data.user.email)
+                localStorage.setItem("profilepic",data.user.profile_image)
 
 
                 // Store JWT Tokens in localStorage for authentication

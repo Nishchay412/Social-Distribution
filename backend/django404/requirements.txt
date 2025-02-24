@@ -1,8 +1,14 @@
 asgiref==3.8.1
+distlib==0.3.9
 Django==5.1.6
 django-cors-headers==4.3.1
 djangorestframework==3.15.2
 djangorestframework_simplejwt==5.4.0
+filelock==3.17.0
+Markdown==3.7
 pillow==11.1.0
+platformdirs==4.3.6
 PyJWT==2.10.1
 sqlparse==0.5.3
+virtualenv==20.29.1
+whitenoise==6.8.2
