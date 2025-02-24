@@ -18,6 +18,7 @@ from .views import (
     list_public_posts_excluding_user,
     list_user_posts_by_username,
     list_user_posts,
+    add_friend
 )
 
 urlpatterns = [
@@ -43,6 +44,7 @@ urlpatterns = [
     # ✅ Comments Endpoints
     path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
     path('posts/<uuid:post_id>/comments/create/', create_comment, name='create-comment'),
+    path('friends/add/<str:username>/', add_friend, name='add_friend'),
 
     # ✅ Likes Endpoints
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),

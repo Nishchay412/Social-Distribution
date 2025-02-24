@@ -7,10 +7,12 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    profile_image = models.ImageField(upload_to='profile_pics/', blank=True, null=True)  # Image field
+    profile_image = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    # Mutual friendship: when one user adds another, it's automatically mutual.
+    friends = models.ManyToManyField("self", blank=True, symmetrical=True)
 
     def __str__(self):
-      return f"{self.username}"
+        return self.username
 
 
 

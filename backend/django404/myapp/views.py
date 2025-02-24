@@ -218,7 +218,23 @@ def list_public_posts_excluding_user(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+from django.shortcuts import get_object_or_404
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_friend(request, username):
+    # 'request.user' is the logged-in user who is adding a friend
+    target_user = get_object_or_404(User, username=username)
+
+    # Avoid adding yourself
+    if request.user == target_user:
+        return Response({"error": "You cannot friend yourself."}, status=400)
+
+    # Add each other to the friends M2M
+    request.user.friends.add(target_user)
+    target_user.friends.add(request.user)
+
+    return Response({"message": "Friend added successfully!"}, status=200)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # ✅ Requires authentication
