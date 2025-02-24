@@ -7,11 +7,11 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer
 from .models import Post, Comment, Like
-import markdown  # ✅ Added Markdown support
 
 User = get_user_model()
 
-# ✅ User Authentication Views
+# User Authentication Views
+
 @api_view(['POST'])
 @permission_classes([AllowAny])  
 def register_user(request):
@@ -30,7 +30,11 @@ def login_user(request):
 
     if user:
         refresh = RefreshToken.for_user(user)
-        profile_image_url = request.build_absolute_uri(user.profile_image.url) if user.profile_image else None
+
+        # ✅ Convert ImageField to Full URL
+        profile_image_url = (
+            request.build_absolute_uri(user.profile_image.url) if user.profile_image else None
+        )
 
         return Response({
             "access": str(refresh.access_token),
@@ -41,11 +45,13 @@ def login_user(request):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "profile_image": profile_image_url,
+                "profile_image": profile_image_url,  # ✅ Full URL now
             }
         })
 
     return Response({"error": "Invalid username or password"}, status=400)
+
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
@@ -58,7 +64,8 @@ def logout_user(request):
     except Exception:
         return Response({"error": "Invalid token."}, status=400)
 
-# ✅ User Profile Views
+#  User Profile Views
+
 @api_view(['GET'])
 @permission_classes([AllowAny])  
 def user_profile_by_username(request, username):
@@ -99,25 +106,43 @@ def update_user_profile(request):
         }
     })
 
-# ✅ Post Management Views
+# Post Management Views
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
 def create_post(request):
-    """
-    Creates a new post with Markdown content support.
-    """
     serializer = PostSerializer(data=request.data)
     if serializer.is_valid():
         post = serializer.save(author=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['PUT', 'PATCH'])  
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  
+def list_posts(request):
+    posts = Post.objects.exclude(visibility='DELETED').order_by('-published')
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  
+def retrieve_post(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id)
+        
+        # Allow authors to see their own private posts
+        if post.visibility == 'PRIVATE' and post.author != request.user:
+            return Response({"error": "This post is private."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = PostSerializer(post)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_post(request, post_id):
-    """
-    Allows the author to update a post.
-    """
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
@@ -132,92 +157,98 @@ def update_post(request, post_id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])  
-def list_posts(request):
-    """
-    Lists all posts that are 'PUBLIC' (not deleted).
-    Converts Markdown content to HTML before returning.
-    """
-    posts = Post.objects.exclude(visibility='DELETED').order_by('-published')
-    serialized_posts = []
-
-    for post in posts:
-        serialized_post = PostSerializer(post).data
-        serialized_post["content_html"] = markdown.markdown(serialized_post["content"])  # ✅ Convert Markdown to HTML
-        serialized_posts.append(serialized_post)
-
-    return Response(serialized_posts, status=status.HTTP_200_OK)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])  
-def retrieve_post(request, post_id):
-    """
-    Retrieves a single post and converts Markdown content to HTML before returning.
-    """
-    try:
-        post = Post.objects.get(id=post_id)
-        
-        if post.visibility == 'PRIVATE' and post.author != request.user:
-            return Response({"error": "This post is private."}, status=status.HTTP_403_FORBIDDEN)
-
-        serialized_post = PostSerializer(post).data
-        serialized_post["content_html"] = markdown.markdown(serialized_post["content"])  # ✅ Convert Markdown to HTML
-        
-        return Response(serialized_post, status=status.HTTP_200_OK)
-
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
-
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])  
+@permission_classes([IsAuthenticated])
 def delete_post(request, post_id):
-    """
-    Allows the author of the post to delete it.
-    """
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
     if post.author != request.user:
-        return Response({"error": "You are not authorized to delete this post"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"error": "Not your post"}, status=status.HTTP_403_FORBIDDEN)
 
-    post.delete()
-    return Response({"message": "Post deleted successfully"}, status=status.HTTP_200_OK)
+    post.delete()  
+    return Response({"message": "Post deleted"}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])  # List Posts by Logged-in User
+@permission_classes([IsAuthenticated])
+def list_user_posts(request):
+    """
+    Lists all posts created by the authenticated user.
+    """
+    user_posts = Post.objects.filter(author=request.user).order_by('-published')
+    serializer = PostSerializer(user_posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])  # Only allows GET requests
+@permission_classes([IsAuthenticated])  # Requires authentication
+def list_user_posts_by_username(request, username):
+    """
+    Lists all posts created by a specific user (identified by their username).
+    """
+    try:
+        user = User.objects.get(username=username)  # Fetch the user by username
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Fetch PUBLIC posts only (so users can't see deleted/private posts)
+    user_posts = Post.objects.filter(author=user, visibility="PUBLIC").order_by('-published')
+
+    # Serialize the posts to JSON format
+    serializer = PostSerializer(user_posts, many=True)
     
-    
+    # Return the JSON response
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  
+@permission_classes([IsAuthenticated])  # Requires user authentication
+def list_public_posts_excluding_user(request):
+    """
+    Fetch all PUBLIC posts, excluding posts made by the authenticated user.
+    """
+    user = request.user  # Get the authenticated user
+
+    # Fetch public posts excluding those created by the user
+    posts = Post.objects.filter(visibility="PUBLIC").exclude(author=user).order_by('-published')
+
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # ✅ Requires authentication
 def list_users_excluding_self(request):
     """
     Lists all users excluding the authenticated user.
     """
+    # Get all users except the currently logged-in user
     users = User.objects.exclude(id=request.user.id)
-    serializer = RegisterUserSerializer(users, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
     
+    # Serialize user data
+    serializer = RegisterUserSerializer(users, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_comments(request, post_id):
-    """
-    Retrieves all comments for a given post.
-    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
     
-    comments = Comment.objects.filter(post=post).order_by('-created')
+    comments = post.comments.all().order_by('-created')
     serializer = CommentSerializer(comments, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_comment(request, post_id):
-    """
-    Allows a user to add a comment to a post.
-    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
@@ -228,13 +259,10 @@ def create_comment(request, post_id):
         serializer.save(post=post, author=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_likes(request, post_id):
-    """
-    Returns a list of all likes on a given post.
-    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
@@ -243,7 +271,23 @@ def list_likes(request, post_id):
     likes = post.likes.all().order_by('-created')
     serializer = LikeSerializer(likes, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_like(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id, visibility="PUBLIC")
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
     
+    # Check if the user already liked the post
+    if Like.objects.filter(post=post, author=request.user).exists():
+        return Response({"error": "Already liked"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    like = Like.objects.create(post=post, author=request.user)
+    serializer = LikeSerializer(like)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def toggle_like(request, post_id):
@@ -266,3 +310,5 @@ def toggle_like(request, post_id):
         like = Like.objects.create(post=post, author=request.user)
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+
