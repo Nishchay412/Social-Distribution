@@ -4,6 +4,7 @@ import './index.css';
 import App from './App.jsx';
 import Signup from './authentication/Signup';
 import { Dashboard } from './dashboard/dashboard';
+import { Admin_Dashboard } from './Node_Management/AdminDashboard.jsx';
 import Login from './authentication/Login';
 import { User_Profile } from './dashboard/user_profile';
 import { Friend_Profile } from './dashboard/friend_user_profile';
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/admin-dashboard",
+    element: <Admin_Dashboard/>
   },
   {
     path: "/dashboard",

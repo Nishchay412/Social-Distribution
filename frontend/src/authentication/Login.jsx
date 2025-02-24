@@ -19,6 +19,9 @@ export default function Login() {
     const navigate_dashboard = () => {
         navigate("/dashboard");  // ✅ Call navigate to go to /login
     };
+    const navigate_admin_dashboard = () => {
+        navigate("/admin-dashboard"); // Call naviage to go to /admin-dashboard if user is an admin
+    }
 
 
     // Handle input changes
@@ -48,8 +51,14 @@ export default function Login() {
                 setError(data.error || "Login failed. Please check your credentials.");
             } else {
                 setSuccess("Login successful! 🎉");
-                console.log(data)
-                navigate_dashboard();
+                
+                if (data.user.admin){
+                    setSuccess("Admin Detected 🔐");
+                    navigate_admin_dashboard();
+                }else{
+                    setSuccess("Login successful! 🎉");
+                    navigate_dashboard();
+                }
                 localStorage.setItem("username",data.user.username)
                 localStorage.setItem("firstname",data.user.first_name)
                 localStorage.setItem("lastname",data.user.last_name)

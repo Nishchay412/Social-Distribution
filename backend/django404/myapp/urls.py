@@ -4,6 +4,7 @@ from .views import (
     login_user,
     logout_user,
     user_profile_by_username,
+    delete_user_by_username,
     update_user_profile,
     create_post,
     list_posts,
@@ -60,4 +61,6 @@ urlpatterns = [
 
     # ✅ User Management
     path('users/exclude-self/', list_users_excluding_self, name='list_users_excluding_self'),
+    path('users/exclude-self/<str:username>/update-user/', update_user_profile, name='admin_update_user'), 
+    path('users/exclude-self/<str:username>/delete-user/', delete_user_by_username, name='delete_user'),
 ]
