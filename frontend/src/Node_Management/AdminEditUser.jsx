@@ -1,9 +1,5 @@
 import React, { useState } from "react";
 
-```
-ADMIN EDIT USER
-Modal Popup Form that allows Admin to edit select user info
-```
 
 function Admin_Edit_User({ onClose, user }) {
   const [error, setError] = useState(null);

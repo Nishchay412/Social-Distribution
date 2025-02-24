@@ -2,11 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import User_Management from "./UserManagement";
 
-```
-ADMIN DASHBOARD
-Superusers/Admins will see a different dashboard than regular users.
-They are currently able to edit and delete user infomation.
-```
 
 export function Admin_Dashboard() {
     const navigate = useNavigate();
