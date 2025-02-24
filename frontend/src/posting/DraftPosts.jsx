@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+// Helper function to build the correct image URL
+function getImageUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  if (path.startsWith("/media") || path.startsWith("media")) {
+    const normalized = path.replace(/^\/+/, ""); // remove leading slash
+    return `http://127.0.0.1:8000/${normalized}`;
+  }
+  // Fallback: assume the image is stored in the media folder
+  return `http://127.0.0.1:8000/media/${path}`;
+}
+
 function DraftPosts() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState("");
@@ -46,6 +58,13 @@ function DraftPosts() {
             <li key={post.id} className="bg-white p-4 rounded shadow">
               <h3 className="text-xl font-semibold">{post.title}</h3>
               <p className="text-gray-700">{post.content}</p>
+              {post.image && (
+                <img
+                  src={getImageUrl(post.image)}
+                  alt="Draft Post"
+                  className="mt-2 w-full h-auto rounded"
+                />
+              )}
               <small className="text-gray-500">
                 Created: {new Date(post.published).toLocaleString()}
               </small>
