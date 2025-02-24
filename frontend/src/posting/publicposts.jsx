@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+// Helper function to build the correct image URL
+function getImageUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  if (path.startsWith("/media") || path.startsWith("media")) {
+    const normalized = path.replace(/^\/+/, "");
+    return `http://127.0.0.1:8000/${normalized}`;
+  }
+  return `http://127.0.0.1:8000/media/${path}`;
+}
+
 const PublicPosts = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Store the current draft comment text for each post
   const [commentTextByPostId, setCommentTextByPostId] = useState({});
-  // Store new comments added locally for each post
   const [commentsByPostId, setCommentsByPostId] = useState({});
-  // NEW: State to track which post’s share options are visible
   const [visibleSharePostId, setVisibleSharePostId] = useState(null);
 
   const API_URL = "http://127.0.0.1:8000/api/posts/public/";
@@ -35,7 +42,7 @@ const PublicPosts = () => {
     fetchPublicPosts();
   }, [token]);
 
-  // Handle the like button
+  // Handle like button
   const handleLike = async (postId) => {
     try {
       await axios.post(
@@ -43,7 +50,6 @@ const PublicPosts = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Option: Re-fetch posts to update like counts
       const response = await axios.get(API_URL, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -61,26 +67,21 @@ const PublicPosts = () => {
     });
   };
 
-  // Handle comment submit: post new comment and update local comments state
+  // Handle comment submit
   const handleCommentSubmit = async (postId) => {
     const commentText = commentTextByPostId[postId] || "";
     if (!commentText.trim()) return;
-
     try {
       const res = await axios.post(
         `http://127.0.0.1:8000/posts/${postId}/comments/create/`,
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      // Clear the input for this post
       setCommentTextByPostId({
         ...commentTextByPostId,
         [postId]: "",
       });
-
-      // Update local comments for this post so the new comment shows immediately.
-      const newComment = res.data; // Assume response returns the new comment object.
+      const newComment = res.data;
       setCommentsByPostId((prev) => ({
         ...prev,
         [postId]: [...(prev[postId] || []), newComment],
@@ -97,13 +98,12 @@ const PublicPosts = () => {
     <div className="flex flex-col items-center w-full bg-gray-100 p-6">
       <div className="max-w-3xl w-full">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Public Posts</h2>
-
         {posts.length === 0 ? (
           <p className="text-center text-gray-600">No public posts available.</p>
         ) : (
           <ul className="space-y-6">
             {posts.map((post) => {
-              // Construct the share URL for the post
+              // Share URLs
               const shareUrl = `${window.location.origin}/post/${post.id}`;
               const twitterShareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
                 shareUrl
@@ -136,26 +136,20 @@ const PublicPosts = () => {
                       </p>
                     </div>
                   </div>
-
                   {/* Post Content */}
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {post.title}
-                  </h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{post.title}</h3>
                   <p className="text-gray-700">{post.content}</p>
-
-                  {/* Post Image */}
                   {post.image && (
                     <img
-                      src={post.image}
+                      src={getImageUrl(post.image)}
                       alt="Post"
                       className="mt-3 w-full h-auto rounded-lg shadow-md"
                     />
                   )}
-
-                  {/* Display Comments */}
+                  {/* Comments Section */}
                   <div className="mt-4 text-left">
                     <h4 className="text-sm font-semibold">Comments:</h4>
-                    {post.comments && post.comments.length > 0 && (
+                    {post.comments?.length > 0 && (
                       <div>
                         {post.comments.map((comment) => (
                           <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
@@ -170,85 +164,9 @@ const PublicPosts = () => {
                       </div>
                     ))}
                   </div>
-
-                  {/* Social Actions */}
-                  <div className="flex justify-between items-center mt-4 text-gray-500 text-sm">
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => handleLike(post.id)}
-                        className="flex items-center gap-1 hover:text-pink-500 transition"
-                      >
-                        ❤️ Like
-                      </button>
-                      <button className="flex items-center gap-1 hover:text-blue-500 transition">
-                        💬 Comment
-                      </button>
-                      <button
-                        onClick={() =>
-                          setVisibleSharePostId(visibleSharePostId === post.id ? null : post.id)
-                        }
-                        className="flex items-center gap-1 hover:text-gray-800 transition"
-                      >
-                        🔄 Share
-                      </button>
-                    </div>
-                    <span>{post.likes_count || 0} Likes</span>
-                  </div>
-
-                  {/* Share Options */}
-                  {visibleSharePostId === post.id && (
-                    <div className="flex gap-3 mt-2 flex-wrap">
-                      <a
-                        href={twitterShareUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                      >
-                        Twitter
-                      </a>
-                      <a
-                        href={facebookShareUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        Facebook
-                      </a>
-                      <a
-                        href={whatsappShareUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-green-500 hover:underline"
-                      >
-                        WhatsApp
-                      </a>
-                      <a
-                        href={linkedinShareUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-700 hover:underline"
-                      >
-                        LinkedIn
-                      </a>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(shareUrl);
-                          alert("Link copied to clipboard!");
-                        }}
-                        className="text-gray-700 hover:underline"
-                      >
-                        Copy Link
-                      </button>
-                    </div>
-                  )}
-
                   {/* Comment Input */}
                   <div className="flex items-center mt-4 gap-2">
-                    <img
-                      src="/userprofile.png"
-                      alt="User"
-                      className="w-8 h-8 rounded-full"
-                    />
+                    <img src="/userprofile.png" alt="User" className="w-8 h-8 rounded-full" />
                     <input
                       type="text"
                       placeholder="Write a comment..."
@@ -263,6 +181,77 @@ const PublicPosts = () => {
                       ➤
                     </button>
                   </div>
+                  {/* Social Actions */}
+                  <div className="flex justify-between items-center mt-4 text-gray-500 text-sm">
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => handleLike(post.id)}
+                        className="hover:text-pink-500 transition"
+                      >
+                        ❤️ Like
+                      </button>
+                      <button
+                        onClick={() =>
+                          setVisibleSharePostId(
+                            visibleSharePostId === post.id ? null : post.id
+                          )
+                        }
+                        className="hover:text-gray-800 transition"
+                      >
+                        🔄 Share
+                      </button>
+                    </div>
+                    <span>{post.likes_count || 0} Likes</span>
+                  </div>
+                  {/* Share Options */}
+                  {visibleSharePostId === post.id && (
+                    <div className="flex flex-col gap-2 mt-2 p-3 bg-gray-100 rounded-lg shadow">
+                      <span className="text-sm font-semibold">Share this post:</span>
+                      <div className="flex gap-3">
+                        <a
+                          href={twitterShareUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
+                        >
+                          Twitter
+                        </a>
+                        <a
+                          href={facebookShareUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          Facebook
+                        </a>
+                        <a
+                          href={whatsappShareUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-500 hover:underline"
+                        >
+                          WhatsApp
+                        </a>
+                        <a
+                          href={linkedinShareUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-700 hover:underline"
+                        >
+                          LinkedIn
+                        </a>
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(shareUrl);
+                          alert("Link copied to clipboard!");
+                        }}
+                        className="text-gray-700 hover:underline"
+                      >
+                        Copy Link
+                      </button>
+                    </div>
+                  )}
                 </li>
               );
             })}
