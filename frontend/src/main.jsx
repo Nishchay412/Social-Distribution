@@ -16,10 +16,12 @@ import PublicPosts from './posting/publicposts';
 import { Header } from './dashboard/leftpanel';
 import { CreatePost1 } from './posting/CreatePost1';
 import PostDetails from './posting/singlepost';
+import FriendsPosts from './posting/FriendsPost';
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
+
 
 const router = createBrowserRouter([
   {
@@ -71,6 +73,12 @@ const router = createBrowserRouter([
     path: "/post/:id",  // ✅ Cleaner URL for user's posts
     element: <PostDetails />,
   },
+  {
+    path: "/friendspost",  // ✅ Cleaner URL for user's posts
+    element: <FriendsPosts/>,
+  },
+  
+  
   {
     path: "/publicposts",  // ✅ Cleaner URL for user's posts
     element: <PublicPosts />,
