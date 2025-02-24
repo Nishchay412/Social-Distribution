@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 import uuid
 
+#Nishchay Ranjan
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=100)
@@ -20,6 +21,7 @@ from django.db import models
 from django.conf import settings
 import uuid
 
+#QingqiuTan/Nishchay Ranjan/Riyasat Zaman
 class Post(models.Model):
     """
     A Post model demonstrating:
@@ -57,7 +59,8 @@ class Post(models.Model):
 
     def __str__(self):
         return f"{self.title} by {self.author.username}"
-    
+
+#QingqiuTan 
 class Comment(models.Model):
     """
     A comment left by a user on a specific Post.
@@ -72,7 +75,8 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author.username} on {self.post.id}"
-    
+
+#QingqiuTan
 class Like(models.Model):
     """
     Represents a 'like' from a specific user on a specific post.
