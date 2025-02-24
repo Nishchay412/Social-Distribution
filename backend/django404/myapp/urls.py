@@ -19,6 +19,7 @@ from .views import (
     list_user_posts_by_username,
     list_user_posts,
     add_friend,
+    friends_posts,
     list_friends
 )
 
@@ -46,6 +47,7 @@ urlpatterns = [
     path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
     path('posts/<uuid:post_id>/comments/create/', create_comment, name='create-comment'),
     path('friends/add/<str:username>/', add_friend, name='add_friend'),
+    path('friends/posts/', friends_posts, name='friends-posts'),
     path('friends/', list_friends, name='list-friends'),
 
     # ✅ Likes Endpoints

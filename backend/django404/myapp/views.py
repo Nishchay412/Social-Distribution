@@ -248,6 +248,44 @@ def list_friends(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def friends_posts(request):
+    user = request.user
+    # Get all your friends
+    friends = user.friends.all()
+
+    # Filter posts authored by your friends
+    # and only show those with relevant visibility (exclude DELETED)
+    posts = Post.objects.filter(
+        author__in=friends,
+        visibility__in=["PUBLIC", "UNLISTED", "FRIENDS"]
+    ).exclude(visibility="DELETED").order_by("-published")
+
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=200)
+from django.db.models import Q
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def stream_posts(request):
+    user = request.user
+    # Get your user's friends (assuming a self-referential many-to-many field)
+    friends = user.friends.all()
+
+    # Build the query for posts to include in the stream:
+    posts = Post.objects.filter(
+        Q(visibility="PUBLIC") |
+        Q(visibility="UNLISTED") |  # If unlisted posts should be visible to everyone with the link, include them here
+        Q(visibility="FRIENDS", author__in=friends) |
+        Q(visibility="PRIVATE", author=user)
+    ).exclude(visibility="DELETED").order_by("-published")
+
+    # (Assume you have a PostSerializer to serialize these posts)
+    from .serializers import PostSerializer
+    serializer = PostSerializer(posts, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])  # ✅ Requires authentication
 def list_users_excluding_self(request):
     """
