@@ -59,6 +59,10 @@ class Post(models.Model):
         return f"{self.title} by {self.author.username}"
     
 class Comment(models.Model):
+    """
+    A comment left by a user on a specific Post.
+    Each comment is tied to exactly one Post, and one author (User).
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
@@ -70,6 +74,9 @@ class Comment(models.Model):
         return f"Comment by {self.author.username} on {self.post.id}"
     
 class Like(models.Model):
+    """
+    Represents a 'like' from a specific user on a specific post.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='likes')
