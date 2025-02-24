@@ -339,18 +339,23 @@ def friends_posts(request):
     Get the posts made by friends of the authenticated user
     """
     user = request.user
-    # Get all your friends
     friends = user.friends.all()
 
-    # Filter posts authored by your friends
-    # and only show those with relevant visibility (exclude DELETED)
-    posts = Post.objects.filter(
-        author__in=friends,
-        visibility__in=["PUBLIC", "UNLISTED", "FRIENDS"]
-    ).exclude(visibility="DELETED").order_by("-published")
+    # Show only PUBLIC, UNLISTED, or FRIENDS posts (excluding DELETED and DRAFT).
+    posts = (
+        Post.objects
+            .filter(
+                author__in=friends,
+                visibility__in=["PUBLIC", "UNLISTED", "FRIENDS"]
+            )
+            .exclude(visibility="DELETED")
+            .exclude(visibility="DRAFT")  # <--- Exclude drafts
+            .order_by("-published")
+    )
 
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=200)
+
 from django.db.models import Q
 
 @api_view(['GET'])
