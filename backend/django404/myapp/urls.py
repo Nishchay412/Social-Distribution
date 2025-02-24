@@ -46,6 +46,7 @@ urlpatterns = [
     path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
     path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  
     path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),  
+    path('api/posts/public/', list_public_posts_excluding_user, name='public-posts-excluding-user'),
 
     # ✅ Comments Endpoints QingqiuTan
     path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),

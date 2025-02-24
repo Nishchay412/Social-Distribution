@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Post, Comment, Like
+import markdown
 
 
 User = get_user_model()
@@ -41,6 +42,7 @@ class PostSerializer(serializers.ModelSerializer):
     # Serialize related comments in a read-only fashion. This way, clients can see comments
     # directly alongside the post data, but can't create or edit comments through the PostSerializer.
     comments = CommentSerializer(many=True, read_only=True)
+    content_html = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -56,6 +58,7 @@ class PostSerializer(serializers.ModelSerializer):
             'published',
             'likes_count', 
             'comments_count',
+            'content_html',
             'comments',
         ]
         # Marking certain fields as read-only ensures that system-managed data (like 'id', 'published') 
@@ -68,6 +71,10 @@ class PostSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         # Returns the total number of comments on this post, also for quick reference
         return obj.comments.count()
+    def get_content_html(self, obj):
+        # Convert the CommonMark content to HTML
+        return markdown.markdown(obj.content)
+    
 #QingqiuTan
 class LikeSerializer(serializers.ModelSerializer):
     # Display the username of the user who liked the post, but don't allow manual edits.

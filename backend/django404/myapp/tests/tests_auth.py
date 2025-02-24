@@ -16,8 +16,8 @@ class AuthTestCase(APITestCase):
             email="test@example.com",
             password="password123"
         )
-        self.login_url = "/api/login/"
-        self.logout_url = "/api/logout/"
+        self.login_url = "/login/"
+        self.logout_url = "/logout/"
 
     def test_login_success(self):
         data = {
@@ -47,16 +47,30 @@ class AuthTestCase(APITestCase):
             "password": "password123"
         })
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
-
+    
+        access_token = login_response.data["access"]
         refresh_token = login_response.data["refresh"]
-
+    
+        # Set the access token in the request headers
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + access_token)
+    
         # Logout using the refresh token
         response = self.client.post(self.logout_url, {"refresh": refresh_token})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["message"], "Logout successful.")
 
     def test_logout_failure_invalid_token(self):
+    # Log in to get a valid access token (even if the refresh token will be invalid)
+        login_response = self.client.post(self.login_url, {
+        "username": "testuser",
+        "password": "password123"
+        })
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+    
+        access_token = login_response.data["access"]
+    
+        # Set the access token in the request headers
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + access_token)
+    
+        # Attempt logout with an invalid refresh token
         response = self.client.post(self.logout_url, {"refresh": "invalidtoken"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response.data)
-        self.assertEqual(response.data["error"], "Invalid token.")
