@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 
 function PostDetails() {
-  // "id" will be whatever you defined in the route: "/post/:id"
+  // "id" will be taken from the URL defined in your route "/post/:id"
   const { id } = useParams();
   
   const [post, setPost] = useState(null);
@@ -11,20 +11,16 @@ function PostDetails() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        // Retrieve the token (if you use token-based auth)
+        // Retrieve the token (if you're using token-based auth)
         const token = localStorage.getItem('access_token');
 
-        // Make the fetch call to Django
-        // e.g., http://127.0.0.1:8000/posts/8aa95be5-cff7-4940-a27e-fd2f1d297e7f/
-        const response = await fetch(
-          `http://127.0.0.1:8000/posts/${id}/`,
-          {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          }
-        );
+        // Make the fetch call to your Django backend
+        const response = await fetch(`http://127.0.0.1:8000/posts/${id}/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
 
         // Parse the JSON response
         const data = await response.json();
@@ -60,7 +56,12 @@ function PostDetails() {
       <h2>{post.title}</h2>
       <p><strong>Content:</strong> {post.content}</p>
       <p><strong>Visibility:</strong> {post.visibility}</p>
-      {/* Render any other fields from the PostSerializer */}
+      <p><strong>Author:</strong> {post.author_username}</p>
+
+      {/* Link to view all posts by the user */}
+      <Link to={`/profile/${post.author_username}`}>
+        View all posts by {post.author_username}
+      </Link>
     </div>
   );
 }
