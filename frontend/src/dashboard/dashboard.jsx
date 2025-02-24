@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CreatePost from "../posting/CreatePost";
 import { Header } from "./leftpanel";
 import { TopPanel } from "./toppanel";
 import PublicPosts from "../posting/publicposts";
-import { useState } from "react";
-
+import Stream from "../posting/Stream";
 import MyPosts from "../posting/Personalposts";
 import FriendsPosts from "../posting/FriendsPost";
+import DraftPosts from "../posting/DraftPosts"; // New component for draft posts
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -50,11 +50,14 @@ export function Dashboard() {
     switch (selectedFeed) {
       case "public":
         return <PublicPosts />;
-      
+      case "stream":
+        return <Stream />;
       case "my":
         return <MyPosts />;
       case "friends":
         return <FriendsPosts />;
+      case "draft":
+        return <DraftPosts />;
       default:
         return <PublicPosts />;
     }
@@ -87,9 +90,10 @@ export function Dashboard() {
               className="p-2 border border-gray-300 rounded"
             >
               <option value="public">Public Posts</option>
-             
+              <option value="stream">My Stream</option>
               <option value="my">My Posts</option>
               <option value="friends">Friends' Posts</option>
+              <option value="draft">Draft Posts</option>
             </select>
           </div>
 

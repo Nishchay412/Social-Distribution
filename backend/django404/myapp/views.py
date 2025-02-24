@@ -334,6 +334,14 @@ def list_non_friend_users(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def draft_posts(request):
+    # Return draft posts for the logged-in user.
+    posts = Post.objects.filter(author=request.user, visibility="DRAFT").order_by("-published")
+    serializer = PostSerializer(posts, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_comments(request, post_id):
     """
     Lists all comments for a given PUBLIC post, in descending order by creation date.

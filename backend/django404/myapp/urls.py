@@ -21,7 +21,8 @@ from .views import (
     add_friend,
     friends_posts,
     list_friends,
-    list_non_friend_users
+    list_non_friend_users,
+    draft_posts
 )
 
 urlpatterns = [
@@ -29,6 +30,7 @@ urlpatterns = [
     path('register/', register_user, name='register'),
     path('login/', login_user, name='login'),
     path('logout/', logout_user, name='logout'),
+    path('posts/drafts/', draft_posts, name='draft-posts'),
 
     # ✅ User Profile Endpoints
     path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
