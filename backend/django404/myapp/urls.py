@@ -23,7 +23,8 @@ from .views import (
     friends_posts,
     list_friends,
     list_non_friend_users,
-    draft_posts
+    draft_posts,
+    admin_update_user
 )
 
 urlpatterns = [
@@ -36,6 +37,10 @@ urlpatterns = [
     # ✅ User Profile Endpoints
     path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
     path('update-profile/', update_user_profile, name='update-profile'),
+    path('users/exclude-self/<str:username>/update-user/', admin_update_user, name='admin_update_user'),
+
+
+
     # User Posts by Username
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),
 

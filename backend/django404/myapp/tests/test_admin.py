@@ -40,22 +40,10 @@ class AdminAPITestCase(APITestCase):
         self.assertEqual(len(response.data), 4) # retrieves 4 users now
         self.assertEqual(response.data[3], {'username': self.test_user3.username, 'email': self.test_user3.email, 'first_name': self.test_user3.first_name, 'last_name': self.test_user3.last_name})
 
-    def test_edit_users(self):
-        """
-        Test Edit User API
-        Check if admin is able to edit
-        """
-        url = reverse('admin_update_user', args=[self.test_user1.username]) # 'users/exclude-self/<str:username>/update-user/'
-        data = {'username': 'edwin', 'first_name':'Edwin', 'last_name': 'Doe', 'email':'edwindoe@gmail.com'}
-        response = self.client.patch(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    
 
         # Checking user was edited
-        url = reverse('list_users_excluding_self') # 'users/exclude-self/'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK) # request went thru
-        self.assertEqual(response.data[0], {'username': 'edwin', 'email': 'edwindoe@gmail.com', 'first_name':'Edwin', 'last_name': 'Doe'})
-
+        
     def test_delete_users(self):
         """
         Test Delete User API

@@ -125,50 +125,67 @@ from rest_framework.response import Response
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
-def update_user_profile(request, username):
-    """
-    Update user profile
-    This can either be edited by an admin or the logged in user.
-    Takes username to edit user's info in database.
-    """
-    try:
-        user = get_object_or_404(User, username=username)  # Ensure user exists
-        data = request.data
+def update_user_profile(request):
+    user = request.user  
+    data = request.data
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.first_name = data.get("first_name", user.first_name)
+    user.last_name = data.get("last_name", user.last_name)
+    user.profile_image = request.FILES.get("profile_picture", user.profile_image)  
 
-        user.username = data.get("username", user.username)
-        user.email = data.get("email", user.email)
-        user.first_name = data.get("first_name", user.first_name)
-        user.last_name = data.get("last_name", user.last_name)
-
-        # Handle Profile Picture
-        profile_picture = data.get("profile_picture", None)
-        if "profile_picture" in request.FILES:
-            user.profile_image = request.FILES["profile_picture"]
-
-        elif profile_picture and profile_picture.startswith("data:image"):  # Handle Base64 images
-            format, imgstr = profile_picture.split(";base64,")
-            ext = format.split("/")[-1]
-            file_name = f"profile_{uuid.uuid4()}.{ext}"
-            user.profile_image.save(file_name, ContentFile(base64.b64decode(imgstr)), save=True)
-
-        user.save()
-
-        return Response({
-            "message": "Profile updated successfully",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "profile_picture": user.profile_image.url if user.profile_image else None
-            }
-        }, status=200)
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)  # ✅ Return exact error in response
+    user.save()
+    return Response({
+        "message": "Profile updated successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "profile_picture": user.profile_image.url if user.profile_image else None
+        }
+    })
 
 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def admin_update_user(request, username):
+    # Check if the current user has admin privileges
+    if not request.user.is_staff:
+        return Response({"error": "Unauthorized"}, status=403)
+
+    # Retrieve the user to update
+    user = get_object_or_404(User, username=username)
+    data = request.data
+
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.first_name = data.get("first_name", user.first_name)
+    user.last_name = data.get("last_name", user.last_name)
+
+    # Handle profile picture upload
+    if "profile_picture" in request.FILES:
+        user.profile_image = request.FILES["profile_picture"]
+    elif data.get("profile_picture") and data.get("profile_picture").startswith("data:image"):
+        format, imgstr = data.get("profile_picture").split(";base64,")
+        ext = format.split("/")[-1]
+        file_name = f"profile_{uuid.uuid4()}.{ext}"
+        user.profile_image.save(file_name, ContentFile(base64.b64decode(imgstr)), save=True)
+
+    user.save()
+
+    return Response({
+        "message": "Profile updated successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "profile_picture": user.profile_image.url if user.profile_image else None
+        }
+    })
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  

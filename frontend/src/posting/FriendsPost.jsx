@@ -24,24 +24,23 @@ function FriendsPosts() {
   const [visibleSharePostId, setVisibleSharePostId] = useState(null);
 
   const token = localStorage.getItem("access_token");
+  const API_URL_FRIENDS = "http://127.0.0.1:8000/friends/posts/";
+
+  const fetchFriendsPosts = async () => {
+    try {
+      const response = await axios.get(API_URL_FRIENDS, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPosts(response.data);
+    } catch (err) {
+      console.error("Error fetching friends' posts:", err.response?.data || err.message);
+      setError("Failed to fetch friends' posts.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchFriendsPosts = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/friends/posts/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setPosts(response.data);
-      } catch (err) {
-        console.error("Error fetching friends' posts:", err.response?.data || err.message);
-        setError("Failed to fetch friends' posts.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (token) {
       fetchFriendsPosts();
     } else {
@@ -50,7 +49,7 @@ function FriendsPosts() {
     }
   }, [token]);
 
-  // Handle like toggling
+  // Handle like toggling (re-fetching from the friends posts endpoint afterward)
   const handleLike = async (postId) => {
     try {
       await axios.post(
@@ -58,22 +57,19 @@ function FriendsPosts() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Re-fetch posts to update like counts
-      const response = await axios.get("http://127.0.0.1:8000/friends/posts/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPosts(response.data);
+      // Re-fetch posts to update like counts using the same API URL for friends posts
+      await fetchFriendsPosts();
     } catch (err) {
       console.error("Error liking post:", err.response?.data || err.message);
     }
   };
 
-  // Handle comment input changes
+  // Handle comment text changes
   const handleCommentChange = (postId, value) => {
-    setCommentTextByPostId({
-      ...commentTextByPostId,
+    setCommentTextByPostId((prev) => ({
+      ...prev,
       [postId]: value,
-    });
+    }));
   };
 
   // Handle comment submission
@@ -86,11 +82,11 @@ function FriendsPosts() {
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Clear the input
-      setCommentTextByPostId({
-        ...commentTextByPostId,
+      // Clear the input for this post
+      setCommentTextByPostId((prev) => ({
+        ...prev,
         [postId]: "",
-      });
+      }));
       const newComment = res.data;
       setCommentsByPostId((prev) => ({
         ...prev,
@@ -249,9 +245,7 @@ function FriendsPosts() {
                     placeholder="Write a comment..."
                     className="w-full p-2 bg-gray-100 rounded-full outline-none"
                     value={commentTextByPostId[post.id] || ""}
-                    onChange={(e) =>
-                      handleCommentChange(post.id, e.target.value)
-                    }
+                    onChange={(e) => handleCommentChange(post.id, e.target.value)}
                   />
                   <button
                     onClick={() => handleCommentSubmit(post.id)}
