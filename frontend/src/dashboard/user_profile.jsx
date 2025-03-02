@@ -76,7 +76,7 @@ export function User_Profile() {
     };
 
     // ✅ Handle Save Button (Send Updated Data to API)
-    const handleSave = async () => {
+    const handleSave = async (username) => {
         try {
             const formDataToSend = new FormData();
             formDataToSend.append("username", formData.username);
@@ -206,7 +206,7 @@ export function User_Profile() {
                 {/* ✅ Edit/Save Button */}
                 <button 
                     className={`mt-4 p-2 rounded ${isEditing ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
-                    onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                    onClick={() => isEditing ? handleSave(localStorage.getItem("username")) : setIsEditing(true)}
                 >
                     {isEditing ? "Save" : "Edit"}
                 </button>

@@ -15,6 +15,11 @@ User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])  
 def register_user(request):
+    """
+    Registers user and creates a serilizer for it
+    Needs username, first name, last name, email, and password
+    Saves user to database
+    """
     serializer = RegisterUserSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -24,6 +29,10 @@ def register_user(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])  
 def login_user(request):
+    """
+    User login
+    Takes username and password
+    """
     username = request.data.get("username")
     password = request.data.get("password")
     user = authenticate(username=username, password=password)
@@ -46,6 +55,7 @@ def login_user(request):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "profile_image": profile_image_url,  # ✅ Full URL now
+                "admin": user.is_staff, # Admin Property to login to correct dashboard
             }
         })
 
@@ -82,8 +92,39 @@ def user_profile_by_username(request, username):
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
 
+# Delete user
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated]) 
+def delete_user_by_username(request, username):
+    """
+    Delete a user. 
+    Expects username of user to be deleted.
+    Cannot delete admin/superusers
+    """
+    # TODO Double check user is an admin
+    admin = request.user
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND);
+
+    if user.is_superuser or user.is_staff:
+        return Response({"error": "You cannot delete another Admin."}, status=status.HTTP_403_FORBIDDEN)
+
+    user.delete()
+    return Response({"message": "User has been deleted"}, status=status.HTTP_200_OK)
+
+import base64
+import uuid
+from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 @api_view(['PATCH'])
-@permission_classes([IsAuthenticated])  
+@permission_classes([IsAuthenticated])
 def update_user_profile(request):
     user = request.user  
     data = request.data
@@ -106,11 +147,52 @@ def update_user_profile(request):
         }
     })
 
-# Post Management Views
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def admin_update_user(request, username):
+    # Check if the current user has admin privileges
+    if not request.user.is_staff:
+        return Response({"error": "Unauthorized"}, status=403)
+
+    # Retrieve the user to update
+    user = get_object_or_404(User, username=username)
+    data = request.data
+
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.first_name = data.get("first_name", user.first_name)
+    user.last_name = data.get("last_name", user.last_name)
+
+    # Handle profile picture upload
+    if "profile_picture" in request.FILES:
+        user.profile_image = request.FILES["profile_picture"]
+    elif data.get("profile_picture") and data.get("profile_picture").startswith("data:image"):
+        format, imgstr = data.get("profile_picture").split(";base64,")
+        ext = format.split("/")[-1]
+        file_name = f"profile_{uuid.uuid4()}.{ext}"
+        user.profile_image.save(file_name, ContentFile(base64.b64decode(imgstr)), save=True)
+
+    user.save()
+
+    return Response({
+        "message": "Profile updated successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "profile_picture": user.profile_image.url if user.profile_image else None
+        }
+    })
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
 def create_post(request):
+    """
+    Creates a new Post. The authenticated user is set as the author.
+    """
     serializer = PostSerializer(data=request.data)
     if serializer.is_valid():
         post = serializer.save(author=request.user)
@@ -120,6 +202,10 @@ def create_post(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  
 def list_posts(request):
+    """
+    Lists all existing posts (except those marked 'DELETED'), ordered by newest first.
+    This endpoint is accessible only to logged-in users.
+    """
     posts = Post.objects.exclude(visibility='DELETED').order_by('-published')
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -127,6 +213,10 @@ def list_posts(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  
 def retrieve_post(request, post_id):
+    """
+    Retrieves a single Post by its ID. Respects privacy settings:
+    - If the Post is marked 'PRIVATE', only the author can view it.
+    """
     try:
         post = Post.objects.get(id=post_id)
         
@@ -143,6 +233,10 @@ def retrieve_post(request, post_id):
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_post(request, post_id):
+    """
+    Updates an existing Post. Only the post's author can modify it.
+    Supports full ('PUT') or partial ('PATCH') updates.
+    """
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
@@ -160,6 +254,9 @@ def update_post(request, post_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_post(request, post_id):
+    """
+    Deletes a post if the requesting user is the author. 
+    """
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
@@ -218,7 +315,85 @@ def list_public_posts_excluding_user(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+from django.shortcuts import get_object_or_404
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_friend(request, username):
+    """
+    Add friend, takes in username of user to be befriended.
+    """
+    # Get the target user by username
+    target_user = get_object_or_404(User, username=username)
+
+    # Prevent a user from friending themselves
+    if request.user == target_user:
+        return Response({"error": "Cannot add yourself as a friend."}, status=400)
+
+    # Check if they are already friends
+    if target_user in request.user.friends.all():
+        return Response({"error": "You are already friends with this user."}, status=400)
+
+    # Create the mutual friendship
+    request.user.friends.add(target_user)
+    target_user.friends.add(request.user)
+
+from .serializers import RegisterUserSerializer
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_friends(request):
+    """
+    Get the friends of the authenticated user
+    """
+    friends = request.user.friends.all()
+    serializer = RegisterUserSerializer(friends, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def friends_posts(request):
+    """
+    Get the posts made by friends of the authenticated user
+    """
+    user = request.user
+    friends = user.friends.all()
+
+    # Show only PUBLIC, UNLISTED, or FRIENDS posts (excluding DELETED and DRAFT).
+    posts = (
+        Post.objects
+            .filter(
+                author__in=friends,
+                visibility__in=["PUBLIC", "UNLISTED", "FRIENDS"]
+            )
+            .exclude(visibility="DELETED")
+            .exclude(visibility="DRAFT")  # <--- Exclude drafts
+            .order_by("-published")
+    )
+
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=200)
+
+from django.db.models import Q
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def stream_posts(request):
+    user = request.user
+    # Get your user's friends (assuming a self-referential many-to-many field)
+    friends = user.friends.all()
+
+    # Build the query for posts to include in the stream:
+    posts = Post.objects.filter(
+        Q(visibility="PUBLIC") |
+        Q(visibility="UNLISTED") |  # If unlisted posts should be visible to everyone with the link, include them here
+        Q(visibility="FRIENDS", author__in=friends) |
+        Q(visibility="PRIVATE", author=user)
+    ).exclude(visibility="DELETED").order_by("-published")
+
+    # (Assume you have a PostSerializer to serialize these posts)
+    from .serializers import PostSerializer
+    serializer = PostSerializer(posts, many=True, context={'request': request})
+    return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # ✅ Requires authentication
@@ -235,8 +410,37 @@ def list_users_excluding_self(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])  # ✅ Requires authentication
+def list_non_friend_users(request):
+    """
+    Lists all users excluding the authenticated user and their friends.
+    """
+    # Get all friends of the authenticated user
+    friends = request.user.friends.all()
+
+    # Exclude the authenticated user and their friends from the user list
+    non_friends = User.objects.exclude(id__in=friends.values_list('id', flat=True)).exclude(id=request.user.id)
+
+    # Serialize user data
+    serializer = RegisterUserSerializer(non_friends, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def draft_posts(request):
+    # Return draft posts for the logged-in user.
+    posts = Post.objects.filter(author=request.user, visibility="DRAFT").order_by("-published")
+    serializer = PostSerializer(posts, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_comments(request, post_id):
+    """
+    Lists all comments for a given PUBLIC post, in descending order by creation date.
+    If the post doesn't exist or isn't PUBLIC, returns a 404.
+    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
@@ -249,6 +453,10 @@ def list_comments(request, post_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_comment(request, post_id):
+    """
+    Creates a new Comment on a PUBLIC post. 
+    Ensures the post exists and sets the comment's author to the requesting user.
+    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
@@ -263,6 +471,10 @@ def create_comment(request, post_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_likes(request, post_id):
+    """
+    Lists all likes on a PUBLIC post, in descending order of creation date.
+    If the post is not found or isn't PUBLIC, returns a 404.
+    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:
@@ -275,6 +487,10 @@ def list_likes(request, post_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_like(request, post_id):
+    """
+    Creates a Like on a PUBLIC post if the user has not already liked it.
+    Returns 400 if the user already liked the post.
+    """
     try:
         post = Post.objects.get(id=post_id, visibility="PUBLIC")
     except Post.DoesNotExist:

@@ -1,77 +1,108 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CreatePost from "../posting/CreatePost";
 import { Header } from "./leftpanel";
 import { TopPanel } from "./toppanel";
 import PublicPosts from "../posting/publicposts";
+import Stream from "../posting/Stream";
+import MyPosts from "../posting/Personalposts";
+import FriendsPosts from "../posting/FriendsPost";
+import DraftPosts from "../posting/DraftPosts"; // New component for draft posts
+
 export function Dashboard() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [selectedFeed, setSelectedFeed] = useState("public"); // Default feed
 
-    const navigateToProfile = () => navigate("/profile");
-    const profile_pic =localStorage.getItem("profilepic")
-    console.log(profile_pic)
-    const navigateToMyPosts = () => navigate("/my-posts");
+  // Navigation functions
+  const navigateToProfile = () => navigate("/profile");
+  const navigateToMyPosts = () => navigate("/my-posts");
 
-    const handleLogout = async () => {
-        try {
-            const response = await fetch("http://127.0.0.1:8000/logout/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
-                },
-                body: JSON.stringify({ refresh: localStorage.getItem("refresh_token") }),
-            });
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/logout/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify({
+          refresh: localStorage.getItem("refresh_token"),
+        }),
+      });
 
-            if (!response.ok) {
-                throw new Error("Failed to logout. Please try again.");
-            }
+      if (!response.ok) {
+        throw new Error("Failed to logout. Please try again.");
+      }
 
-            ["access_token", "refresh_token", "email", "firstname", "lastname", "username"].forEach(item => localStorage.removeItem(item));
-            navigate("/login");
-        } catch (error) {
-            console.error("Logout error:", error);
-            alert("Logout failed. Please check your connection and try again.");
-        }
-    };
+      ["access_token", "refresh_token", "email", "firstname", "lastname", "username"].forEach(
+        (item) => localStorage.removeItem(item)
+      );
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Logout failed. Please check your connection and try again.");
+    }
+  };
 
-    return (
-        <div className=" min-h-screen">
-          {/* Top Panel (Navigation, Search, Profile) */}
-          <TopPanel />
-    
-          {/* Main Layout */}
-          <div className="flex mt-4">
-            {/* Sidebar (Navigation, Contacts) */}
-            <div className="w-1/4 border-r border-gray-300 px-4">
-              <Header />
-            </div>
-    
-            {/* Main Content (Feed) */}
-            <div className="flex flex-col w-3/4 mx-auto max-w-3xl">
-              {/* Create Post at the Top */}
-              <div className="mb-6">
-                <CreatePost />
-              </div>
+  // Render the appropriate feed based on the selected option
+  const renderFeedComponent = () => {
+    switch (selectedFeed) {
+      case "public":
+        return <PublicPosts />;
+      case "stream":
+        return <Stream />;
+      case "my":
+        return <MyPosts />;
+      case "friends":
+        return <FriendsPosts />;
+      case "draft":
+        return <DraftPosts />;
+      default:
+        return <PublicPosts />;
+    }
+  };
 
-            <div className="mb-6 text-center">
-            <button
-              onClick={navigateToMyPosts}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              View My Posts
-            </button>
+  return (
+    <div className="min-h-screen">
+      {/* Top Panel (Navigation, Search, Profile) */}
+      <TopPanel />
+
+      {/* Main Layout */}
+      <div className="flex mt-4">
+        {/* Sidebar (Navigation, Contacts) */}
+        <div className="w-1/4 border-r border-gray-300 px-4">
+          <Header />
+        </div>
+
+        {/* Main Content (Feed) */}
+        <div className="flex flex-col w-3/4 mx-auto max-w-3xl">
+          {/* Create Post at the Top */}
+          <div className="mb-6">
+            <CreatePost />
           </div>
-    
-              {/* Placeholder for Feed Posts */}
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <h2 className="text-lg font-semibold">Recent Posts</h2>
-                <p className="text-gray-500">Posts will appear here...</p>
-                <PublicPosts/>
-                
-              </div>
-            </div>
+
+          {/* Feed Selection Dropdown */}
+          <div className="mb-6 text-center">
+            <select
+              value={selectedFeed}
+              onChange={(e) => setSelectedFeed(e.target.value)}
+              className="p-2 border border-gray-300 rounded"
+            >
+              <option value="public">Public Posts</option>
+              <option value="stream">My Stream</option>
+              <option value="my">My Posts</option>
+              <option value="friends">Friends' Posts</option>
+              <option value="draft">Draft Posts</option>
+            </select>
+          </div>
+
+          {/* Feed Display Area */}
+          <div className="bg-white rounded-lg shadow-md p-4">
+            {renderFeedComponent()}
           </div>
         </div>
-      );
-    }
+      </div>
+    </div>
+  );
+}

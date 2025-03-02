@@ -4,6 +4,7 @@ import './index.css';
 import App from './App.jsx';
 import Signup from './authentication/Signup';
 import { Dashboard } from './dashboard/dashboard';
+import { Admin_Dashboard } from './Node_Management/AdminDashboard.jsx';
 import Login from './authentication/Login';
 import { User_Profile } from './dashboard/user_profile';
 import { Friend_Profile } from './dashboard/friend_user_profile';
@@ -16,15 +17,32 @@ import PublicPosts from './posting/publicposts';
 import { Header } from './dashboard/leftpanel';
 import { CreatePost1 } from './posting/CreatePost1';
 import PostDetails from './posting/singlepost';
+import FriendsPosts from './posting/FriendsPost';
+import User_Management from './Node_Management/UserManagement';
+
+import Admin_Edit_User from './Node_Management/AdminEditUser';
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
 
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+  },
+  {
+    path: "/user-management",
+    element: <User_Management />,
+  },
+  {
+    path: "/admin-dashboard",
+    element: <Admin_Dashboard />,
+  },
+  {
+    path: "/admin-edit-user",
+    element: <Admin_Edit_User />,
   },
   {
     path: "/sign-up",
@@ -34,6 +52,7 @@ const router = createBrowserRouter([
     path: "/login",
     element: <Login />,
   },
+  
   {
     path: "/dashboard",
     element: <Dashboard />,
@@ -71,6 +90,12 @@ const router = createBrowserRouter([
     path: "/post/:id",  // ✅ Cleaner URL for user's posts
     element: <PostDetails />,
   },
+  {
+    path: "/friendspost",  // ✅ Cleaner URL for user's posts
+    element: <FriendsPosts/>,
+  },
+  
+  
   {
     path: "/publicposts",  // ✅ Cleaner URL for user's posts
     element: <PublicPosts />,
