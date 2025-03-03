@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser  # For handling image uploads
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer
-from .models import Post, Comment, Like
+from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, CommentLikeSerializer
+from .models import Post, Comment, Like, CommentLike
 
 User = get_user_model()
 
@@ -527,4 +527,40 @@ def toggle_like(request, post_id):
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_comment_like(request, post_id, comment_id):
+    """
+    Toggle a like on a comment.
+    If the user already liked it, remove that like.
+    Otherwise, create a new like.
+    """
+    # Ensure the comment is accessible (public post or friend post if the user is a friend).
+    # We'll handle the "friends-only" visibility logic here.
+
+    # 1. Check if comment belongs to a post user can access
+    # (public or friend logic). For example:
+    # - If post is "PUBLIC" => any user can like the comment
+    # - If post is "FRIENDS" => ensure request.user is a friend of the post’s author
+    # - If the user is the comment’s author, they can see it, too.
+    # Pseudocode:
+    # post = Post.objects.get(id=post_id)
+    # if post.visibility == "FRIENDS" and not is_friend(request.user, post.author):
+    #     return Response({"error": "Not allowed to access friends-only post's comment."},
+    #                     status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        comment = Comment.objects.get(id=comment_id, post__id=post_id)
+    except Comment.DoesNotExist:
+        return Response({"error": "Comment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    existing_like = CommentLike.objects.filter(comment=comment, author=request.user).first()
+    if existing_like:
+        existing_like.delete()
+        return Response({"message": "Removed like from comment"}, status=status.HTTP_200_OK)
+    else:
+        like = CommentLike.objects.create(comment=comment, author=request.user)
+        serializer = CommentLikeSerializer(like)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 

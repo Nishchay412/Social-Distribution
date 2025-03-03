@@ -24,7 +24,8 @@ from .views import (
     list_friends,
     list_non_friend_users,
     draft_posts,
-    admin_update_user
+    admin_update_user,
+    toggle_comment_like,
 )
 
 urlpatterns = [
@@ -60,11 +61,12 @@ urlpatterns = [
     path('friends/posts/', friends_posts, name='friends-posts'),
     path('friends/', list_friends, name='list-friends'),
     path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),  # ✅ Corrected endpoint
+    path('posts/<uuid:post_id>/comments/<uuid:comment_id>/likes/toggle/', toggle_comment_like, name='toggle-comment-like'),
 
     # ✅ Likes Endpoints QingqiuTan
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
     path('posts/<uuid:post_id>/likes/toggle/', toggle_like, name='toggle-like'),
-     path('posts/my/', list_user_posts, name='list-user-posts'),
+    path('posts/my/', list_user_posts, name='list-user-posts'),
     path('api/posts/public/', list_public_posts_excluding_user, name='public-posts-excluding-user'),
 
     # ✅ User Management
