@@ -25,7 +25,9 @@ from .views import (
     list_non_friend_users,
     draft_posts,
     admin_update_user,
-    register_admin_user
+    register_admin_user,
+    approve_user,
+    list_pending_users
 )
 
 urlpatterns = [
@@ -62,6 +64,8 @@ urlpatterns = [
     path('friends/posts/', friends_posts, name='friends-posts'),
     path('friends/', list_friends, name='list-friends'),
     path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),  # ✅ Corrected endpoint
+    path('admin/approve-user/<int:user_id>/', approve_user, name='approve-user'),
+    path('admin/pending-users/', list_pending_users, name='pending-users'),
 
     # ✅ Likes Endpoints QingqiuTan
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
