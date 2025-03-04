@@ -87,12 +87,12 @@ def login_user(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def approve_user(request, user_id):
+def approve_user(request, username):
     """
     Approves a user account by setting is_approved to True.
     Only accessible by admin users.
     """
-    user = get_object_or_404(User, id=user_id)
+    user = get_object_or_404(User, username=username)
     if user.is_approved:
         return Response({"detail": "User is already approved."}, status=400)
     
