@@ -11,6 +11,9 @@ class User(AbstractUser):
     profile_image = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     # Mutual friendship: when one user adds another, it's automatically mutual.
     friends = models.ManyToManyField("self", blank=True, symmetrical=True)
+    is_approved = models.BooleanField(default=True)  # New users need approval
+    is_admin = models.BooleanField(default=False)  # Admins can manage users/nodes
+    is_approved = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
@@ -56,6 +59,10 @@ class Post(models.Model):
         default='PUBLIC'
     )
     published = models.DateTimeField(auto_now_add=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)  # Soft Delete
+    
+    def is_deleted(self):
+        return self.deleted_at is not None  # ✅ Check if post is deleted
 
     def __str__(self):
         return f"{self.title} by {self.author.username}"
@@ -89,3 +96,17 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.author.username} liked {self.post.id}"
+
+#Yicheng Lin
+class Node(models.Model):
+    """
+    Represents a remote node that this server can communicate with.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    base_url = models.URLField(unique=True)  # URL of the remote node
+    username = models.CharField(max_length=255)  # For Basic Auth
+    password = models.CharField(max_length=255)  # For Basic Auth
+    is_active = models.BooleanField(default=True)  # Can be disabled
+
+    def __str__(self):
+        return f"Node {self.base_url} (Active: {self.is_active})"

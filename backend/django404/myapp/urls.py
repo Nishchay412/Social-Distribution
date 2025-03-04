@@ -24,7 +24,10 @@ from .views import (
     list_friends,
     list_non_friend_users,
     draft_posts,
-    admin_update_user
+    admin_update_user,
+    register_admin_user,
+    approve_user,
+    list_pending_users
 )
 
 urlpatterns = [
@@ -52,6 +55,7 @@ urlpatterns = [
     path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  
     path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),  
     path('api/posts/public/', list_public_posts_excluding_user, name='public-posts-excluding-user'),
+    path('api/admin-register/', register_admin_user, name='admin-register'),
 
     # ✅ Comments Endpoints QingqiuTan
     path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
@@ -60,6 +64,8 @@ urlpatterns = [
     path('friends/posts/', friends_posts, name='friends-posts'),
     path('friends/', list_friends, name='list-friends'),
     path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),  # ✅ Corrected endpoint
+    path('api/admin/approve-user/<str:username>/', approve_user, name='approve-user'),
+    path('api/admin/pending-users/', list_pending_users, name='pending-users'),
 
     # ✅ Likes Endpoints QingqiuTan
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),

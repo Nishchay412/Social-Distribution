@@ -25,22 +25,45 @@ def register_user(request):
         serializer.save()
         return Response({"message": "User registered successfully"}, status=201)
     return Response(serializer.errors, status=400)
+from rest_framework.permissions import IsAdminUser
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  
+@permission_classes([IsAdminUser])
+def register_admin_user(request):
+    """
+    Registers a user and creates a serializer for it.
+    Needs username, first name, last name, email, and password.
+    Saves user to the database.
+    """
+    serializer = RegisterUserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "User registered successfully"}, status=201)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def login_user(request):
     """
     User login
-    Takes username and password
+    Takes username and password and returns tokens if the account is approved.
     """
     username = request.data.get("username")
     password = request.data.get("password")
     user = authenticate(username=username, password=password)
 
     if user:
+        # Check if the user is approved by the admin
+        if not user.is_approved:
+            return Response(
+                {"error": "Your account is pending approval by the admin."},
+                status=403
+            )
+
         refresh = RefreshToken.for_user(user)
 
-        # ✅ Convert ImageField to Full URL
+        # Convert ImageField to Full URL
         profile_image_url = (
             request.build_absolute_uri(user.profile_image.url) if user.profile_image else None
         )
@@ -54,13 +77,38 @@ def login_user(request):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "profile_image": profile_image_url,  # ✅ Full URL now
-                "admin": user.is_staff, # Admin Property to login to correct dashboard
+                "profile_image": profile_image_url,
+                "admin": user.is_staff,  # Admin property to log in to the correct dashboard
             }
         })
 
     return Response({"error": "Invalid username or password"}, status=400)
 
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def approve_user(request, username):
+    """
+    Approves a user account by setting is_approved to True.
+    Only accessible by admin users.
+    """
+    user = get_object_or_404(User, username=username)
+    if user.is_approved:
+        return Response({"detail": "User is already approved."}, status=400)
+    
+    user.is_approved = True
+    user.save()
+    return Response({"detail": f"User {user.username} approved."}, status=200)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def list_pending_users(request):
+    """
+    Lists all users that are not yet approved.
+    """
+    pending_users = User.objects.filter(is_approved=False)
+    serializer = RegisterUserSerializer(pending_users, many=True)
+    return Response(serializer.data, status=200)
 
 
 @api_view(['POST'])
