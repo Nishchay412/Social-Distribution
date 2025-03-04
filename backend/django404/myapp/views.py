@@ -25,6 +25,22 @@ def register_user(request):
         serializer.save()
         return Response({"message": "User registered successfully"}, status=201)
     return Response(serializer.errors, status=400)
+from rest_framework.permissions import IsAdminUser
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def register_admin_user(request):
+    """
+    Registers a user and creates a serializer for it.
+    Needs username, first name, last name, email, and password.
+    Saves user to the database.
+    """
+    serializer = RegisterUserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "User registered successfully"}, status=201)
+    return Response(serializer.errors, status=400)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])  

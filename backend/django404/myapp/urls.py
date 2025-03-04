@@ -24,7 +24,8 @@ from .views import (
     list_friends,
     list_non_friend_users,
     draft_posts,
-    admin_update_user
+    admin_update_user,
+    register_admin_user
 )
 
 urlpatterns = [
@@ -52,6 +53,7 @@ urlpatterns = [
     path("posts/<uuid:post_id>/edit/", update_post, name="edit-post"),  
     path('posts/<uuid:post_id>/delete/', delete_post, name='delete-post'),  
     path('api/posts/public/', list_public_posts_excluding_user, name='public-posts-excluding-user'),
+    path('api/admin-register/', register_admin_user, name='admin-register'),
 
     # ✅ Comments Endpoints QingqiuTan
     path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
