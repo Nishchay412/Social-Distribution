@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Post, Comment, Like
+from .models import Following, Post, Comment, Like
 import markdown
 
 
@@ -15,6 +15,18 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # ✅ Uses create_user() to hash passwords
+
+#ChristineBao
+class FollowingSerializer(serializers.ModelSerializer):
+    follower = serializers.ForeignKey("User", related_name="follower")
+    followee = serializers.ForeignKey("User", related_name="followee")
+    followed_at = serializers.DateTimeField(auto_now=True)
+
+    class Meta:
+        model = Following
+        fields  = [
+            'follower', 'followee', 'followed_at'
+        ]
 
 #QingqiuTan
 class CommentSerializer(serializers.ModelSerializer):

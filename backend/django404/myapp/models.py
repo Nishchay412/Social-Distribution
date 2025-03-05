@@ -21,6 +21,30 @@ from django.db import models
 from django.conf import settings
 import uuid
 
+#ChristineBao
+class Following(models.Model):
+    """
+    Following model
+    - 'follower' userId of user who wants to follow
+    - 'followee' userId of user being followed
+    - 'followed_at' is DateTimeField of when follower follows followee
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    follower = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='follower'
+    )
+    followee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='followee'
+    )
+
+    followed_at = models.DateTimeField(auto_now_add=True)
+
+
+
 #QingqiuTan/Nishchay Ranjan/Riyasat Zaman
 class Post(models.Model):
     """
