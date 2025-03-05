@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Post, Comment, Like
+from .models import Post, Comment, Like, Node
 import markdown
 
 
@@ -15,6 +15,25 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # ✅ Uses create_user() to hash passwords
+
+#Yicheng Lin
+class NodeSerializer(serializers.ModelSerializer):
+    """ Ensures safe handling of node data without exposing passwords. """
+
+    class Meta:
+        model = Node
+        fields = ['id', 'base_url', 'username', 'is_active']
+        read_only_fields = ['id']  # Prevent clients from modifying node ID
+
+    def create(self, validated_data):
+        """ Prevents exposing password in API responses. """
+        node = Node.objects.create(**validated_data)
+        return node
+
+    def update(self, instance, validated_data):
+        """ Ensure password is not updated accidentally. """
+        validated_data.pop("password", None)  # Ignore password updates
+        return super().update(instance, validated_data)
 
 #QingqiuTan
 class CommentSerializer(serializers.ModelSerializer):
