@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 // Helper function to build the full image URL from a relative path.
 function getImageUrl(path) {
   if (!path) return "";
-  // If already a full URL, return it.
   if (path.startsWith("http")) return path;
-  // If the path already includes "/media" (or "media"), remove any extra leading slash.
   if (path.startsWith("/media") || path.startsWith("media")) {
-    const normalized = path.replace(/^\/+/, ""); // remove leading slash(es)
+    const normalized = path.replace(/^\/+/, "");
     return `http://127.0.0.1:8000/${normalized}`;
   }
-  // Otherwise, assume it's something like "images/foo.png" and prepend "/media/"
   return `http://127.0.0.1:8000/media/${path}`;
 }
 
@@ -19,22 +16,22 @@ const Stream = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   // Get the JWT token from localStorage
   const token = localStorage.getItem("access_token");
 
   useEffect(() => {
     const fetchStreamPosts = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/stream/", {
+        const response = await axios.get("http://127.0.0.1:8000/api/posts/public_and_friends/", {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
         setPosts(response.data);
       } catch (err) {
-        console.error("Error fetching stream posts:", err.response?.data || err.message);
-        setError("Failed to fetch stream posts.");
+        console.error("Error fetching posts:", err.response?.data || err.message);
+        setError("Failed to fetch posts.");
       } finally {
         setLoading(false);
       }

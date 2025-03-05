@@ -100,6 +100,7 @@ def approve_user(request, username):
     user.save()
     return Response({"detail": f"User {user.username} approved."}, status=200)
 
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def list_pending_users(request):
@@ -359,6 +360,34 @@ def list_public_posts_excluding_user(request):
 
     # Fetch public posts excluding those created by the user
     posts = Post.objects.filter(visibility="PUBLIC").exclude(author=user).order_by('-published')
+
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def friends_and_public_posts(request):
+    """
+    Fetch both:
+    1. Friends' posts (with visibility PUBLIC, UNLISTED, or FRIENDS)
+    2. Public posts (excluding those made by the authenticated user)
+    """
+    user = request.user
+    friends = user.friends.all()
+
+    # Fetch friends' posts with the allowed visibilities
+    friends_posts = Post.objects.filter(
+        author__in=friends,
+        visibility__in=["PUBLIC", "UNLISTED", "FRIENDS"]
+    )
+
+    # Fetch public posts excluding those created by the user
+    public_posts = Post.objects.filter(
+        visibility="PUBLIC"
+    ).exclude(author=user)
+
+    # Combine both QuerySets using `|` (union)
+    posts = (friends_posts | public_posts).distinct().order_by("-published")
 
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
