@@ -107,6 +107,8 @@ class Node(models.Model):
     username = models.CharField(max_length=255)  # For Basic Auth
     password = models.CharField(max_length=255)  # For Basic Auth
     is_active = models.BooleanField(default=True)  # Can be disabled
+    description = models.TextField(blank=True, null=True)  # Optional description
+    last_connected = models.DateTimeField(blank=True, null=True)  # Last successful connection
 
     def __str__(self):
         return f"Node {self.base_url} (Active: {self.is_active})"
