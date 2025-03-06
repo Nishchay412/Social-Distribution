@@ -15,17 +15,14 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-from django.db import models
-from django.conf import settings
-import uuid
-
-#ChristineBao
 class Following(models.Model):
     """
     Following model
     - 'follower' userId of user who wants to follow
     - 'followee' userId of user being followed
     - 'followed_at' is DateTimeField of when follower follows followee
+
+    @author Christine Bao
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     follower = models.ForeignKey(
@@ -41,7 +38,8 @@ class Following(models.Model):
 
     followed_at = models.DateTimeField(auto_now_add=True)
 
-
+    def __str__(self):
+            return f"{self.follower} followed {self.followee}"
 
 #QingqiuTan/Nishchay Ranjan/Riyasat Zaman
 class Post(models.Model):
@@ -111,3 +109,58 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.author.username} liked {self.post.id}"
+
+class Notifs(models.Model):
+    """
+    Notification Model
+    Holds notifs when an author recives a like, commments, or follow request
+    
+    - 'reciever' linked to Custome User Model, is the user recieving the notif
+    - 'sender' linked to Custom User Model, is the user sending the notif
+    - 'notif_type' is type of notif: 'LIKE', 'COMMENT', 'FOLLOW REQUEST'
+    - 'post' is optional field, linked to Custom POST Model if notif is a 'LIKE' or 'COMMENT' type
+    - 'comment' is optional field, linked to Custom Comment Model if notif is a 'LIKE' or 'COMMENT' type
+
+    @author Christine Bao
+    """
+    NOTIF_CHOICES = [
+        ('LIKE', 'like'),
+        ('COMMENT', 'comment'),
+        ('FOLLOW_REQUEST', 'follow_request')
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    reciever = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='author'
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='sender'
+    )
+    notif_type = models.CharField(
+        max_length=20,
+        choices= NOTIF_CHOICES,
+        default='PUBLIC'
+    )
+    post = models.ForeignKey(
+        Post, 
+        on_delete=models.CASCADE, 
+        blank=True,
+        null=True,
+        related_name="post_notif"
+    )
+
+    comment = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE, 
+        blank=True,
+        null=True,
+        related_name="comment_notif"
+    )
+
+    def __str__(self):
+        return f"{self.reciever} has {self.notif_type} {self.sender}"
+    

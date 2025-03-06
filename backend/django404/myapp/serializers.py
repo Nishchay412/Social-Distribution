@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Following, Post, Comment, Like
+from .models import Following, Post, Comment, Like, Notifs
 import markdown
 
 
@@ -16,14 +16,20 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)  # ✅ Uses create_user() to hash passwords
 
-#ChristineBao
 class FollowingSerializer(serializers.ModelSerializer):
+    """
+    Serilaizer for Following Model
+    - follower and followee are Read Only
+
+    @author Christine Bao
+    """
     follower = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     followee = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Following
         fields  = ['follower', 'followee', 'followed_at']
+
 
 #QingqiuTan
 class CommentSerializer(serializers.ModelSerializer):
@@ -96,3 +102,12 @@ class LikeSerializer(serializers.ModelSerializer):
         # We protect 'id', 'author_username', and 'created' from client-side modifications.
         read_only_fields = ['id', 'author_username', 'created']
 
+class NotifSerializer(serializers.ModelSerializer):
+    """
+    Notif Serializer
+
+    @author Christine Bao
+    """
+    class Meta:
+        model = Notifs
+        fields = ['reciever', 'sender', 'notif_type', 'post', 'comment']

@@ -19,7 +19,7 @@ from .views import (
     list_public_posts_excluding_user,
     list_user_posts_by_username,
     list_user_posts,
-    following,
+    resolve_follower_request,
     add_friend,
     friends_posts,
     list_friends,
@@ -39,7 +39,7 @@ urlpatterns = [
     path('update-profile/', update_user_profile, name='update-profile'),
     
     # Following Endpoints Christine Bao
-    path('profile/<str:username>/following', following, name='following'),
+    path('profile/<str:username>/following', resolve_follower_request, name='resolve_follower_request'),
     # User Posts by Username
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),
 

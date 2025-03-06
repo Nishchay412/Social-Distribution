@@ -6,7 +6,7 @@ from rest_framework.parsers import MultiPartParser, FormParser  # For handling i
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, FollowingSerializer
-from .models import Post, Comment, Like, Following
+from .models import Post, Comment, Like, Following, Notifs
 
 User = get_user_model()
 
@@ -300,41 +300,67 @@ def list_public_posts_excluding_user(request):
 
 from django.shortcuts import get_object_or_404
 
-@api_view(['POST', 'DELETE'])
-# @permission_classes([IsAuthenticated])
-def following (request, username):
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def resolve_follower_request (request):
     """
+    TODO 
+    - allows for follows directly right now
+
     To follow a user, takes username of user that you would like to follow.
     To unfollow a user, takes username of user you already follow to unfollow.
     Following relationship takes user.id instead of username.
+
+    @author Christine Bao
     """
-    # Get user we want to follow by username 
-    # AKA the followee
-    followee = get_object_or_404(User, username=username)
+    # Are we denying or accepting the friend request
+    if request.data['confirm'] == 'deny':
+        Notifs.objects.filter(id=request.data.id).delete()
+        return Response({"message" : "Follower Request denied"}, status=status.HTTP_200_OK)
+    
+    # Get followee and follower
+    followee = get_object_or_404(User, username=request.data['followee'])
     follower = get_object_or_404(User, username=request.data['follower'])
 
     # Cannot follow yourself
     if follower.id == followee.id:
         return Response({"error": "Cannot follow yourself."}, status=status.HTTP_403_FORBIDDEN)
-
-    # Check if they are already friends
+    # Cannot follow someone twice
     if Following.objects.filter(followee_id=followee.id, follower_id=follower.id).exists():
-        try:
-            Following.objects.filter(followee_id=followee.id, follower_id=follower.id).delete()
-            return Response({"message": "You have unfollowed this user."}, status=status.HTTP_200_OK)
-        except:
-            return Response({"message": "Something went wrong, user not unfollowed"}, status=status.HTTP_400_BAD_REQUEST)
-    
+        return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
+
     # If not friends and following
     data = {"followee": followee.id, "follower": follower.id}
     try:
         serializer = FollowingSerializer(data=data)
         if serializer.is_valid():
             serializer.save(followee_id = followee.id, follower_id = follower.id)
+            Notifs.objects.filter(id=request.data.id).delete()
             return Response({"message": "You have followed this user."}, status=status.HTTP_200_OK)
     except:
         return Response({"message": "Something went wrong, user not followed"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def unfollow_user(request, username):
+    # Get followee and follower
+    followee = get_object_or_404(User, username=username)
+    follower = get_object_or_404(User, username=request.data['follower'])
+   
+   # Cannot unfollow yourself
+    if follower.id == followee.id:
+        return Response({"error": "Cannot unfollow yourself."}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        # Check if they are already friends
+        if Following.objects.filter(followee_id=followee.id, follower_id=follower.id).exists():
+            Following.objects.filter(followee_id=followee.id, follower_id=follower.id).delete()
+            return Response({"message": "You have unfollowed this user."}, status=status.HTTP_200_OK)
+    except:
+        return Response({"message": "You can't unfollow someone you don't follow"}, status=status.HTTP_400_BAD_REQUEST)
     
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_friend(request, username):
@@ -356,6 +382,33 @@ def add_friend(request, username):
     request.user.friends.add(target_user)
     target_user.friends.add(request.user)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_followers(request, username=None):
+    """
+    Christine Bao
+
+    Get followers of user. 
+    Get user from request.data (user logged in) or by username (another user)
+    """
+    user = get_object_or_404(User, username=request.data['username'])
+    if username != None:    
+        user = get_object_or_404(User, username=username)
+    
+    try:
+        followers = (
+            Following.objects
+                .filter(followee_id = user.id)
+                .order_by("-followed_at")
+        )
+
+        serializer = FollowingSerializer(followers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    except:
+        return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
+
+    
 from .serializers import RegisterUserSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
