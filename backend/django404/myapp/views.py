@@ -5,26 +5,10 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser  # For handling image uploads
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer
-from .models import Post, Comment, Like
+from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, FollowingSerializer
+from .models import Post, Comment, Like, Following
 
 User = get_user_model()
-
-class UserFollowing(models.Model):
-
-    user_id = models.ForeignKey(UserModel, related_name="following", on_delete=models.CASCADE)
-    following_user_id = models.ForeignKey(UserModel, related_name="followers", on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['user_id','following_user_id'],  name="unique_followers")
-        ]
-
-        ordering = ["-created"]
-
-    def __str__(self):
-        f"{self.user_id} follows {self.following_user_id}"
 
 
 # User Authentication Views
@@ -317,26 +301,40 @@ def list_public_posts_excluding_user(request):
 from django.shortcuts import get_object_or_404
 
 @api_view(['POST', 'DELETE'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def following (request, username):
     """
-    To follow a user, takes username of user that you would like to follow
-    To unfollow a user, takes username of user you already follow to unfollow
+    To follow a user, takes username of user that you would like to follow.
+    To unfollow a user, takes username of user you already follow to unfollow.
+    Following relationship takes user.id instead of username.
     """
-    # Get user we want to follow by username
+    # Get user we want to follow by username 
+    # AKA the followee
     followee = get_object_or_404(User, username=username)
+    follower = get_object_or_404(User, username=request.data['follower'])
 
-    # Prevent a user from following themselves
-    if request.user == followee:
-        return Response({"error": "Cannot follow yourself."}, status=400)
+    # Cannot follow yourself
+    if follower.id == followee.id:
+        return Response({"error": "Cannot follow yourself."}, status=status.HTTP_403_FORBIDDEN)
 
     # Check if they are already friends
-    if followee in request.user.friends.all():
-        return Response({"error": "You are already friends with this user."}, status=400)
+    if Following.objects.filter(followee_id=followee.id, follower_id=follower.id).exists():
+        try:
+            Following.objects.filter(followee_id=followee.id, follower_id=follower.id).delete()
+            return Response({"message": "You have unfollowed this user."}, status=status.HTTP_200_OK)
+        except:
+            return Response({"message": "Something went wrong, user not unfollowed"}, status=status.HTTP_400_BAD_REQUEST)
     
+    # If not friends and following
+    data = {"followee": followee.id, "follower": follower.id}
+    try:
+        serializer = FollowingSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(followee_id = followee.id, follower_id = follower.id)
+            return Response({"message": "You have followed this user."}, status=status.HTTP_200_OK)
+    except:
+        return Response({"message": "Something went wrong, user not followed"}, status=status.HTTP_400_BAD_REQUEST)
     
-
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_friend(request, username):

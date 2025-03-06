@@ -18,15 +18,12 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
 #ChristineBao
 class FollowingSerializer(serializers.ModelSerializer):
-    follower = serializers.ForeignKey("User", related_name="follower")
-    followee = serializers.ForeignKey("User", related_name="followee")
-    followed_at = serializers.DateTimeField(auto_now=True)
+    follower = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    followee = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Following
-        fields  = [
-            'follower', 'followee', 'followed_at'
-        ]
+        fields  = ['follower', 'followee', 'followed_at']
 
 #QingqiuTan
 class CommentSerializer(serializers.ModelSerializer):
