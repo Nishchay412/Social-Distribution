@@ -305,38 +305,37 @@ def create_follow_request(request, username):
     'receiver' is author receiving the follow request, get username from username
     'sender' is the user sending the follow request, get username from request
     """
-    reciever = get_object_or_404(User, username=username)
+    receiver = get_object_or_404(User, username=username)
     sender = get_object_or_404(User, username=request.data['username'])
 
     # Cannot send yourself a follow request
-    if reciever.id == sender.id: 
+    if receiver.id == sender.id: 
         return Response({"message":"You cannot send yourself a follow request!"}, status=status.HTTP_403_FORBIDDEN)
     # Cannot send follow request to someone you already follow
-    if Following.objects.filter(followee_id=reciever.id, follower_id=sender.id).exists():
+    if Following.objects.filter(followee_id=receiver.id, follower_id=sender.id).exists():
         return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
     
-    data = {'reciever':reciever.id, 'sender':sender.id, 'notif_type':'FOLLOW_REQUEST'}
+    data = {"receiver":receiver.id, "sender":sender.id, "notif_type":"FOLLOW_REQUEST"}
     try:
         serializer = NotifSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(reciever_id = reciever.id, sender_id = sender.id, notif_type = 'FOLLOW_REQUEST')
-            Notif.objects.filter(id=request.data.id).delete()
+            serializer.save(receiver_id = receiver.id, sender_id = sender.id, notif_type = 'FOLLOW_REQUEST')
             return Response({"message":"Follow Request Sent!"}, status=status.HTTP_200_OK)
     except:
         return Response({"error":"Follow Request couldn't be made"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def get_follower_request_list(request):
     """
     Get a list of Notifs of type follower_request of followee user
-    'receiver' is user receiving notifs
+    'receiver' is user receiving notifs (user logged in)
     Get reciever username from request data
     Return list of Notifs of type follower_request
     
     @author Christine Bao
     """
-    receiver = get_object_or_404(User, username=request.data['username'])
+    receiver = get_object_or_404(User, username=request.user)
 
     try:
         follower_request_list = (
@@ -367,7 +366,7 @@ def resolve_follower_request (request):
     """
     # Are we denying or accepting the friend request
     if request.data['confirm'] == 'deny':
-        Notif.objects.filter(id=request.data.id).delete()
+        Notif.objects.filter(pk=request.data['notif_id']).delete()
         return Response({"message" : "Follower Request denied"}, status=status.HTTP_200_OK)
     
     # Get followee and follower
@@ -387,12 +386,12 @@ def resolve_follower_request (request):
         serializer = FollowingSerializer(data=data)
         if serializer.is_valid():
             serializer.save(followee_id = followee.id, follower_id = follower.id)
-            Notif.objects.filter(id=request.data.id).delete()
+            Notif.objects.filter(pk=request.data['notif_id']).delete() # get Notif id to delete follow_request
             return Response({"message": "You have followed this user."}, status=status.HTTP_200_OK)
     except:
         return Response({"message": "Something went wrong, user not followed"}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['DELETE'])
+@api_view(['POST','DELETE'])
 # @permission_classes([IsAuthenticated])
 def unfollow_user(request, username):
     """

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Following, Post, Comment, Like, Notifs
+from .models import Following, Post, Comment, Like, Notif
 import markdown
 
 
@@ -109,5 +109,5 @@ class NotifSerializer(serializers.ModelSerializer):
     @author Christine Bao
     """
     class Meta:
-        model = Notifs
+        model = Notif
         fields = ['receiver', 'sender', 'notif_type', 'post', 'comment', 'created_at']

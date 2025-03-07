@@ -31,12 +31,15 @@ export function Header() {
   };
 
   const handleUserProfile = async () => await navigate("/profile");
+  const handleNotifs = async () => await navigate("/follow-requests");
 
   const headerelements = [
-    { id: 1, name: "feed", img: "/homeicon.png", action: null },
-    { id: 2, name: "settings", img: "/settings.png", action: null },
-    { id: 3, name: "Log Out", img: "/logout.png", action: handleLogout },
-    { id: 4, name: "Profile", img: "/userprofile.png", action: handleUserProfile },
+    { id: 1, name: "Home", img: "/homeicon.png", action: null },
+    { id: 2, name: "Profile", img: "/userprofile.png", action: handleUserProfile},
+    { id: 3, name: "Notifs", action: handleNotifs},
+    { id: 4, name: "Settings", img: "/settings.png", action: null },
+    { id: 5, name: "Log Out", img: "/logout.png", action: handleLogout },
+    
   ];
 
   const [users, setUsers] = useState([]);
