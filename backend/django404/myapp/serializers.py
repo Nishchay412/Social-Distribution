@@ -110,4 +110,4 @@ class NotifSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Notifs
-        fields = ['reciever', 'sender', 'notif_type', 'post', 'comment']
+        fields = ['receiver', 'sender', 'notif_type', 'post', 'comment', 'created_at']

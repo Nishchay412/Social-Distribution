@@ -19,7 +19,11 @@ from .views import (
     list_public_posts_excluding_user,
     list_user_posts_by_username,
     list_user_posts,
+    create_follow_request,
+    get_follower_request_list,
     resolve_follower_request,
+    get_followers,
+    unfollow_user,
     add_friend,
     friends_posts,
     list_friends,
@@ -38,8 +42,14 @@ urlpatterns = [
     path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
     path('update-profile/', update_user_profile, name='update-profile'),
     
-    # Following Endpoints Christine Bao
-    path('profile/<str:username>/following', resolve_follower_request, name='resolve_follower_request'),
+    # Following Endpoints 
+    # @author Christine Bao
+    path('profile/<str:username>/follow_request', create_follow_request, name='create_follow_request'), #send follow request to user whose profile you are visitng
+    path('profile/<str:username>/unfollow', unfollow_user, name='unfollow_user'), #unfollow user whose profile you are visitng
+    path('notifs/follow_requests/', get_follower_request_list, name='get_follower_request_list'), #get follower_request notifs from user whose profile you are on
+    path('notifs/follow_requests/resolve', resolve_follower_request, name='resolve_follower_request'), #get follower_request notifs from user whose profile you are on
+    path('followers/<str:username>/', get_followers, name='get_followers'), #get list of followers of user you are on
+    
     # User Posts by Username
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),
 
