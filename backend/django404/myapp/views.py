@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser  # For handling image uploads
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer
-from .models import Post, Comment, Like
+from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, CommentLikeSerializer
+from .models import Post, Comment, Like, CommentLike
 
 User = get_user_model()
 
@@ -555,24 +555,35 @@ def create_like(request, post_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def toggle_like(request, post_id):
-    """
-    Toggles a like on a post: if the user has already liked it, cancel the like.
-    Otherwise, create a new like.
-    """
     try:
-        post = Post.objects.get(id=post_id, visibility="PUBLIC")
+        post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
-    
+
+    # Filter by both post and the requesting user
     existing_like = Like.objects.filter(post=post, author=request.user).first()
     if existing_like:
-        # If like exists, delete it (cancel like)
         existing_like.delete()
-        return Response({"message": "Like removed"}, status=status.HTTP_200_OK)
+        return Response({"message": "You unliked this post."}, status=status.HTTP_200_OK)
     else:
-        # Otherwise, create a new like
-        like = Like.objects.create(post=post, author=request.user)
-        serializer = LikeSerializer(like)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        new_like = Like.objects.create(post=post, author=request.user)
+        # optionally serialize new_like
+        return Response({"message": "You liked this post."}, status=status.HTTP_201_CREATED)
     
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_comment_like(request, post_id, comment_id):
+    try:
+        comment = Comment.objects.get(id=comment_id, post__id=post_id)
+    except Comment.DoesNotExist:
+        return Response({"error": "Comment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    existing_like = CommentLike.objects.filter(comment=comment, author=request.user).first()
+    if existing_like:
+        existing_like.delete()
+        return Response({"message": "You unliked this comment."}, status=status.HTTP_200_OK)
+    else:
+        CommentLike.objects.create(comment=comment, author=request.user)
+        return Response({"message": "You liked this comment."}, status=status.HTTP_201_CREATED)
 

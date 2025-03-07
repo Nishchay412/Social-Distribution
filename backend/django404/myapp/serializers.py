@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Post, Comment, Like, Node
+from .models import Post, Comment, Like, CommentLike,Node
 import markdown
 
 
@@ -38,6 +38,7 @@ class NodeSerializer(serializers.ModelSerializer):
 #QingqiuTan
 class CommentSerializer(serializers.ModelSerializer):
     author_username = serializers.ReadOnlyField(source='author.username')
+    likes_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Comment
@@ -45,9 +46,12 @@ class CommentSerializer(serializers.ModelSerializer):
         # 'author_username' is shown for convenience but is not editable.
         # 'text' holds the actual comment content.
         # 'created' is automatically set by the server/model upon creation.
-        fields = ['id', 'post', 'author_username', 'text', 'created']
+        fields = ['id', 'post', 'author_username', 'text', 'created', 'likes_count']
         # Marking these fields as read-only prevents clients from manipulating identifiers or timestamps.
-        read_only_fields = ['id','post','author_username', 'created']
+        read_only_fields = ['id','post','author_username', 'created','likes_count']
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
 
 #QingqiuTan/Nishchay Ranjan/Riyasat Zaman
 """ Serializer for Post model with author_username as a read-only field. """
@@ -105,4 +109,13 @@ class LikeSerializer(serializers.ModelSerializer):
         fields = ['id', 'post', 'author_username', 'created']
         # We protect 'id', 'author_username', and 'created' from client-side modifications.
         read_only_fields = ['id', 'author_username', 'created']
+
+
+class CommentLikeSerializer(serializers.ModelSerializer):
+    author_username = serializers.ReadOnlyField(source='author.username')
+
+    class Meta:
+        model = CommentLike
+        fields = ['id', 'author_username', 'comment', 'created']
+        read_only_fields = ['id', 'author_username', 'created', 'comment']
 

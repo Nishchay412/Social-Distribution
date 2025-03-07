@@ -18,12 +18,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-
-
-from django.db import models
-from django.conf import settings
-import uuid
-
 #QingqiuTan/Nishchay Ranjan/Riyasat Zaman
 class Post(models.Model):
     """
@@ -97,6 +91,7 @@ class Like(models.Model):
     def __str__(self):
         return f"{self.author.username} liked {self.post.id}"
 
+
 #Yicheng Lin
 class Node(models.Model):
     """
@@ -112,3 +107,14 @@ class Node(models.Model):
 
     def __str__(self):
         return f"Node {self.base_url} (Active: {self.is_active})"
+
+    
+class CommentLike(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='likes')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.author.username} liked comment {self.comment.id}"
+

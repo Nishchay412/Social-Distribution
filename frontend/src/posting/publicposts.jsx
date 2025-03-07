@@ -42,6 +42,24 @@ const PublicPosts = () => {
     fetchPublicPosts();
   }, [token]);
 
+  // Handle like comment button
+  const handleLikeComment = async (postId, commentId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:8000/posts/${postId}/comments/${commentId}/likes/toggle/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // re-fetch or update local state to show updated like count
+      const response = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPosts(response.data);
+    } catch (err) {
+      console.error("Error liking comment:", err.response?.data || err.message);
+    }
+  };
+
   // Handle like button
   const handleLike = async (postId) => {
     try {
@@ -152,8 +170,22 @@ const PublicPosts = () => {
                     {post.comments?.length > 0 && (
                       <div>
                         {post.comments.map((comment) => (
-                          <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
-                            <strong>{comment.author_username}:</strong> {comment.text}
+                          <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between">
+                            <dev>
+                              <strong>{comment.author_username}:</strong> {comment.text}
+                            </dev>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">
+                                {comment.likes_count || 0}
+                            </span>
+                            <button
+                              onClick={() => handleLikeComment(post.id, comment.id)}
+                              className="hover:text-pink-500 transition"
+                            >
+                              👍
+                            </button>
+                            </div>
                           </div>
                         ))}
                       </div>

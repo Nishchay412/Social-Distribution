@@ -28,6 +28,8 @@ from .views import (
     register_admin_user,
     approve_user,
     list_pending_users
+    toggle_comment_like,
+
 )
 
 urlpatterns = [
@@ -66,11 +68,13 @@ urlpatterns = [
     path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),  # ✅ Corrected endpoint
     path('api/admin/approve-user/<str:username>/', approve_user, name='approve-user'),
     path('api/admin/pending-users/', list_pending_users, name='pending-users'),
+    path('posts/<uuid:post_id>/comments/<uuid:comment_id>/likes/toggle/', toggle_comment_like, name='toggle-comment-like'),
+
 
     # ✅ Likes Endpoints QingqiuTan
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
     path('posts/<uuid:post_id>/likes/toggle/', toggle_like, name='toggle-like'),
-     path('posts/my/', list_user_posts, name='list-user-posts'),
+    path('posts/my/', list_user_posts, name='list-user-posts'),
     path('api/posts/public/', list_public_posts_excluding_user, name='public-posts-excluding-user'),
 
     # ✅ User Management
