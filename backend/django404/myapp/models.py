@@ -15,12 +15,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-
-
-from django.db import models
-from django.conf import settings
-import uuid
-
 #QingqiuTan/Nishchay Ranjan/Riyasat Zaman
 class Post(models.Model):
     """
