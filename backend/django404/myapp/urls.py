@@ -27,7 +27,7 @@ from .views import (
     admin_update_user,
     register_admin_user,
     approve_user,
-    list_pending_users
+    list_pending_users,
     toggle_comment_like,
 
 )
