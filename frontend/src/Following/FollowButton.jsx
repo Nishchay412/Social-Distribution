@@ -3,9 +3,11 @@ import { useParams } from "react-router-dom";
 
 /*  Follow Button
     @TODO 
-    - combine user profile and friends profile to one (?)
-    - add onClick functions to buttons
-   
+    - Button has a slight delay in showing up
+    - Edit Button Functionlity (add if we combine profiles of ones own profile and another user's profile)
+    
+    Follow Button will show appropriate text depending on the relationship between 
+    the User whose profile is being visited and the User who is logged in.
     @author Christine Bao
 */
 
@@ -13,10 +15,10 @@ const Follow_Button = () => {
     const { username } = useParams();
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
-    const button_text = 'FOLLOW';
+    const [buttonText, setButtonText] = useState("FOLLOW");
     const accessToken = localStorage.getItem("access_token");
 
-
+    //Fetch Relationship between Logged-in User and User from Profile
     useEffect(() => {
         const fetchRelationship = async () => {
             setLoading(true);
@@ -29,16 +31,20 @@ const Follow_Button = () => {
                     },
                 });
                 const data = await response.json();
-                console.log("fart", data);
+                
                 if (response.ok){
-                    if (data.response == 'YOURSELF'){
-                        button_text  = 'YOURSELF';
-                    } else if (data.response == 'FRIEND' || data.response == 'FOLLOWEE'){
-                        button_text = 'UNFOLLOW';
-                    } else if (data.response == 'PENDING'){
-                        button_text = 'PENDING';
-                    };               
+                    if (data['relation'] =="YOURSELF"){
+                        changeButtonText("EDIT")
+                    } else if (data['relation'] == "FRIEND" || data['relation'] == "FOLLOWEE"){
+                        changeButtonText("UNFOLLOW")
+                    } else if (data['relation'] == "PENDING"){
+                        changeButtonText("PENDING")
+                    }else{
+                        changeButtonText("FOLLOW")
+                    };  
+                             
                 } else {
+                    console.log("data")
                     setError(data.error || "Issue retrieving User Relationship")
                 }
             } catch (error){
@@ -50,11 +56,18 @@ const Follow_Button = () => {
         fetchRelationship();
     }, [username]);
 
+    const changeButtonText = (text) => {
+        setButtonText(text)
+    }
+
     return (
         <div className = "w-full h-fit content-start flex items-stretch">
+            {loading ? (<p></p>) : error ? (<p className="text-red-500">{error}</p>
+            ) : (
             <button className="item-start mt-4 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded">
-                {button_text}
+                {buttonText}
             </button>
+            )}
         </div>
 
     )

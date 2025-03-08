@@ -309,12 +309,11 @@ def get_relationship(request, username):
 
     @author Christine Bao
     """
-    curr_user = get_object_or_404(User, username=request.data['username'])
+    curr_user = get_object_or_404(User, username=request.user)
     check_user = get_object_or_404(User, username=username)
-
     if curr_user.id == check_user.id:
         return Response({"message":"This is you", "relation":"YOURSELF"}, status=status.HTTP_200_OK)
-    return Response({"current_user":curr_user, "check_user":check_user}, status=status.HTTP_200_OK)
+    
     # Checks if curr_user and check_user have Following relationship
     if Following.objects.filter(followee_id=check_user.id, follower_id=curr_user.id).exists() and Following.objects.filter(followee_id=curr_user.id, follower_id=check_user.id).exists():
         return Response({"message":"This is a user you are friends with.", "relation":"FRIEND"}, status=status.HTTP_200_OK)
