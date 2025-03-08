@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 import uuid
 
+#Nishchay Ranjan
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=100)
@@ -10,16 +11,14 @@ class User(AbstractUser):
     profile_image = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     # Mutual friendship: when one user adds another, it's automatically mutual.
     friends = models.ManyToManyField("self", blank=True, symmetrical=True)
+    is_approved = models.BooleanField(default=True)  # New users need approval
+    is_admin = models.BooleanField(default=False)  # Admins can manage users/nodes
+    is_approved = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
 
-
-
-from django.db import models
-from django.conf import settings
-import uuid
-
+#QingqiuTan/Nishchay Ranjan/Riyasat Zaman
 class Post(models.Model):
     """
     A Post model demonstrating:
@@ -54,10 +53,15 @@ class Post(models.Model):
         default='PUBLIC'
     )
     published = models.DateTimeField(auto_now_add=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)  # Soft Delete
+    
+    def is_deleted(self):
+        return self.deleted_at is not None  # ✅ Check if post is deleted
 
     def __str__(self):
         return f"{self.title} by {self.author.username}"
-    
+
+#QingqiuTan 
 class Comment(models.Model):
     """
     A comment left by a user on a specific Post.
@@ -72,7 +76,8 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author.username} on {self.post.id}"
-    
+
+#QingqiuTan
 class Like(models.Model):
     """
     Represents a 'like' from a specific user on a specific post.
@@ -85,3 +90,31 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.author.username} liked {self.post.id}"
+
+
+#Yicheng Lin
+class Node(models.Model):
+    """
+    Represents a remote node that this server can communicate with.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    base_url = models.URLField(unique=True)  # URL of the remote node
+    username = models.CharField(max_length=255)  # For Basic Auth
+    password = models.CharField(max_length=255)  # For Basic Auth
+    is_active = models.BooleanField(default=True)  # Can be disabled
+    description = models.TextField(blank=True, null=True)  # Optional description
+    last_connected = models.DateTimeField(blank=True, null=True)  # Last successful connection
+
+    def __str__(self):
+        return f"Node {self.base_url} (Active: {self.is_active})"
+
+    
+class CommentLike(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='likes')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.author.username} liked comment {self.comment.id}"
+

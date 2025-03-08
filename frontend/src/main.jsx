@@ -4,6 +4,7 @@ import './index.css';
 import App from './App.jsx';
 import Signup from './authentication/Signup';
 import { Dashboard } from './dashboard/dashboard';
+import { Admin_Dashboard } from './Node_Management/AdminDashboard.jsx';
 import Login from './authentication/Login';
 import { User_Profile } from './dashboard/user_profile';
 import { Friend_Profile } from './dashboard/friend_user_profile';
@@ -17,6 +18,10 @@ import { Header } from './dashboard/leftpanel';
 import { CreatePost1 } from './posting/CreatePost1';
 import PostDetails from './posting/singlepost';
 import FriendsPosts from './posting/FriendsPost';
+import User_Management from './Node_Management/UserManagement';
+import AdminSignup from './Node_Management/AdminSignup';
+import Admin_Edit_User from './Node_Management/AdminEditUser';
+import AdminPendingUsers from './Node_Management/AdminPendingUsers';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -29,13 +34,34 @@ const router = createBrowserRouter([
     element: <App />,
   },
   {
+    path: "/user-management",
+    element: <User_Management />,
+  },
+  {
+    path: "/admin-dashboard",
+    element: <Admin_Dashboard />,
+  },
+  {
+    path: "/admin-edit-user",
+    element: <Admin_Edit_User />,
+  },
+  {
     path: "/sign-up",
     element: <Signup />,
+  },
+  {
+    path: "/admin-sign-up",
+    element: <AdminSignup/>,
+  },
+  {
+    path: "/admin-pending-users",
+    element: <AdminPendingUsers/>,
   },
   {
     path: "/login",
     element: <Login />,
   },
+  
   {
     path: "/dashboard",
     element: <Dashboard />,

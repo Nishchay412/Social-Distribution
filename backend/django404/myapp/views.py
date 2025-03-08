@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser  # For handling image uploads
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer
-from .models import Post, Comment, Like
+from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, CommentLikeSerializer
+from .models import Post, Comment, Like, CommentLike
 
 User = get_user_model()
 
@@ -15,23 +15,55 @@ User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])  
 def register_user(request):
+    """
+    Registers user and creates a serilizer for it
+    Needs username, first name, last name, email, and password
+    Saves user to database
+    """
+    serializer = RegisterUserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "User registered successfully"}, status=201)
+    return Response(serializer.errors, status=400)
+from rest_framework.permissions import IsAdminUser
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def register_admin_user(request):
+    """
+    Registers a user and creates a serializer for it.
+    Needs username, first name, last name, email, and password.
+    Saves user to the database.
+    """
     serializer = RegisterUserSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response({"message": "User registered successfully"}, status=201)
     return Response(serializer.errors, status=400)
 
+
 @api_view(['POST'])
-@permission_classes([AllowAny])  
+@permission_classes([AllowAny])
 def login_user(request):
+    """
+    User login
+    Takes username and password and returns tokens if the account is approved.
+    """
     username = request.data.get("username")
     password = request.data.get("password")
     user = authenticate(username=username, password=password)
 
     if user:
+        # Check if the user is approved by the admin
+        if not user.is_approved:
+            return Response(
+                {"error": "Your account is pending approval by the admin."},
+                status=403
+            )
+
         refresh = RefreshToken.for_user(user)
 
-        # ✅ Convert ImageField to Full URL
+        # Convert ImageField to Full URL
         profile_image_url = (
             request.build_absolute_uri(user.profile_image.url) if user.profile_image else None
         )
@@ -45,12 +77,38 @@ def login_user(request):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "profile_image": profile_image_url,  # ✅ Full URL now
+                "profile_image": profile_image_url,
+                "admin": user.is_staff,  # Admin property to log in to the correct dashboard
             }
         })
 
     return Response({"error": "Invalid username or password"}, status=400)
 
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def approve_user(request, username):
+    """
+    Approves a user account by setting is_approved to True.
+    Only accessible by admin users.
+    """
+    user = get_object_or_404(User, username=username)
+    if user.is_approved:
+        return Response({"detail": "User is already approved."}, status=400)
+    
+    user.is_approved = True
+    user.save()
+    return Response({"detail": f"User {user.username} approved."}, status=200)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def list_pending_users(request):
+    """
+    Lists all users that are not yet approved.
+    """
+    pending_users = User.objects.filter(is_approved=False)
+    serializer = RegisterUserSerializer(pending_users, many=True)
+    return Response(serializer.data, status=200)
 
 
 @api_view(['POST'])
@@ -82,8 +140,39 @@ def user_profile_by_username(request, username):
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
 
+# Delete user
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated]) 
+def delete_user_by_username(request, username):
+    """
+    Delete a user. 
+    Expects username of user to be deleted.
+    Cannot delete admin/superusers
+    """
+    # TODO Double check user is an admin
+    admin = request.user
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND);
+
+    if user.is_superuser or user.is_staff:
+        return Response({"error": "You cannot delete another Admin."}, status=status.HTTP_403_FORBIDDEN)
+
+    user.delete()
+    return Response({"message": "User has been deleted"}, status=status.HTTP_200_OK)
+
+import base64
+import uuid
+from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 @api_view(['PATCH'])
-@permission_classes([IsAuthenticated])  
+@permission_classes([IsAuthenticated])
 def update_user_profile(request):
     user = request.user  
     data = request.data
@@ -94,6 +183,46 @@ def update_user_profile(request):
     user.profile_image = request.FILES.get("profile_picture", user.profile_image)  
 
     user.save()
+    return Response({
+        "message": "Profile updated successfully",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "profile_picture": user.profile_image.url if user.profile_image else None
+        }
+    })
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def admin_update_user(request, username):
+    # Check if the current user has admin privileges
+    if not request.user.is_staff:
+        return Response({"error": "Unauthorized"}, status=403)
+
+    # Retrieve the user to update
+    user = get_object_or_404(User, username=username)
+    data = request.data
+
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.first_name = data.get("first_name", user.first_name)
+    user.last_name = data.get("last_name", user.last_name)
+
+    # Handle profile picture upload
+    if "profile_picture" in request.FILES:
+        user.profile_image = request.FILES["profile_picture"]
+    elif data.get("profile_picture") and data.get("profile_picture").startswith("data:image"):
+        format, imgstr = data.get("profile_picture").split(";base64,")
+        ext = format.split("/")[-1]
+        file_name = f"profile_{uuid.uuid4()}.{ext}"
+        user.profile_image.save(file_name, ContentFile(base64.b64decode(imgstr)), save=True)
+
+    user.save()
+
     return Response({
         "message": "Profile updated successfully",
         "user": {
@@ -239,6 +368,9 @@ from django.shortcuts import get_object_or_404
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_friend(request, username):
+    """
+    Add friend, takes in username of user to be befriended.
+    """
     # Get the target user by username
     target_user = get_object_or_404(User, username=username)
 
@@ -258,7 +390,9 @@ from .serializers import RegisterUserSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friends(request):
-    # Get the friends of the authenticated user
+    """
+    Get the friends of the authenticated user
+    """
     friends = request.user.friends.all()
     serializer = RegisterUserSerializer(friends, many=True, context={'request': request})
     return Response(serializer.data)
@@ -266,19 +400,27 @@ def list_friends(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def friends_posts(request):
+    """
+    Get the posts made by friends of the authenticated user
+    """
     user = request.user
-    # Get all your friends
     friends = user.friends.all()
 
-    # Filter posts authored by your friends
-    # and only show those with relevant visibility (exclude DELETED)
-    posts = Post.objects.filter(
-        author__in=friends,
-        visibility__in=["PUBLIC", "UNLISTED", "FRIENDS"]
-    ).exclude(visibility="DELETED").order_by("-published")
+    # Show only PUBLIC, UNLISTED, or FRIENDS posts (excluding DELETED and DRAFT).
+    posts = (
+        Post.objects
+            .filter(
+                author__in=friends,
+                visibility__in=["PUBLIC", "UNLISTED", "FRIENDS"]
+            )
+            .exclude(visibility="DELETED")
+            .exclude(visibility="DRAFT")  # <--- Exclude drafts
+            .order_by("-published")
+    )
 
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=200)
+
 from django.db.models import Q
 
 @api_view(['GET'])
@@ -413,24 +555,35 @@ def create_like(request, post_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def toggle_like(request, post_id):
-    """
-    Toggles a like on a post: if the user has already liked it, cancel the like.
-    Otherwise, create a new like.
-    """
     try:
-        post = Post.objects.get(id=post_id, visibility="PUBLIC")
+        post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
-    
+
+    # Filter by both post and the requesting user
     existing_like = Like.objects.filter(post=post, author=request.user).first()
     if existing_like:
-        # If like exists, delete it (cancel like)
         existing_like.delete()
-        return Response({"message": "Like removed"}, status=status.HTTP_200_OK)
+        return Response({"message": "You unliked this post."}, status=status.HTTP_200_OK)
     else:
-        # Otherwise, create a new like
-        like = Like.objects.create(post=post, author=request.user)
-        serializer = LikeSerializer(like)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        new_like = Like.objects.create(post=post, author=request.user)
+        # optionally serialize new_like
+        return Response({"message": "You liked this post."}, status=status.HTTP_201_CREATED)
     
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_comment_like(request, post_id, comment_id):
+    try:
+        comment = Comment.objects.get(id=comment_id, post__id=post_id)
+    except Comment.DoesNotExist:
+        return Response({"error": "Comment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    existing_like = CommentLike.objects.filter(comment=comment, author=request.user).first()
+    if existing_like:
+        existing_like.delete()
+        return Response({"message": "You unliked this comment."}, status=status.HTTP_200_OK)
+    else:
+        CommentLike.objects.create(comment=comment, author=request.user)
+        return Response({"message": "You liked this comment."}, status=status.HTTP_201_CREATED)
 

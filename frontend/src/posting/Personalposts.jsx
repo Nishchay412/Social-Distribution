@@ -53,7 +53,7 @@ const MyPosts = () => {
     fetchMyPosts();
   }, [token]);
 
-  // Handle like toggle
+    // Handle like toggle
   const handleLike = async (postId) => {
     try {
       await axios.post(
@@ -68,6 +68,23 @@ const MyPosts = () => {
       setPosts(response.data);
     } catch (err) {
       console.error("Error liking post:", err.response?.data || err.message);
+    }
+  };
+
+  const handleLikeComment = async (postId, commentId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:8000/posts/${postId}/comments/${commentId}/likes/toggle/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Re-fetch the “my” posts to get updated likes
+      const response = await axios.get("http://127.0.0.1:8000/posts/my/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPosts(response.data);
+    } catch (err) {
+      console.error("Error liking comment:", err.response?.data || err.message);
     }
   };
 
@@ -242,33 +259,38 @@ const MyPosts = () => {
                   </>
                 )}
 
-                {/* Comments */}
-                <div className="mt-4 text-left">
-                  <h4 className="text-sm font-semibold">Comments:</h4>
-                  {post.comments?.length > 0 && (
-                    <div>
-                      {post.comments.map((comment) => (
-                        <div
-                          key={comment.id}
-                          className="bg-gray-50 p-2 rounded-md mb-1"
-                        >
-                          <strong>{comment.author_username}:</strong>{" "}
-                          {comment.text}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {(commentsByPostId[post.id] || []).map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="bg-gray-50 p-2 rounded-md mb-1"
-                    >
-                      <p>
+                 {/* Comments Section */}
+                 <div className="mt-4 text-left">
+                    <h4 className="text-sm font-semibold">Comments:</h4>
+                    {post.comments?.length > 0 && (
+                      <div>
+                        {post.comments.map((comment) => (
+                          <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between">
+                            <dev>
+                              <strong>{comment.author_username}:</strong> {comment.text}
+                            </dev>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">
+                                {comment.likes_count || 0}
+                            </span>
+                            <button
+                              onClick={() => handleLikeComment(post.id, comment.id)}
+                              className="hover:text-pink-500 transition"
+                            >
+                              👍
+                            </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(commentsByPostId[post.id] || []).map((comment) => (
+                      <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
                         <strong>{comment.author_username}:</strong> {comment.text}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    ))}
+                  </div>
 
                 {/* Social Actions */}
                 <div className="flex justify-between items-center mt-4 text-gray-500 text-sm">
