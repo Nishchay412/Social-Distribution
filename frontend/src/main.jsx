@@ -68,7 +68,7 @@ const router = createBrowserRouter([
   },
   {
     path:"/follow-requests",
-    elements: <Follow_Requests/>,
+    element: <Follow_Requests/>,
   },
   {
     path: "/authorlist",

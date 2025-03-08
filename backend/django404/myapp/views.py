@@ -167,8 +167,6 @@ def update_user_profile(request, username):
     except Exception as e:
         return Response({"error": str(e)}, status=500)  # ✅ Return exact error in response
 
-
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
 def create_post(request):
@@ -281,8 +279,6 @@ def list_user_posts_by_username(request, username):
     # Return the JSON response
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # Requires user authentication
 def list_public_posts_excluding_user(request):
@@ -297,8 +293,43 @@ def list_public_posts_excluding_user(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_relationship(request, username):
+    """
+    TODO - if possilbe, i was thinking we use this to check if profile visiting is own user 
+    (have profiles all be the same, but if its one's own profile than add edit button + functionality)
+
+    Get relationship between two users 
+    'curr_user' is currently logged in user, get username from request.data['username']
+    'check_user' is the user we are checking to see what relationship we have with them, get username from username
+    
+    Expected to return 'message' of the relationship and a 'relation' of either ['YOURSELF', 'FRIEND', 'FOLLOWEE', 'FOLLOWER', 'PENDING']
+    'PENDING' is if 'curr_user' sent a follow request.
+
+    @author Christine Bao
+    """
+    curr_user = get_object_or_404(User, username=request.data['username'])
+    check_user = get_object_or_404(User, username=username)
+
+    if curr_user.id == check_user.id:
+        return Response({"message":"This is you", "relation":"YOURSELF"}, status=status.HTTP_200_OK)
+    return Response({"current_user":curr_user, "check_user":check_user}, status=status.HTTP_200_OK)
+    # Checks if curr_user and check_user have Following relationship
+    if Following.objects.filter(followee_id=check_user.id, follower_id=curr_user.id).exists() and Following.objects.filter(followee_id=curr_user.id, follower_id=check_user.id).exists():
+        return Response({"message":"This is a user you are friends with.", "relation":"FRIEND"}, status=status.HTTP_200_OK)
+    elif Following.objects.filter(followee_id=check_user.id, follower_id=curr_user.id).exists():
+        return Response({"message":"This is a user you follow.", "relation":"FOLLOWEE"}, status=status.HTTP_200_OK)
+    elif Following.objects.filter(followee_id=curr_user.id, follower_id=check_user.id).exists():
+        return Response({"message":"This is a user you are followed by.", "relation":"FOLLOWER"}, status=status.HTTP_200_OK)
+
+    if Notif.objects.filter(receiver=check_user.id, sender=curr_user.id):
+        return Response({"message":"This is a user you sent a follow request to.", "relation":"PENDING"}, status=status.HTTP_200_OK)
+
+    return Response({"message":"This is a user is no one special.", "relation":"NOBODY"}, status=status.HTTP_200_OK)
+
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def create_follow_request(request, username):
     """
     Create Notif of follow_request type 
@@ -325,7 +356,7 @@ def create_follow_request(request, username):
         return Response({"error":"Follow Request couldn't be made"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_follower_request_list(request):
     """
     Get a list of Notifs of type follower_request of followee user
@@ -350,7 +381,7 @@ def get_follower_request_list(request):
         return Response({"error":"Error: Unable to retrieve follower requests"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def resolve_follower_request (request):
     """
     TODO 
@@ -392,7 +423,7 @@ def resolve_follower_request (request):
         return Response({"message": "Something went wrong, user not followed"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST','DELETE'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def unfollow_user(request, username):
     """
     Unfollow a User
@@ -420,7 +451,7 @@ def unfollow_user(request, username):
         return Response({"message": "You can't unfollow someone you don't follow"}, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_followers(request, username=None):
     """
     TODO 

@@ -19,6 +19,7 @@ from .views import (
     list_public_posts_excluding_user,
     list_user_posts_by_username,
     list_user_posts,
+    get_relationship,
     create_follow_request,
     get_follower_request_list,
     resolve_follower_request,
@@ -42,6 +43,10 @@ urlpatterns = [
     path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
     path('update-profile/', update_user_profile, name='update-profile'),
     
+    # User Relationship Endpoints 
+    # @author Christine Bao
+    path('<str:username>/relationship/', get_relationship, name='get_relationship'), #get relationship between user and logged-in user
+
     # Following Endpoints 
     # @author Christine Bao
     path('profile/<str:username>/follow_request/', create_follow_request, name='create_follow_request'), #send follow request to user whose profile you are visitng

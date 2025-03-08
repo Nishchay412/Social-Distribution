@@ -1,18 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "./leftpanel"; import { TopPanel } from "./toppanel";
 
-/*  Notifications
+/*  Notifications - Follow Requests
     @TODO add notifs for likes + comments?
     Notification currently displays list of Follow Requests for User currently logged in.
     Each Follow Request has a button to accept or deny the request.
     Logged in User is able to click username of Follow Request sender to view their profile.
+   
     @author Christine Bao
 */
-export function Follow_Requests(){
+
+export function Follow_Requests() {
     const navigate = useNavigate();
     const [notifs, setNotifs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const accessToken = localStorage.getItem("access_token");
 
     // fill setNotifs with follow_request NOTIF
@@ -44,28 +47,11 @@ export function Follow_Requests(){
         fetchFollowRequests();
     }, [])
 
-    // Loading State while Follow Request data is being fetched
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-            <p>Fetching Follow Requests...</p>
-            </div>        
-        );
-    }
-    // Error State if an error occurs while fetching Follow Request
-    if (error) {
-        return (
-          <div className="flex justify-center items-center min-h-screen">
-            <p className="text-red-500">{error}</p>
-          </div>
-        );
-    }
     // Render the Follow Reqeusts
     return(
         <div className="min-h-screen">
         {/* Top Panel (Navigation, Search, Profile) */}
         <TopPanel />
-            
             {/* Main Layout */}
             <div className="flex mt-4">
                 {/* Sidebar (Navigation, Contacts) */}
@@ -78,7 +64,13 @@ export function Follow_Requests(){
                     {/* Create Post at the Top */}
                     <div className="mb-6">
                         <h2 className="text-2xl font-bold mb-4">Follow Requests</h2>
-                        {notifs.length === 0 ? (<p>It's Quiet...</p>) : (
+                        {loading ? (  // Loading State while Follow Request data is being fetched
+                            <p className="text-blue-500"> Fetching Follow Requests... </p>
+                        ) : error ? ( // Error State if an error occurs while fetching Follow Request
+                            <p className="text-red-500">{error}</p>
+                        ) : notifs.length === 0 ? (
+                            <p>It's Quiet...</p>
+                        ) : (
                             <ul className="space-y-6">
                                 {notifs.map((notif) => (
                                     <li key={notif.id} className="bg-white p-4 rounded shadow">
