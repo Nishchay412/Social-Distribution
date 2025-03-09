@@ -22,7 +22,8 @@ from .views import (
     get_relationship,
     create_follow_request,
     get_follower_request_list,
-    resolve_follower_request,
+    accept_follower_request,
+    cancel_follower_request,
     get_followers,
     unfollow_user,
     add_friend,
@@ -49,10 +50,11 @@ urlpatterns = [
 
     # Following Endpoints 
     # @author Christine Bao
-    path('profile/<str:username>/follow_request/', create_follow_request, name='create_follow_request'), #send follow request to user whose profile you are visitng
+    path('profile/<str:username>/follow-request/', create_follow_request, name='create_follow_request'), #send follow request to user whose profile you are visitng
     path('profile/<str:username>/unfollow/', unfollow_user, name='unfollow_user'), #unfollow user whose profile you are visitng
-    path('notifs/follow_requests/', get_follower_request_list, name='get_follower_request_list'), #get follower_request notifs from user whose profile you are on
-    path('notifs/follow_requests/resolve/', resolve_follower_request, name='resolve_follower_request'), #get follower_request notifs from user whose profile you are on
+    path('profile/<str:username>/cancel-follow-request/', cancel_follower_request, name='cancel_follewor_request'), #cancel follow request to the user whose profile you are visitng
+    path('notifs/follow-requests/', get_follower_request_list, name='get_follower_request_list'), #get follower_request notifs from user whose profile you are on
+    path('notifs/follow-requests/<str:username>/accept/', accept_follower_request, name='accept_follower_request'), #get follower_request notifs from user whose profile you are on
     path('followers/<str:username>/', get_followers, name='get_followers'), #get list of followers of user you are on
     
     # User Posts by Username

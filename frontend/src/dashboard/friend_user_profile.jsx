@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import Follow_Button from "../Following/FollowButton";
+import Profile_Button from "../Following/ProfileButton";
 
 export function Friend_Profile() {
   const { username } = useParams(); // e.g., /profile/:username
@@ -113,7 +113,7 @@ export function Friend_Profile() {
     <div className="flex justify-center items-center min-h-screen">
       <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
         {/* Follow Button from Following dir */}
-        <Follow_Button/>
+        <Profile_Button/>
         {/* Profile Image */}
         <img
           src={

@@ -336,7 +336,11 @@ def create_follow_request(request, username):
     'sender' is the user sending the follow request, get username from request
     """
     receiver = get_object_or_404(User, username=username)
-    sender = get_object_or_404(User, username=request.data['username'])
+    sender = get_object_or_404(User, username=request.user)
+
+    # Can't send another notif if request already sent
+    if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id):
+        return Response({"message":"You already sent them a follow request!"}, status=status.HTTP_204_NO_CONTENT)
 
     # Cannot send yourself a follow request
     if receiver.id == sender.id: 
@@ -381,27 +385,19 @@ def get_follower_request_list(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def resolve_follower_request (request):
+def accept_follower_request (request, username):
     """
     TODO 
-    - create notif to see if it works with notifs
     - maybe shouldn't allow admins to follow or be followed
 
-    Allow or deny a follow request.
-    Request data MUST include a 'confirm' value of either 'deny' or anything else.
-    Denying a follow request deletes the follower request notif.
+    Accept follow request
     Allowing a follow request adds a Following relationship between the two users and deletes the follower request notif.
 
     @author Christine Bao
     """
-    # Are we denying or accepting the friend request
-    if request.data['confirm'] == 'deny':
-        Notif.objects.filter(pk=request.data['notif_id']).delete()
-        return Response({"message" : "Follower Request denied"}, status=status.HTTP_200_OK)
-    
     # Get followee and follower
-    followee = get_object_or_404(User, username=request.data['followee'])
-    follower = get_object_or_404(User, username=request.data['follower'])
+    followee = get_object_or_404(User, username=request.user)
+    follower = get_object_or_404(User, username=username)
 
     # Cannot follow yourself
     if follower.id == followee.id:
@@ -416,12 +412,30 @@ def resolve_follower_request (request):
         serializer = FollowingSerializer(data=data)
         if serializer.is_valid():
             serializer.save(followee_id = followee.id, follower_id = follower.id)
-            Notif.objects.filter(pk=request.data['notif_id']).delete() # get Notif id to delete follow_request
+            Notif.objects.filter(receiver_id=followee.id, sender_id=follower.id).delete() # get Notif id to delete follow_request
             return Response({"message": "You have followed this user."}, status=status.HTTP_200_OK)
     except:
         return Response({"message": "Something went wrong, user not followed"}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST','DELETE'])
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def cancel_follower_request(request, username):
+    """
+    Cancel Friend Request
+    'receiver' is the User we no longer want to follow but still have a pending follow request
+    'sender' is the User who is cancelling the friend request
+    """
+    # Get sender and receiver of the follow request
+    sender = get_object_or_404(User, username=request.user)
+    receiver = get_object_or_404(User, username=username)
+
+    try: # delete Notif Request                                                                          
+        Notif.objects.filter(receiver_id=receiver.id, sender_id=sender.id).delete() 
+        return Response({"message":"Friend Request Cancelled!"}, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({"error":"Friend Request not deleted"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def unfollow_user(request, username):
     """
@@ -435,8 +449,8 @@ def unfollow_user(request, username):
     """
     # Get followee and follower
     followee = get_object_or_404(User, username=username)
-    follower = get_object_or_404(User, username=request.data['follower'])
-   
+    follower = get_object_or_404(User, username=request.user)
+
    # Cannot unfollow yourself
     if follower.id == followee.id:
         return Response({"error": "Cannot unfollow yourself."}, status=status.HTTP_403_FORBIDDEN)

@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "./leftpanel"; import { TopPanel } from "./toppanel";
 
 /*  Notifications - Follow Requests
-    @TODO add notifs for likes + comments?
+    @TODO 
+    - add notifs for likes + comments?
+    - add functionality for allow or deny requests
+
     Notification currently displays list of Follow Requests for User currently logged in.
     Each Follow Request has a button to accept or deny the request.
     Logged in User is able to click username of Follow Request sender to view their profile.
@@ -23,7 +26,7 @@ export function Follow_Requests() {
         const fetchFollowRequests = async () => {
             setLoading(true);
             try {
-                const response = await fetch("http://127.0.0.1:8000/notifs/follow_requests/", {
+                const response = await fetch("http://127.0.0.1:8000/notifs/follow-requests/", {
                     method: "GET",
                     headers: {
                         "Authorization": `Bearer ${accessToken}`,
