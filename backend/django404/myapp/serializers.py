@@ -86,10 +86,12 @@ class PostSerializer(serializers.ModelSerializer):
             'comments_count',
             'content_html',
             'comments',
+            'updated',
+            'deleted_at'
         ]
         # Marking certain fields as read-only ensures that system-managed data (like 'id', 'published') 
         # and relationships (like author_username, comments) cannot be overridden.
-        read_only_fields = ['id', 'author_username', 'published', 'likes_count', 'comments_count','comments']  # ✅ Prevents modification of these fields
+        read_only_fields = ['id', 'author_username', 'published','updated', 'likes_count', 'comments_count','comments']  # ✅ Prevents modification of these fields
     def get_likes_count(self, obj):
         # Returns the total number of likes for this post, allowing quick reference in the serialized output.
         return obj.likes.count()

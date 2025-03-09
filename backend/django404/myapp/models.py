@@ -54,6 +54,7 @@ class Post(models.Model):
         default='PUBLIC'
     )
     published = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)  # Soft Delete
     
     def is_deleted(self):

@@ -203,7 +203,7 @@ const MyPosts = () => {
                       {post.author_username || "You"}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {new Date(post.published).toLocaleString()}
+                      {new Date(post.updated).toLocaleString()}
                     </p>
                   </div>
                 </div>

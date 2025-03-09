@@ -51,7 +51,7 @@ const UserPosts = () => {
                                 <ReactMarkdown>{post.content}</ReactMarkdown>
                             </div>
                             {post.image && <img src={post.image} alt="Post" className="w-full mt-4 rounded-lg" />}
-                            <p className="text-sm text-gray-400 mt-2"><strong>Published:</strong> {new Date(post.published).toLocaleString()}</p>
+                            <p className="text-sm text-gray-400 mt-2"><strong>Published:</strong> {new Date(post.published).toLocaleString()}<strong>Last Edited:</strong> {new Date(post.updated).toLocaleString()}</p>
                         </li>
                     ))}
                 </ul>
