@@ -74,6 +74,7 @@ const Stream = () => {
               )}
               <div className="text-xs text-gray-500 mt-2">
                 Published: {new Date(post.published).toLocaleString()}
+                Last Edited: {new Date(post.updated).toLocaleString()}
               </div>
             </li>
           ))}

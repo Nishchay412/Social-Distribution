@@ -163,6 +163,7 @@ export function Friend_Profile() {
                 </div>
                 <p className="text-xs text-gray-400">
                   Published: {new Date(post.published).toLocaleString()}
+                  Last Edited: {new Date(post.updated).toLocaleString()}
                 </p>
               </div>
             ))
