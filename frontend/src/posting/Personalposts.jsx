@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 
 // Helper function to build the full image URL
 function getImageUrl(path) {
@@ -248,7 +249,9 @@ const MyPosts = () => {
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       {post.title}
                     </h3>
-                    <p className="text-gray-700">{post.content}</p>
+                    <div className="text-gray-700 markdown-content">
+                      <ReactMarkdown>{post.content}</ReactMarkdown>
+                    </div>
                     {post.image && (
                       <img
                         src={getImageUrl(post.image)}

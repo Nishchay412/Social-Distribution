@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 
 // Helper function to build the correct image URL
 function getImageUrl(path) {
@@ -57,7 +58,9 @@ function DraftPosts() {
           {posts.map((post) => (
             <li key={post.id} className="bg-white p-4 rounded shadow">
               <h3 className="text-xl font-semibold">{post.title}</h3>
-              <p className="text-gray-700">{post.content}</p>
+              <div className="text-gray-700 markdown-content">
+                <ReactMarkdown>{post.content}</ReactMarkdown>
+              </div>
               {post.image && (
                 <img
                   src={getImageUrl(post.image)}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import ReactMarkdown from "react-markdown";
 
 // Helper function to build the full image URL from a relative path.
 function getImageUrl(path) {
@@ -61,7 +62,9 @@ const Stream = () => {
           {posts.map((post) => (
             <li key={post.id} className="bg-white p-5 rounded-lg shadow-md">
               <h3 className="text-xl font-bold">{post.title}</h3>
-              <p className="text-gray-700">{post.content}</p>
+              <div className="text-gray-700 markdown-content">
+                <ReactMarkdown>{post.content}</ReactMarkdown>
+              </div>
               {post.image && (
                 <img
                   src={getImageUrl(post.image)}

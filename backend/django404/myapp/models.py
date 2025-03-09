@@ -38,7 +38,7 @@ class Post(models.Model):
     ('DELETED', 'Deleted'),     # Soft delete (not actually removed, only node admin can see)
 ]
 
-
+    content = models.TextField(blank=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, 

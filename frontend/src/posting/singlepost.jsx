@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import ReactMarkdown from "react-markdown";
+
 
 // Helper function to build the correct image URL
 function getImageUrl(path) {
