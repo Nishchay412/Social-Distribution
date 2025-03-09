@@ -64,6 +64,8 @@ class PostSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     # Serialize related comments in a read-only fashion. This way, clients can see comments
     # directly alongside the post data, but can't create or edit comments through the PostSerializer.
+    title = serializers.CharField(required=False, allow_blank=True)
+    content = serializers.CharField(required=False, allow_blank=True)
     comments = CommentSerializer(many=True, read_only=True)
     content_html = serializers.SerializerMethodField()
 
@@ -76,6 +78,7 @@ class PostSerializer(serializers.ModelSerializer):
             'author_username',
             'title',
             'content',
+            'content_html',
             'image',
             'visibility',
             'published',
@@ -94,9 +97,16 @@ class PostSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         # Returns the total number of comments on this post, also for quick reference
         return obj.comments.count()
+    
     def get_content_html(self, obj):
         # Convert the CommonMark content to HTML
-        return markdown.markdown(obj.content)
+        return markdown.markdown(obj.content or '')
+    
+    def validate(self, data):
+        # If there's no title, no content, and no image, raise an error
+        if not data.get('title') and not data.get('content') and not data.get('image'):
+            raise serializers.ValidationError("At least one of title/content/image is required.")
+        return data
     
 #QingqiuTan
 class LikeSerializer(serializers.ModelSerializer):

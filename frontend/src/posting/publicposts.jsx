@@ -171,9 +171,9 @@ const PublicPosts = () => {
                       <div>
                         {post.comments.map((comment) => (
                           <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between">
-                            <dev>
+                            <div>
                               <strong>{comment.author_username}:</strong> {comment.text}
-                            </dev>
+                            </div>
                             
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-600">

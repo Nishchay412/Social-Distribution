@@ -7,6 +7,13 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, CommentLikeSerializer
 from .models import Post, Comment, Like, CommentLike
+import base64
+import uuid
+from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 User = get_user_model()
 
@@ -163,13 +170,6 @@ def delete_user_by_username(request, username):
     user.delete()
     return Response({"message": "User has been deleted"}, status=status.HTTP_200_OK)
 
-import base64
-import uuid
-from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -243,7 +243,7 @@ def create_post(request):
     """
     serializer = PostSerializer(data=request.data)
     if serializer.is_valid():
-        post = serializer.save(author=request.user)
+        serializer.save(author=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

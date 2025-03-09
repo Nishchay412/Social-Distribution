@@ -73,7 +73,7 @@ export function CreatePost() {
             {/* Title Field */}
             <input
               type="text"
-              placeholder="Title"
+              placeholder="Title (optional)"
               className="w-full p-3 bg-gray-100 rounded-full outline-none"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -81,7 +81,7 @@ export function CreatePost() {
             {/* Content Field */}
             <input
               type="text"
-              placeholder={`What's happening, ${firstName}?`}
+              placeholder={`What's happening, ${firstName}? (optional)`}
               className="w-full p-3 bg-gray-100 rounded-full outline-none"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -121,7 +121,7 @@ export function CreatePost() {
           <button
             onClick={handleSubmit}
             className="bg-pink-500 text-white px-4 py-2 rounded-full hover:bg-pink-600 transition"
-            disabled={!content.trim() || !title.trim()}
+            disabled={!title.trim() && !content.trim() && !selectedFile}
           >
             Post
           </button>
