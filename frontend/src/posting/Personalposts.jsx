@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 
 // Helper function to build the full image URL
 function getImageUrl(path) {
@@ -248,7 +249,9 @@ const MyPosts = () => {
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       {post.title}
                     </h3>
-                    <p className="text-gray-700">{post.content}</p>
+                    <div className="text-gray-700 markdown-content">
+                      <ReactMarkdown>{post.content}</ReactMarkdown>
+                    </div>
                     {post.image && (
                       <img
                         src={getImageUrl(post.image)}
@@ -266,9 +269,9 @@ const MyPosts = () => {
                       <div>
                         {post.comments.map((comment) => (
                           <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between">
-                            <dev>
+                            <div>
                               <strong>{comment.author_username}:</strong> {comment.text}
-                            </dev>
+                            </div>
                             
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-600">

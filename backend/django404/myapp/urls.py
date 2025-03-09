@@ -3,6 +3,7 @@ from .views import (
     register_user,
     login_user,
     logout_user,
+    toggle_comment_like,
     user_profile_by_username,
     delete_user_by_username,
     update_user_profile,

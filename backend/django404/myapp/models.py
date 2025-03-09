@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 import uuid
+import markdown
 
 #Nishchay Ranjan
 class User(AbstractUser):
@@ -37,14 +38,14 @@ class Post(models.Model):
     ('DELETED', 'Deleted'),     # Soft delete (not actually removed, only node admin can see)
 ]
 
-
+    content = models.TextField(blank=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
         related_name='posts'
     )
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100,blank=True)
     content = models.TextField(blank=True)
     image = models.ImageField(upload_to='images/', blank=True, null=True)
     visibility = models.CharField(
@@ -90,9 +91,7 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.author.username} liked {self.post.id}"
-
-
-#Yicheng Lin
+    #Yicheng Lin
 class Node(models.Model):
     """
     Represents a remote node that this server can communicate with.
@@ -107,7 +106,6 @@ class Node(models.Model):
 
     def __str__(self):
         return f"Node {self.base_url} (Active: {self.is_active})"
-
     
 class CommentLike(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -117,4 +115,3 @@ class CommentLike(models.Model):
 
     def __str__(self):
         return f"{self.author.username} liked comment {self.comment.id}"
-

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 
 // Helper function to build the correct image URL
 function getImageUrl(path) {
@@ -143,7 +144,9 @@ function FriendsPosts() {
             return (
               <li key={post.id} className="bg-white p-4 rounded shadow">
                 <h3 className="text-xl font-semibold">{post.title}</h3>
-                <p className="text-gray-700">{post.content}</p>
+                <div className="text-gray-700 markdown-content">
+                  <ReactMarkdown>{post.content}</ReactMarkdown>
+                </div>
                 {post.image && (
                   <img
                     src={getImageUrl(post.image)}
@@ -232,9 +235,9 @@ function FriendsPosts() {
                       <div>
                         {post.comments.map((comment) => (
                           <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between">
-                            <dev>
+                            <div>
                               <strong>{comment.author_username}:</strong> {comment.text}
-                            </dev>
+                            </div>
                             
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-600">
