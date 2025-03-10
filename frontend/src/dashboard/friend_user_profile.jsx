@@ -161,9 +161,12 @@ export function Friend_Profile() {
             posts.map((post) => (
               <div key={post.id} className="border-b border-gray-300 py-2">
                 <h4 className="font-semibold">{post.title}</h4>
-                <p className="text-gray-700">{post.content}</p>
+                <div className="text-gray-700 markdown-content">
+                  <ReactMarkdown>{post.content}</ReactMarkdown>
+                </div>
                 <p className="text-xs text-gray-400">
                   Published: {new Date(post.published).toLocaleString()}
+                  Last Edited: {new Date(post.updated).toLocaleString()}
                 </p>
               </div>
             ))

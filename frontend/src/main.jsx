@@ -20,8 +20,10 @@ import { CreatePost1 } from './posting/CreatePost1';
 import PostDetails from './posting/singlepost';
 import FriendsPosts from './posting/FriendsPost';
 import User_Management from './Node_Management/UserManagement';
-
+import AdminSignup from './Node_Management/AdminSignup';
 import Admin_Edit_User from './Node_Management/AdminEditUser';
+import AdminPendingUsers from './Node_Management/AdminPendingUsers';
+import AdminRegisterUser from './Node_Management/AdminRegisterUser';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -50,8 +52,20 @@ const router = createBrowserRouter([
     element: <Signup />,
   },
   {
+    path: "/admin-sign-up",
+    element: <AdminSignup/>,
+  },
+  {
+    path: "/admin-pending-users",
+    element: <AdminPendingUsers/>,
+  },
+  {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/admin-register-user",
+    element: <AdminRegisterUser />,
   },
   
   {

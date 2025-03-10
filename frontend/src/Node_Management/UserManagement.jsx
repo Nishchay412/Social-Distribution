@@ -31,17 +31,30 @@ const User_Management = () => {
     // Handle deleting users
     const handleDelete = async (username) => {
         try {
-            await fetch(`http://127.0.0.1:8000/users/exclude-self/${username}/delete-user/`,{ 
-                method: "DELETE",
-                headers: {"Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json"}
-            })
-
-            window.location.reload();
+          const res = await fetch(
+            `http://127.0.0.1:8000/users/exclude-self/${username}/delete-user/`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+      
+          if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Delete failed: ${res.status} ${errorText}`);
+          }
+      
+          // Optionally, you could remove the deleted user from state instead of reloading the page:
+          window.location.reload();
         } catch (error) {
-            console.error(`Error deleting user ${username}:`, error);
-            setError(`Error deleting user ${username}.`);
+          console.error(`Error deleting user ${username}:`, error);
+          setError(`Error deleting user ${username}.`);
         }
-    };
+      };
+      
 
     useEffect(() => {
         const fetchUsers = async () => {

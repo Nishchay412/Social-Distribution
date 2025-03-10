@@ -51,7 +51,7 @@ export function Dashboard() {
       case "public":
         return <PublicPosts />;
       case "stream":
-        return <Stream />;
+        return <Stream/>;
       case "my":
         return <MyPosts />;
       case "friends":

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
+
 
 // Helper function to build the correct image URL
 function getImageUrl(path) {
@@ -41,6 +43,24 @@ const PublicPosts = () => {
 
     fetchPublicPosts();
   }, [token]);
+
+  // Handle like comment button
+  const handleLikeComment = async (postId, commentId) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:8000/posts/${postId}/comments/${commentId}/likes/toggle/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // re-fetch or update local state to show updated like count
+      const response = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPosts(response.data);
+    } catch (err) {
+      console.error("Error liking comment:", err.response?.data || err.message);
+    }
+  };
 
   // Handle like button
   const handleLike = async (postId) => {
@@ -138,7 +158,10 @@ const PublicPosts = () => {
                   </div>
                   {/* Post Content */}
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{post.title}</h3>
-                  <p className="text-gray-700">{post.content}</p>
+                  <div className="text-gray-700 markdown-content">
+                    <ReactMarkdown>{post.content}</ReactMarkdown>
+                  </div>
+
                   {post.image && (
                     <img
                       src={getImageUrl(post.image)}
@@ -152,8 +175,22 @@ const PublicPosts = () => {
                     {post.comments?.length > 0 && (
                       <div>
                         {post.comments.map((comment) => (
-                          <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
-                            <strong>{comment.author_username}:</strong> {comment.text}
+                          <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between">
+                            <div>
+                              <strong>{comment.author_username}:</strong> {comment.text}
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">
+                                {comment.likes_count || 0}
+                            </span>
+                            <button
+                              onClick={() => handleLikeComment(post.id, comment.id)}
+                              className="hover:text-pink-500 transition"
+                            >
+                              👍
+                            </button>
+                            </div>
                           </div>
                         ))}
                       </div>

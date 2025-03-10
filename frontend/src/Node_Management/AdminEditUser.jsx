@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 
-
 function Admin_Edit_User({ onClose, user }) {
   const [error, setError] = useState(null);
   const accessToken = localStorage.getItem("access_token");
@@ -51,8 +50,9 @@ function Admin_Edit_User({ onClose, user }) {
         formDataToSend.append("profile_picture", blob, "profile.jpg");
       }
 
+      // Updated URL: using the self-update endpoint
       const response = await fetch(
-        `http://127.0.0.1:8000/users/exclude-self/${user.username}/update-user/`,  // ✅ Fixed API URL
+        `http://127.0.0.1:8000/users/exclude-self/${user.username}/update-user/`,
         {
           method: "PATCH",
           headers: {
@@ -62,7 +62,7 @@ function Admin_Edit_User({ onClose, user }) {
         }
       );
       
-
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Update error:", response.status, errorText);

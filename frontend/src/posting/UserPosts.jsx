@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 
 const UserPosts = () => {
     const { username } = useParams();
@@ -46,9 +47,11 @@ const UserPosts = () => {
                     {posts.map((post) => (
                         <li key={post.id} className="border-b border-gray-200 pb-4">
                             <h3 className="text-xl font-semibold text-gray-700">{post.title}</h3>
-                            <p className="text-gray-600 mt-2">{post.content}</p>
+                            <div className="text-gray-700 markdown-content">
+                                <ReactMarkdown>{post.content}</ReactMarkdown>
+                            </div>
                             {post.image && <img src={post.image} alt="Post" className="w-full mt-4 rounded-lg" />}
-                            <p className="text-sm text-gray-400 mt-2"><strong>Published:</strong> {new Date(post.published).toLocaleString()}</p>
+                            <p className="text-sm text-gray-400 mt-2"><strong>Published:</strong> {new Date(post.published).toLocaleString()}<strong>Last Edited:</strong> {new Date(post.updated).toLocaleString()}</p>
                         </li>
                     ))}
                 </ul>

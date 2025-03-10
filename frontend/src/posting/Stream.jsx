@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import ReactMarkdown from "react-markdown";
 
 // Helper function to build the full image URL from a relative path.
 function getImageUrl(path) {
@@ -26,7 +27,7 @@ const Stream = () => {
   useEffect(() => {
     const fetchStreamPosts = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/stream/", {
+        const response = await axios.get("http://127.0.0.1:8000/posts/stream", {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -61,7 +62,9 @@ const Stream = () => {
           {posts.map((post) => (
             <li key={post.id} className="bg-white p-5 rounded-lg shadow-md">
               <h3 className="text-xl font-bold">{post.title}</h3>
-              <p className="text-gray-700">{post.content}</p>
+              <div className="text-gray-700 markdown-content">
+                <ReactMarkdown>{post.content}</ReactMarkdown>
+              </div>
               {post.image && (
                 <img
                   src={getImageUrl(post.image)}
@@ -71,6 +74,7 @@ const Stream = () => {
               )}
               <div className="text-xs text-gray-500 mt-2">
                 Published: {new Date(post.published).toLocaleString()}
+                Last Edited: {new Date(post.updated).toLocaleString()}
               </div>
             </li>
           ))}
