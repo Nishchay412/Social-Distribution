@@ -6,6 +6,16 @@ import markdown
 
 #Nishchay Ranjan
 class User(AbstractUser):
+    """
+    Custom User model with the following fields:
+    - email (unique)
+    - first_name
+    - last_name
+    - profile_image
+    - friends (ManyToManyField to 'self')
+    - is_approved (BooleanField)
+    - is_admin (BooleanField)
+    """
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -109,6 +119,9 @@ class Node(models.Model):
         return f"Node {self.base_url} (Active: {self.is_active})"
     
 class CommentLike(models.Model):
+    """
+    Represents a 'like' from a specific user on a specific comment.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='likes')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

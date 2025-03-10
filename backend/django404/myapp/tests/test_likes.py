@@ -14,6 +14,9 @@ class LikeAPITestCase(APITestCase):
         self.post = Post.objects.create(author=self.user, title='Like Me')
 
     def test_toggle_like(self):
+        """
+        Test toggling a like on a post.
+        """
         url = reverse('toggle-like', args=[self.post.id])
         # First call: creates a like
         response = self.client.post(url, {}, format='json')

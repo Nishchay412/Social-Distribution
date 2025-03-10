@@ -559,6 +559,9 @@ def create_like(request, post_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def toggle_like(request, post_id):
+    """
+    Toggles a like on a PUBLIC post. If the user has already liked the post, the like is removed.
+    """
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
@@ -578,6 +581,9 @@ def toggle_like(request, post_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def toggle_comment_like(request, post_id, comment_id):
+    """
+    Toggles a like on a comment. If the user has already liked the comment, the like is removed.
+    """
     try:
         comment = Comment.objects.get(id=comment_id, post__id=post_id)
     except Comment.DoesNotExist:
