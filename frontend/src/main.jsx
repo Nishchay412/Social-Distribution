@@ -8,6 +8,7 @@ import { Admin_Dashboard } from './Node_Management/AdminDashboard.jsx';
 import Login from './authentication/Login';
 import { User_Profile } from './dashboard/user_profile';
 import { Friend_Profile } from './dashboard/friend_user_profile';
+import { Follow_Requests } from './dashboard/follow_requests.jsx';
 import AuthorList from './posting/AuthorList';
 import EditPost from './posting/EditPost';
 import UserPosts from './posting/UserPosts';
@@ -80,6 +81,10 @@ const router = createBrowserRouter([
     element: <Friend_Profile />,
   },
   {
+    path:"/follow-requests",
+    element: <Follow_Requests/>,
+  },
+  {
     path: "/authorlist",
     element: <AuthorList />,
   },
@@ -99,7 +104,6 @@ const router = createBrowserRouter([
     path: "/my-posts",  // ✅ Cleaner URL for user's posts
     element: <MyPosts />,
   },
-
   {
     path: "/post/:id",  // ✅ Cleaner URL for user's posts
     element: <PostDetails />,
@@ -108,8 +112,6 @@ const router = createBrowserRouter([
     path: "/friendspost",  // ✅ Cleaner URL for user's posts
     element: <FriendsPosts/>,
   },
-  
-  
   {
     path: "/publicposts",  // ✅ Cleaner URL for user's posts
     element: <PublicPosts />,

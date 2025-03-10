@@ -20,6 +20,16 @@ from .views import (
     list_public_posts_excluding_user,
     list_user_posts_by_username,
     list_user_posts,
+    get_relationship,
+    create_follow_request,
+    get_follower_request_list,
+    accept_follower_request,
+    deny_follow_request,
+    cancel_follower_request,
+    get_followers,
+    get_friends,
+    get_followees,
+    unfollow_user,
     add_friend,
     friends_posts,
     list_friends,
@@ -29,10 +39,8 @@ from .views import (
     register_admin_user,
     approve_user,
     list_pending_users,
-    toggle_comment_like,
     stream_posts,
     register_user_as_admin
-
 )
 
 urlpatterns = [
@@ -47,15 +55,28 @@ urlpatterns = [
     # ✅ User Profile Endpoints
     path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
     path('update-profile/', update_user_profile, name='update-profile'),
+    
+    # User Relationship Endpoints (by Christine Bao)
+    path('<str:username>/relationship/', get_relationship, name='get_relationship'),  # Get relationship between user and logged-in user
+
+    # Following Endpoints (by Christine Bao)
+    path('profile/<str:username>/follow-request/', create_follow_request, name='create_follow_request'),  # Send follow request to user whose profile you are visiting
+    path('profile/<str:username>/unfollow/', unfollow_user, name='unfollow_user'),  # Unfollow user whose profile you are visiting
+    path('profile/<str:username>/cancel-follow-request/', cancel_follower_request, name='cancel_follewor_request'),  # Cancel follow request
+    path('notifs/follow-requests/', get_follower_request_list, name='get_follower_request_list'),  # Get follow request notifications
+    path('notifs/follow-requests/<str:username>/accept/', accept_follower_request, name='accept_follower_request'),  # Accept follow request
+    path('notifs/follow-requests/<str:username>/deny/', deny_follow_request, name='deny_follow_request'),  # Deny follow request
+    path('followers/<str:username>/', get_followers, name='get_followers'),  # Get list of followers for a user
+    path('followees/<str:username>/', get_followees, name='get_followees'),  # Get list of users the given user is following
+    path('users/friends/', get_friends, name='get_friends'),  # Get list of friends
+
+    # Admin user update endpoint from main branch
     path('users/exclude-self/<str:username>/update-user/', admin_update_user, name='admin_update_user'),
-
-
 
     # User Posts by Username
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),
 
-
-    # ✅ Post Endpoints QingqiuTan/Nishchay Ranjan/Riyasat Zaman
+    # ✅ Post Endpoints (QingqiuTan/Nishchay Ranjan/Riyasat Zaman)
     path('posts/', list_posts, name='list-posts'),
     path('posts/create/', create_post, name='create-post'),
     path('posts/<uuid:post_id>/', retrieve_post, name='retrieve-post'),
@@ -64,25 +85,24 @@ urlpatterns = [
     path('api/posts/public/', list_public_posts_excluding_user, name='public-posts-excluding-user'),
     path('api/admin-register/', register_admin_user, name='admin-register'),
 
-    # ✅ Comments Endpoints QingqiuTan
+    # ✅ Comments Endpoints (QingqiuTan)
     path('posts/<uuid:post_id>/comments/', list_comments, name='list-comments'),
     path('posts/<uuid:post_id>/comments/create/', create_comment, name='create-comment'),
+    path('posts/<uuid:post_id>/comments/<uuid:comment_id>/likes/toggle/', toggle_comment_like, name='toggle-comment-like'),
+
+    # ✅ Friend & Non-Friend Endpoints
     path('friends/add/<str:username>/', add_friend, name='add_friend'),
     path('friends/posts/', friends_posts, name='friends-posts'),
     path('friends/', list_friends, name='list-friends'),
-    path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),  # ✅ Corrected endpoint
-    path('api/admin/approve-user/<str:username>/', approve_user, name='approve-user'),
-    path('api/admin/pending-users/', list_pending_users, name='pending-users'),
-    path('posts/<uuid:post_id>/comments/<uuid:comment_id>/likes/toggle/', toggle_comment_like, name='toggle-comment-like'),
+    path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),
 
-
-    # ✅ Likes Endpoints QingqiuTan
+    # ✅ Likes Endpoints (QingqiuTan)
     path('posts/<uuid:post_id>/likes/', list_likes, name='list-likes'),
     path('posts/<uuid:post_id>/likes/toggle/', toggle_like, name='toggle-like'),
     path('posts/my/', list_user_posts, name='list-user-posts'),
     path('api/posts/public/', list_public_posts_excluding_user, name='public-posts-excluding-user'),
 
-    # ✅ User Management
+    # ✅ User Management Endpoints (Nishchay Ranjan/Christine Bao)
     path('users/exclude-self/', list_users_excluding_self, name='list_users_excluding_self'),
     path('users/exclude-self/<str:username>/update-user/', update_user_profile, name='admin_update_user'), 
     path('users/exclude-self/<str:username>/delete-user/', delete_user_by_username, name='delete_user'),

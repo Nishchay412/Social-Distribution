@@ -31,12 +31,15 @@ export function Header() {
   };
 
   const handleUserProfile = async () => await navigate("/profile");
+  const handleNotifs = async () => await navigate("/follow-requests");
 
   const headerelements = [
-    { id: 1, name: "feed", img: "/homeicon.png", action: null },
-    { id: 2, name: "settings", img: "/settings.png", action: null },
-    { id: 3, name: "Log Out", img: "/logout.png", action: handleLogout },
-    { id: 4, name: "Profile", img: "/userprofile.png", action: handleUserProfile },
+    { id: 1, name: "Home", img: "/homeicon.png", action: null },
+    { id: 2, name: "Profile", img: "/userprofile.png", action: handleUserProfile},
+    { id: 3, name: "Notifs", action: handleNotifs},
+    { id: 4, name: "Settings", img: "/settings.png", action: null },
+    { id: 5, name: "Log Out", img: "/logout.png", action: handleLogout },
+    
   ];
 
   const [users, setUsers] = useState([]);
@@ -98,7 +101,7 @@ export function Header() {
       }
 
       try {
-        const response = await fetch("http://127.0.0.1:8000/friends/", {
+        const response = await fetch("http://127.0.0.1:8000/users/friends", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -150,7 +153,7 @@ export function Header() {
               className="p-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition"
               onClick={() => userProfile(user.username)}
             >
-              <strong>{user.username}</strong> - {user.email}
+              <strong>{user.username}</strong>
             </li>
           ))}
         </ul>
@@ -166,11 +169,11 @@ export function Header() {
         <ul className="space-y-3">
           {friends.map((friend) => (
             <li
-              key={friend.username}
+              key={friend.followee_username}
               className="p-2 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200 transition"
-              onClick={() => userProfile(friend.username)}
+              onClick={() => userProfile(friend.followee_username)}
             >
-              <strong>{friend.username}</strong> - {friend.email}
+              <strong>{friend.followee_username}</strong>
             </li>
           ))}
         </ul>

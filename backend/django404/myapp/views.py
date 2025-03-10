@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser  # For handling image uploads
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, CommentLikeSerializer
-from .models import Post, Comment, Like, CommentLike
+from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, FollowingSerializer, NotifSerializer, CommentLikeSerializer
+from .models import Post, Comment, Like, Following, Notif, CommentLike
 import base64
 import uuid
 from django.core.files.base import ContentFile
@@ -19,8 +19,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 User = get_user_model()
 
-# User Authentication Views
 
+# User Authentication Views
 @api_view(['POST'])
 @permission_classes([AllowAny])  
 def register_user(request):
@@ -134,7 +134,6 @@ def logout_user(request):
         return Response({"error": "Invalid token."}, status=400)
 
 #  User Profile Views
-
 @api_view(['GET'])
 @permission_classes([AllowAny])  
 def user_profile_by_username(request, username):
@@ -156,13 +155,13 @@ def user_profile_by_username(request, username):
 @permission_classes([IsAuthenticated]) 
 def delete_user_by_username(request, username):
     """
+    TODO - permission class should be checking if current user is a superuser/admin
     Delete a user. 
     Expects username of user to be deleted.
     Cannot delete admin/superusers
-    """
-    # TODO Double check user is an admin
-    admin = request.user
 
+    @author Christine Bao
+    """
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
@@ -198,7 +197,6 @@ def update_user_profile(request):
             "profile_picture": user.profile_image.url if user.profile_image else None
         }
     })
-
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -351,8 +349,6 @@ def list_user_posts_by_username(request, username):
     # Return the JSON response
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # Requires user authentication
 def list_public_posts_excluding_user(request):
@@ -367,12 +363,294 @@ def list_public_posts_excluding_user(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-from django.shortcuts import get_object_or_404
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_relationship(request, username):
+    """
+    TODO - if possilbe, i was thinking we use this to check if profile visiting is own user 
+    (have profiles all be the same, but if its one's own profile than add edit button + functionality)
 
+    Get relationship between two users 
+    'curr_user' is currently logged in user, get username from request.data['username']
+    'check_user' is the user we are checking to see what relationship we have with them, get username from username
+    
+    Expected to return 'message' of the relationship and a 'relation' of either ['YOURSELF', 'FRIEND', 'FOLLOWEE', 'FOLLOWER', 'PENDING']
+    'PENDING' is if 'curr_user' sent a follow request.
+
+    @author Christine Bao
+    """
+    curr_user = get_object_or_404(User, username=request.user)
+    check_user = get_object_or_404(User, username=username)
+    if curr_user.id == check_user.id:
+        return Response({"message":"This is you", "relation":"YOURSELF"}, status=status.HTTP_200_OK)
+    
+    # Checks if curr_user and check_user have Following relationship
+    if Following.objects.filter(followee_id=check_user.id, follower_id=curr_user.id).exists() and Following.objects.filter(followee_id=curr_user.id, follower_id=check_user.id).exists():
+        return Response({"message":"This is a user you are friends with.", "relation":"FRIEND"}, status=status.HTTP_200_OK)
+    elif Following.objects.filter(followee_id=check_user.id, follower_id=curr_user.id).exists():
+        return Response({"message":"This is a user you follow.", "relation":"FOLLOWEE"}, status=status.HTTP_200_OK)
+    elif Following.objects.filter(followee_id=curr_user.id, follower_id=check_user.id).exists():
+        return Response({"message":"This is a user you are followed by.", "relation":"FOLLOWER"}, status=status.HTTP_200_OK)
+
+    if Notif.objects.filter(receiver=check_user.id, sender=curr_user.id):
+        return Response({"message":"This is a user you sent a follow request to.", "relation":"PENDING"}, status=status.HTTP_200_OK)
+
+    return Response({"message":"This is a user is no one special.", "relation":"NOBODY"}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_follow_request(request, username):
+    """
+    Create Notif of follow_request type 
+    'receiver' is author receiving the follow request, get username from username
+    'sender' is the user sending the follow request, get username from request
+    """
+    receiver = get_object_or_404(User, username=username)
+    sender = get_object_or_404(User, username=request.user)
+
+    # Can't send another notif if request already sent
+    if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id):
+        return Response({"message":"You already sent them a follow request!"}, status=status.HTTP_204_NO_CONTENT)
+
+    # Cannot send yourself a follow request
+    if receiver.id == sender.id: 
+        return Response({"message":"You cannot send yourself a follow request!"}, status=status.HTTP_403_FORBIDDEN)
+    # Cannot send follow request to someone you already follow
+    if Following.objects.filter(followee_id=receiver.id, follower_id=sender.id).exists():
+        return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
+    
+    data = {"receiver":receiver.id, "sender":sender.id, "notif_type":"FOLLOW_REQUEST"}
+    try:
+        serializer = NotifSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(receiver_id = receiver.id, sender_id = sender.id, notif_type = 'FOLLOW_REQUEST')
+            return Response({"message":"Follow Request Sent!"}, status=status.HTTP_200_OK)
+    except:
+        return Response({"error":"Follow Request couldn't be made"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_follower_request_list(request):
+    """
+    Get a list of Notifs of type follower_request of followee user
+    'receiver' is user receiving notifs (user logged in)
+    Get reciever username from request data
+    Return list of Notifs of type follower_request
+    
+    @author Christine Bao
+    """
+    receiver = get_object_or_404(User, username=request.user)
+
+    try:
+        follower_request_list = (
+            Notif.objects
+                .filter(receiver=receiver.id)
+                .order_by("-created_at")
+            )
+
+        serializer = NotifSerializer(follower_request_list, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except:
+        return Response({"error":"Error: Unable to retrieve follower requests"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def accept_follower_request (request, username):
+    """
+    TODO 
+    - maybe shouldn't allow admins to follow or be followed
+
+    Accept follow request
+    Allowing a follow request adds a Following relationship between the two users and deletes the follower request notif.
+
+    @author Christine Bao
+    """
+    # Get followee and follower
+    followee = get_object_or_404(User, username=request.user)
+    follower = get_object_or_404(User, username=username)
+    
+    # Cannot follow yourself
+    if follower.id == followee.id:
+        return Response({"error": "Cannot follow yourself."}, status=status.HTTP_403_FORBIDDEN)
+    # Cannot follow someone twice
+    if Following.objects.filter(followee_id=followee.id, follower_id=follower.id).exists():
+        return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
+
+    # If not friends and following
+    data = {"followee": followee.id, "follower": follower.id}
+    try:
+        # Mark users as friends if they follow each other
+        if Following.objects.filter(followee_id=follower.id, follower_id=followee.id).exists():
+            relationship = Following.objects.get(followee_id=follower.id, follower_id=followee.id)
+            relationship.friends = 'YES'
+            relationship.save()
+            data = {"followee": followee.id, "follower": follower.id, "friends":"YES"}
+            
+        serializer = FollowingSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(followee_id = followee.id, follower_id = follower.id)
+            Notif.objects.filter(receiver_id=followee.id, sender_id=follower.id).delete() # get Notif id to delete follow_request
+            return Response({"message": "You have followed this user."}, status=status.HTTP_200_OK)
+    except:
+        return Response({"message": "Something went wrong, user not followed"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def deny_follow_request(request, username):
+    """
+    Deny Follow Request
+    'receiver' is the User we no longer want to follow but still have a pending follow request
+    'sender' is the User who is cancelling the friend request
+    """
+    # Get sender and receiver of the follow request
+    sender = get_object_or_404(User, username=username)
+    receiver = get_object_or_404(User, username=request.user)
+
+    try: # delete Notif Request                                                                          
+        Notif.objects.filter(receiver_id=receiver.id, sender_id=sender.id).delete() 
+        return Response({"message":"Follow Request Denied!"}, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({"error":"Unable to Deny Follow Request."}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def cancel_follower_request(request, username):
+    """
+    Cancel Follow Request
+    'receiver' is the User we no longer want to follow but still have a pending follow request
+    'sender' is the User who is cancelling the friend request
+    """
+    # Get sender and receiver of the follow request
+    sender = get_object_or_404(User, username=request.user)
+    receiver = get_object_or_404(User, username=username)
+
+    try: # delete Notif Request                                                                          
+        Notif.objects.filter(receiver_id=receiver.id, sender_id=sender.id).delete() 
+        return Response({"message":"Friend Request Cancelled!"}, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({"error":"Friend Request not deleted"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def unfollow_user(request, username):
+    """
+    Unfollow a User
+
+    Takes in a username of user to be unfollowed.
+    Deletes Following relationship between two users.
+    No notifs will be generated from being unfollowed.
+
+    @author Christine Bao
+    """
+    # Get followee and follower
+    followee = get_object_or_404(User, username=username)
+    follower = get_object_or_404(User, username=request.user)
+
+   # Cannot unfollow yourself
+    if follower.id == followee.id:
+        return Response({"error": "Cannot unfollow yourself."}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        # Check if they are already friends
+        if Following.objects.filter(followee_id=followee.id, follower_id=follower.id).exists():
+            Following.objects.filter(followee_id=followee.id, follower_id=follower.id).delete()
+            
+            if Following.objects.filter(followee_id=follower.id, follower_id=followee.id).exists():
+                relation = Following.objects.get(followee_id=follower.id, follower_id=followee.id)
+                relation.friends = 'NO'
+                relation.save()
+
+            return Response({"message": "You have unfollowed this user."}, status=status.HTTP_200_OK)
+    except:
+        return Response({"message": "You can't unfollow someone you don't follow"}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_followers(request, username):
+    """
+    TODO 
+    - test if this works
+
+    Get followers of author.
+    Get author from request.data (user logged in) or by username (another user).
+    Returns list of users who follow the author.
+
+    @author Christine Bao
+    """
+    author = get_object_or_404(User, username=username)
+    
+    try:
+        followers = (
+            Following.objects
+                .filter(followee_id = author.id)
+                .order_by("-followed_at")
+        )
+        serializer = FollowingSerializer(followers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except:
+        return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_followees(request, username):
+    """
+    TODO 
+    - test if this works
+
+    Get followees of author.
+    Get author from request.data (user logged in) or by username (another user).
+    Returns list of users who follow the author.
+
+    @author Christine Bao
+    """
+    author = get_object_or_404(User, username=username)
+    
+    try:
+        followers = (
+            Following.objects
+                .filter(following_id = author.id)
+                .order_by("-followed_at")
+        )
+        serializer = FollowingSerializer(followers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except:
+        return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_friends(request):
+    """
+    TODO 
+    - test if this works
+
+    Get friends of author.
+    Get author from request.data (user logged in) or by username (another user).
+    Returns list of users who follow the author.
+
+    @author Christine Bao
+    """
+    author = get_object_or_404(User, username=request.user)
+    
+    try:
+        followers = (
+            Following.objects
+                .filter(follower_id=author.id, friends='YES')
+                .order_by("-followed_at")
+        )
+
+        serializer = FollowingSerializer(followers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except:
+        return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
+
+    
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_friend(request, username):
     """
+    TODO - to be removed
     Add friend, takes in username of user to be befriended.
     """
     # Get the target user by username
@@ -390,11 +668,13 @@ def add_friend(request, username):
     request.user.friends.add(target_user)
     target_user.friends.add(request.user)
 
+
 from .serializers import RegisterUserSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friends(request):
     """
+    TODO - to be removed
     Get the friends of the authenticated user
     """
     friends = request.user.friends.all()
@@ -405,6 +685,7 @@ def list_friends(request):
 @permission_classes([IsAuthenticated])
 def friends_posts(request):
     """
+    TODO - to be changed
     Get the posts made by friends of the authenticated user
     """
     user = request.user
@@ -445,6 +726,9 @@ from django.db.models import Q
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def stream_posts(request):
+    """
+    TODO - to be changed to accomadate new Following model for followers-only and friends-only posts
+    """
     user = request.user
     # Get your user's friends (assuming a self-referential many-to-many field)
     friends = user.friends.all()
@@ -480,6 +764,8 @@ def list_users_excluding_self(request):
 @permission_classes([IsAuthenticated])  # ✅ Requires authentication
 def list_non_friend_users(request):
     """
+    TODO - to be changed to accomadate new Following model for followers-only and friends-only posts
+
     Lists all users excluding the authenticated user and their friends.
     """
     # Get all friends of the authenticated user
@@ -505,6 +791,8 @@ def draft_posts(request):
 @permission_classes([IsAuthenticated])
 def list_comments(request, post_id):
     """
+    TODO - think about how we want comments to appear in friends-only or follower-only posts
+
     Lists all comments for a given PUBLIC post, in descending order by creation date.
     If the post doesn't exist or isn't PUBLIC, returns a 404.
     """
