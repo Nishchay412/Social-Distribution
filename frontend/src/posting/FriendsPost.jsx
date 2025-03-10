@@ -166,16 +166,7 @@ function FriendsPosts() {
                     >
                       ❤️ Like
                     </button>
-                    <button
-                      onClick={() =>
-                        setVisibleSharePostId(
-                          visibleSharePostId === post.id ? null : post.id
-                        )
-                      }
-                      className="hover:text-gray-800 transition"
-                    >
-                      🔄 Share
-                    </button>
+                   
                   </div>
                   <span>{post.likes_count || 0} Likes</span>
                 </div>

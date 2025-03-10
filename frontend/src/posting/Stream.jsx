@@ -27,7 +27,7 @@ const Stream = () => {
   useEffect(() => {
     const fetchStreamPosts = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/stream/", {
+        const response = await axios.get("http://127.0.0.1:8000/posts/stream", {
           headers: {
             Authorization: `Bearer ${token}`
           }
