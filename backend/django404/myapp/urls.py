@@ -26,6 +26,8 @@ from .views import (
     deny_follow_request,
     cancel_follower_request,
     get_followers,
+    get_friends,
+    get_followees,
     unfollow_user,
     add_friend,
     friends_posts,
@@ -58,6 +60,8 @@ urlpatterns = [
     path('notifs/follow-requests/<str:username>/accept/', accept_follower_request, name='accept_follower_request'), #accept follower_request notifs from user whose profile you are on
     path('notifs/follow-requests/<str:username>/deny/', deny_follow_request, name='deny_follow_request'), #deny follower_request notifs from user whose profile you are on
     path('followers/<str:username>/', get_followers, name='get_followers'), #get list of followers of user you are on
+    path('followees/<str:username>/', get_followees, name='get_followees'), #get list of followers of user you are on
+    path('users/friends/', get_friends, name='get_friends'), #get list of followers of user you are on
     
     # User Posts by Username
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),

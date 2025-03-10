@@ -23,13 +23,12 @@ class FollowingSerializer(serializers.ModelSerializer):
 
     @author Christine Bao
     """
-    follower = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    followee = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-
+    follower_username = serializers.ReadOnlyField(source='follower.username')
+    followee_username = serializers.ReadOnlyField(source='followee.username')
+    
     class Meta:
         model = Following
-        fields  = ['follower', 'followee', 'followed_at']
-
+        fields  = ['friends','follower_username', 'followee_username', 'followed_at']
 
 #QingqiuTan
 class CommentSerializer(serializers.ModelSerializer):

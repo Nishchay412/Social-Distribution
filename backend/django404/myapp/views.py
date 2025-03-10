@@ -411,6 +411,13 @@ def accept_follower_request (request, username):
     # If not friends and following
     data = {"followee": followee.id, "follower": follower.id}
     try:
+        # Mark users as friends if they follow each other
+        if Following.objects.filter(followee_id=follower.id, follower_id=followee.id).exists():
+            relationship = Following.objects.get(followee_id=follower.id, follower_id=followee.id)
+            relationship.friends = 'YES'
+            relationship.save()
+            data = {"followee": followee.id, "follower": follower.id, "friends":"YES"}
+            
         serializer = FollowingSerializer(data=data)
         if serializer.is_valid():
             serializer.save(followee_id = followee.id, follower_id = follower.id)
@@ -479,13 +486,19 @@ def unfollow_user(request, username):
         # Check if they are already friends
         if Following.objects.filter(followee_id=followee.id, follower_id=follower.id).exists():
             Following.objects.filter(followee_id=followee.id, follower_id=follower.id).delete()
+            
+            if Following.objects.filter(followee_id=follower.id, follower_id=followee.id).exists():
+                relation = Following.objects.get(followee_id=follower.id, follower_id=followee.id)
+                relation.friends = 'NO'
+                relation.save()
+
             return Response({"message": "You have unfollowed this user."}, status=status.HTTP_200_OK)
     except:
         return Response({"message": "You can't unfollow someone you don't follow"}, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_followers(request, username=None):
+def get_followers(request, username):
     """
     TODO 
     - test if this works
@@ -496,9 +509,7 @@ def get_followers(request, username=None):
 
     @author Christine Bao
     """
-    author = get_object_or_404(User, username=request.data['username'])
-    if username != None:    
-        author = get_object_or_404(User, username=username)
+    author = get_object_or_404(User, username=username)
     
     try:
         followers = (
@@ -506,10 +517,61 @@ def get_followers(request, username=None):
                 .filter(followee_id = author.id)
                 .order_by("-followed_at")
         )
+        serializer = FollowingSerializer(followers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except:
+        return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_followees(request, username):
+    """
+    TODO 
+    - test if this works
+
+    Get followees of author.
+    Get author from request.data (user logged in) or by username (another user).
+    Returns list of users who follow the author.
+
+    @author Christine Bao
+    """
+    author = get_object_or_404(User, username=username)
+    
+    try:
+        followers = (
+            Following.objects
+                .filter(following_id = author.id)
+                .order_by("-followed_at")
+        )
+        serializer = FollowingSerializer(followers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except:
+        return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_friends(request):
+    """
+    TODO 
+    - test if this works
+
+    Get friends of author.
+    Get author from request.data (user logged in) or by username (another user).
+    Returns list of users who follow the author.
+
+    @author Christine Bao
+    """
+    author = get_object_or_404(User, username=request.user)
+    
+    try:
+        followers = (
+            Following.objects
+                .filter(follower_id=author.id, friends='YES')
+                .order_by("-followed_at")
+        )
 
         serializer = FollowingSerializer(followers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
     except:
         return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
 

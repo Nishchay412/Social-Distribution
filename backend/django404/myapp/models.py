@@ -36,6 +36,11 @@ class Following(models.Model):
         related_name='followee'
     )
 
+    friends = models.CharField(
+        max_length=10,
+        default='NO'
+    )
+
     followed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
