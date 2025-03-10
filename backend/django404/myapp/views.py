@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer
 from .models import Post, Comment, Like
+from django.utils import timezone  # Import timezone to set deleted_at timestamps
 
 User = get_user_model()
 
@@ -255,7 +256,7 @@ def list_posts(request):
     Lists all existing posts (except those marked 'DELETED'), ordered by newest first.
     This endpoint is accessible only to logged-in users.
     """
-    posts = Post.objects.exclude(visibility='DELETED').order_by('-published')
+    posts = Post.objects.filter(deleted_at__isnull=True).order_by('-published')  # Exclude soft-deleted posts
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -304,7 +305,8 @@ def update_post(request, post_id):
 @permission_classes([IsAuthenticated])
 def delete_post(request, post_id):
     """
-    Deletes a post if the requesting user is the author. 
+    Soft delete a post by setting deleted_at timestamp instead of removing it from the database.
+    Only the post's author can delete it.
     """
     try:
         post = Post.objects.get(id=post_id)
@@ -312,10 +314,14 @@ def delete_post(request, post_id):
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
     if post.author != request.user:
-        return Response({"error": "Not your post"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"error": "You are not the author of this post"}, status=status.HTTP_403_FORBIDDEN)
 
-    post.delete()  
-    return Response({"message": "Post deleted"}, status=status.HTTP_200_OK)
+    post.deleted_at = timezone.now()  # Mark the post as deleted
+    post.visibility = "DELETED"  # Change visibility to DELETED
+    post.save()
+
+    return Response({"message": "Post soft deleted"}, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])  # List Posts by Logged-in User
 @permission_classes([IsAuthenticated])
