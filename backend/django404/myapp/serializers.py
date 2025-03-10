@@ -68,6 +68,7 @@ class PostSerializer(serializers.ModelSerializer):
     content = serializers.CharField(required=False, allow_blank=True)
     comments = CommentSerializer(many=True, read_only=True)
     content_html = serializers.SerializerMethodField()
+    image = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Post

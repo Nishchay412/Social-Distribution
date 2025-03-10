@@ -14,6 +14,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.views.decorators.csrf import csrf_exempt
+
 
 User = get_user_model()
 
@@ -51,6 +53,7 @@ def register_admin_user(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def login_user(request):
     """
     User login
@@ -120,6 +123,7 @@ def list_pending_users(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
+@csrf_exempt
 def logout_user(request):
     try:
         refresh_token = request.data.get("refresh")
