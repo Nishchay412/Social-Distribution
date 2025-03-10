@@ -160,20 +160,17 @@ const Stream = () => {
                   </p>
                 </div>
 
-                {/* Post Title */}
-                <h3 className="text-xl font-bold mb-2">{post.title}</h3>
-
                 {/* Post Content */}
-                <div className="text-gray-700 markdown-content mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{post.title}</h3>
+                <div className="text-gray-700 markdown-content">
                   <ReactMarkdown>{post.content}</ReactMarkdown>
                 </div>
-
-                {/* Post Image */}
+                
                 {post.image && (
                   <img
-                    src={getImageUrl(post.image)}
-                    alt="Post"
-                    className="mt-2 w-full h-auto rounded"
+                  src={getImageUrl(post.image)}
+                  alt="Post"
+                  className="mt-3 w-full h-auto rounded-lg shadow-md"
                   />
                 )}
 
@@ -182,7 +179,35 @@ const Stream = () => {
                   Published: {new Date(post.published).toLocaleString()} <br />
                   Last Edited: {new Date(post.updated).toLocaleString()}
                 </div>
-
+                {/* Comments Section */}
+                <div className="mt-4">
+                  <h4 className="text-sm font-semibold">Comments:</h4>
+                  {post.comments?.length > 0 && (
+                    <div className="mb-2">
+                      {post.comments.map((comment) => (
+                        <div
+                          key={comment.id}
+                          className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between"
+                        >
+                          <div>
+                            <strong>{comment.author_username}:</strong>{" "}
+                            {comment.text}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">
+                              {comment.likes_count || 0}
+                            </span>
+                            <button
+                              onClick={() => handleLikeComment(post.id, comment.id)}
+                              className="hover:text-pink-500 transition"
+                            >
+                              👍
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 {/* Social Actions */}
                 <div className="flex justify-between items-center mt-4 text-gray-500 text-sm">
                   <div className="flex gap-4">
@@ -255,36 +280,6 @@ const Stream = () => {
                     </button>
                   </div>
                 )}
-
-                {/* Comments Section */}
-                <div className="mt-4">
-                  <h4 className="text-sm font-semibold">Comments:</h4>
-                  {post.comments?.length > 0 && (
-                    <div className="mb-2">
-                      {post.comments.map((comment) => (
-                        <div
-                          key={comment.id}
-                          className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between"
-                        >
-                          <div>
-                            <strong>{comment.author_username}:</strong>{" "}
-                            {comment.text}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">
-                              {comment.likes_count || 0}
-                            </span>
-                            <button
-                              onClick={() => handleLikeComment(post.id, comment.id)}
-                              className="hover:text-pink-500 transition"
-                            >
-                              👍
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                   {/* Newly added comments */}
                   {(commentsByPostId[post.id] || []).map((comment) => (
                     <div
