@@ -384,6 +384,10 @@ def get_relationship(request, username):
     if curr_user.id == check_user.id:
         return Response({"message":"This is you", "relation":"YOURSELF"}, status=status.HTTP_200_OK)
     
+    # Checks if curr_user and check_user have any outgoing follow requests first
+    if Notif.objects.filter(receiver=check_user.id, sender=curr_user.id):
+        return Response({"message":"This is a user you sent a follow request to.", "relation":"PENDING"}, status=status.HTTP_200_OK)
+
     # Checks if curr_user and check_user have Following relationship
     if Following.objects.filter(followee_id=check_user.id, follower_id=curr_user.id).exists() and Following.objects.filter(followee_id=curr_user.id, follower_id=check_user.id).exists():
         return Response({"message":"This is a user you are friends with.", "relation":"FRIEND"}, status=status.HTTP_200_OK)
@@ -391,9 +395,6 @@ def get_relationship(request, username):
         return Response({"message":"This is a user you follow.", "relation":"FOLLOWEE"}, status=status.HTTP_200_OK)
     elif Following.objects.filter(followee_id=curr_user.id, follower_id=check_user.id).exists():
         return Response({"message":"This is a user you are followed by.", "relation":"FOLLOWER"}, status=status.HTTP_200_OK)
-
-    if Notif.objects.filter(receiver=check_user.id, sender=curr_user.id):
-        return Response({"message":"This is a user you sent a follow request to.", "relation":"PENDING"}, status=status.HTTP_200_OK)
 
     return Response({"message":"This is a user is no one special.", "relation":"NOBODY"}, status=status.HTTP_200_OK)
 

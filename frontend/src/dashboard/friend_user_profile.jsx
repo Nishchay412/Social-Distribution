@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import Follow_Button from "../Following/ButtonComponents/follow_button";
+import Relation_Button from "../Following/RelationButton";
 
 export function Friend_Profile() {
   const { username } = useParams(); // e.g., /profile/:username
@@ -89,8 +89,8 @@ export function Friend_Profile() {
   return (
     <div className="flex justify-center items-center min-h-screen">
       <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
-        {/* Use the imported Follow_Button component */}
-        <Follow_Button />
+        {/* Use the imported Relation_Button component */}
+        <Relation_Button />
 
         {/* Profile Image */}
         <img
