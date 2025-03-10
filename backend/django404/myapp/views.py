@@ -482,6 +482,9 @@ def accept_follower_request (request, username):
     followee = get_object_or_404(User, username=request.user)
     follower = get_object_or_404(User, username=username)
     
+    # Must have a notif to accept follow request
+    if Notif.objects.filter(receiver_id=followee.id, sender_id=follower.id).exists() == False:
+        return Response({"error": "Send a follow request first."}, status=status.HTTP_400_BAD_REQUEST)
     # Cannot follow yourself
     if follower.id == followee.id:
         return Response({"error": "Cannot follow yourself."}, status=status.HTTP_403_FORBIDDEN)
@@ -519,9 +522,12 @@ def deny_follow_request(request, username):
     sender = get_object_or_404(User, username=username)
     receiver = get_object_or_404(User, username=request.user)
 
-    try: # delete Notif Request                                                                          
-        Notif.objects.filter(receiver_id=receiver.id, sender_id=sender.id).delete() 
-        return Response({"message":"Follow Request Denied!"}, status=status.HTTP_400_BAD_REQUEST)
+    try: # delete Notif Request                                
+        if Notif.objects.filter(receiver_id=receiver.id, sender_id=sender.id).exists():                                         
+            Notif.objects.filter(receiver_id=receiver.id, sender_id=sender.id).delete() 
+            return Response({"message":"Follow Request Denied!"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error":"There's nothing to delete."}, status=status.HTTP_400_BAD_REQUEST)
     except:
         return Response({"error":"Unable to Deny Follow Request."}, status=status.HTTP_400_BAD_REQUEST)
     
