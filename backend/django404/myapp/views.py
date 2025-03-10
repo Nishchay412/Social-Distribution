@@ -864,13 +864,11 @@ def list_comments(request, post_id):
 @permission_classes([IsAuthenticated])
 def create_comment(request, post_id):
     """
-    Creates a new Comment on a PUBLIC post. 
+    Creates a new Comment on a post.
     Ensures the post exists and sets the comment's author to the requesting user.
     """
-    try:
-        post = Post.objects.get(id=post_id, visibility="PUBLIC")
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    # Look up the post only by its ID (removing the visibility filter)
+    post = get_object_or_404(Post, id=post_id)
     
     serializer = CommentSerializer(data=request.data)
     if serializer.is_valid():
