@@ -73,6 +73,7 @@ urlpatterns = [
     path('followers/<str:username>/', get_followers, name='get_followers'),  # Get list of followers for a user
     path('followees/<str:username>/', get_followees, name='get_followees'),  # Get list of users the given user is following
     path('users/friends/', get_friends, name='get_friends'),  # Get list of friends
+    path('profile/<str:username>/cancel-follow-request/',cancel_follower_request,name='cancel_follower_request'),
 
     # Admin user update endpoint from main branch
     path('users/exclude-self/<str:username>/update-user/', admin_update_user, name='admin_update_user'),
