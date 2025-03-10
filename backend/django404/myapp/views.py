@@ -556,34 +556,45 @@ def cancel_follower_request(request, username):
 def unfollow_user(request, username):
     """
     Unfollow a User
-
-    Takes in a username of user to be unfollowed.
-    Deletes Following relationship between two users.
-    No notifs will be generated from being unfollowed.
-
-    @author Christine Bao
+    
+    1. If you try to unfollow yourself => 403
+    2. If you are not following the user => 400
+    3. Otherwise, remove the follow relationship => 200
     """
-    # Get followee and follower
+    # "followee" is the user being unfollowed
     followee = get_object_or_404(User, username=username)
-    follower = get_object_or_404(User, username=request.user)
+    # "follower" is the current, authenticated user
+    follower = request.user
 
-   # Cannot unfollow yourself
+    # 1. Cannot unfollow yourself
     if follower.id == followee.id:
-        return Response({"error": "Cannot unfollow yourself."}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"error": "Cannot unfollow yourself."}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
 
-    try:
-        # Check if they are already friends
-        if Following.objects.filter(followee_id=followee.id, follower_id=follower.id).exists():
-            Following.objects.filter(followee_id=followee.id, follower_id=follower.id).delete()
-            
-            if Following.objects.filter(followee_id=follower.id, follower_id=followee.id).exists():
-                relation = Following.objects.get(followee_id=follower.id, follower_id=followee.id)
-                relation.friends = 'NO'
-                relation.save()
+    # Check if a following relationship exists
+    existing_rel = Following.objects.filter(followee_id=followee.id, follower_id=follower.id).first()
+    if not existing_rel:
+        # 2. If you’re not following them, return 400
+        return Response(
+            {"error": "You can't unfollow someone you don't follow"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-            return Response({"message": "You have unfollowed this user."}, status=status.HTTP_200_OK)
-    except:
-        return Response({"message": "You can't unfollow someone you don't follow"}, status=status.HTTP_400_BAD_REQUEST)
+    # 3. Remove the following relationship
+    existing_rel.delete()
+
+    # If there's a reverse relationship (the other user following you) in "friends" mode, set it to "NO"
+    reverse_rel = Following.objects.filter(followee_id=follower.id, follower_id=followee.id).first()
+    if reverse_rel:
+        reverse_rel.friends = 'NO'
+        reverse_rel.save()
+
+    return Response(
+        {"message": "You have unfollowed this user."}, 
+        status=status.HTTP_200_OK
+    )
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
