@@ -14,7 +14,8 @@ class AuthTestCase(APITestCase):
         self.user = User.objects.create_user(
             username="testuser",
             email="test@example.com",
-            password="password123"
+            password="password123",
+            is_approved=True
         )
         self.login_url = "/login/"
         self.logout_url = "/logout/"

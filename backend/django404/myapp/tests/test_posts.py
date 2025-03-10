@@ -6,17 +6,37 @@ from myapp.models import Post
 from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
+from time import sleep
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+import io
 
 User = get_user_model()
+
+def generate_test_image():
+    # Create a small 10x10 red image for testing
+    file = io.BytesIO()
+    image = Image.new("RGB", (10, 10), color=(255, 0, 0))
+    image.save(file, "JPEG")
+    file.name = "testimage.jpg"
+    file.seek(0)
+    return file
 
 class PostAPITestCase(APITestCase):
     def setUp(self):
         """Create a test user and authenticate."""
         self.user = User.objects.create_user(
             username='testuser',
-            password='testpass'
+            password='testpass',
+            is_approved=True 
         )
         self.client.force_authenticate(user=self.user)
+        Post.objects.filter(author=self.user).delete()
+        self.post = Post.objects.create(
+            author=self.user, 
+            title='Old Title', 
+            content='Original content'
+        )
 
     def test_create_post(self):
         """Test creating a simple post without an image."""
@@ -32,6 +52,8 @@ class PostAPITestCase(APITestCase):
 
     def test_list_posts(self):
         """Test listing multiple posts."""
+        Post.objects.filter(author=self.user).delete()
+        
         Post.objects.create(author=self.user, title='Post1')
         Post.objects.create(author=self.user, title='Post2')
 
@@ -131,3 +153,50 @@ class PostAPITestCase(APITestCase):
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_image_only_post(self):
+        url = reverse('create-post')
+        image_file = generate_test_image()
+        data = {
+            'title': "",
+            'content': "",
+            'visibility': "PUBLIC",
+            'image': image_file
+        }
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_edit_post_updates_updated_field(self):
+        """Test that editing a post updates the 'updated' field."""
+        url = reverse('edit-post', args=[self.post.id])
+        original_updated = self.post.updated
+        # Ensure a time gap so the timestamp updates
+        import time; time.sleep(1)
+        data = {'title': 'New Title', 'content': 'New content'}
+        response = self.client.patch(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        updated_post = response.data
+        self.assertNotEqual(original_updated, updated_post.get("updated"))
+        self.assertEqual(updated_post.get("title"), "New Title")
+
+    def test_markdown_rendering(self):
+        """Test that Markdown content is properly converted to HTML."""
+        markdown_content = (
+            "# Heading\n\n"
+            "**Bold Text**\n\n"
+            "Here is an image: ![Alt Text](http://example.com/img.png)"
+        )
+        post = Post.objects.create(
+            author=self.user, 
+            title="Markdown Test", 
+            content=markdown_content
+        )
+        # Retrieve the post via its unique URL
+        url = reverse('retrieve-post', args=[post.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        # Check that content_html is returned and contains expected HTML tags.
+        self.assertIn("<h1>", data.get("content_html", ""))
+        self.assertIn("<strong>", data.get("content_html", ""))
+        self.assertIn("<img", data.get("content_html", ""))
