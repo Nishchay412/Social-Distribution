@@ -50,7 +50,7 @@ function FriendsPosts() {
     }
   }, [token]);
 
-  // Handle like toggling (re-fetching from the friends posts endpoint afterward)
+  // Handle like toggling
   const handleLike = async (postId) => {
     try {
       await axios.post(
@@ -58,7 +58,7 @@ function FriendsPosts() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Re-fetch posts to update like counts using the same API URL for friends posts
+      // Re-fetch posts to update like counts
       await fetchFriendsPosts();
     } catch (err) {
       console.error("Error liking post:", err.response?.data || err.message);
@@ -143,6 +143,17 @@ function FriendsPosts() {
 
             return (
               <li key={post.id} className="bg-white p-4 rounded shadow">
+                {/* Post Header with Author Information */}
+                <div className="flex items-center gap-3 mb-2">
+                  <img
+                    src={post.author_profile_pic || "/default-avatar.png"}
+                    alt="Author"
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <p className="text-sm text-gray-500">
+                    By: {post.author_username || "Unknown User"}
+                  </p>
+                </div>
                 <h3 className="text-xl font-semibold">{post.title}</h3>
                 <div className="text-gray-700 markdown-content">
                   <ReactMarkdown>{post.content}</ReactMarkdown>
@@ -166,7 +177,6 @@ function FriendsPosts() {
                     >
                       ❤️ Like
                     </button>
-                   
                   </div>
                   <span>{post.likes_count || 0} Likes</span>
                 </div>
@@ -219,20 +229,19 @@ function FriendsPosts() {
                     </button>
                   </div>
                 )}
-               {/* Comments Section */}
-               <div className="mt-4 text-left">
-                    <h4 className="text-sm font-semibold">Comments:</h4>
-                    {post.comments?.length > 0 && (
-                      <div>
-                        {post.comments.map((comment) => (
-                          <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between">
-                            <div>
-                              <strong>{comment.author_username}:</strong> {comment.text}
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-gray-600">
-                                {comment.likes_count || 0}
+                {/* Comments Section */}
+                <div className="mt-4 text-left">
+                  <h4 className="text-sm font-semibold">Comments:</h4>
+                  {post.comments?.length > 0 && (
+                    <div>
+                      {post.comments.map((comment) => (
+                        <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1 flex items-center justify-between">
+                          <div>
+                            <strong>{comment.author_username}:</strong> {comment.text}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">
+                              {comment.likes_count || 0}
                             </span>
                             <button
                               onClick={() => handleLikeComment(post.id, comment.id)}
@@ -240,17 +249,17 @@ function FriendsPosts() {
                             >
                               👍
                             </button>
-                            </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                    {(commentsByPostId[post.id] || []).map((comment) => (
-                      <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
-                        <strong>{comment.author_username}:</strong> {comment.text}
-                      </div>
-                    ))}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {(commentsByPostId[post.id] || []).map((comment) => (
+                    <div key={comment.id} className="bg-gray-50 p-2 rounded-md mb-1">
+                      <strong>{comment.author_username}:</strong> {comment.text}
+                    </div>
+                  ))}
+                </div>
                 {/* Comment Input */}
                 <div className="flex items-center mt-4 gap-2">
                   <img
