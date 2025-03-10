@@ -94,6 +94,16 @@ def login_user(request):
 
     return Response({"error": "Invalid username or password"}, status=400)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def friend_post_detail(request, post_id):
+    """
+    Returns the details of a single friend's post.
+    """
+    post = get_object_or_404(Post, id=post_id)
+    serializer = PostSerializer(post, context={'request': request})
+    return Response(serializer.data)
+
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -523,15 +533,17 @@ def cancel_follower_request(request, username):
     'receiver' is the User we no longer want to follow but still have a pending follow request
     'sender' is the User who is cancelling the friend request
     """
-    # Get sender and receiver of the follow request
-    sender = get_object_or_404(User, username=request.user)
     receiver = get_object_or_404(User, username=username)
-
-    try: # delete Notif Request                                                                          
-        Notif.objects.filter(receiver_id=receiver.id, sender_id=sender.id).delete() 
-        return Response({"message":"Friend Request Cancelled!"}, status=status.HTTP_400_BAD_REQUEST)
-    except:
-        return Response({"error":"Friend Request not deleted"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        notif = Notif.objects.get(
+            sender=request.user, 
+            receiver=receiver, 
+            notif_type="FOLLOW_REQUEST"
+        )
+        notif.delete()
+        return Response({"message": "Follow request canceled."}, status=status.HTTP_200_OK)
+    except Notif.DoesNotExist:
+        return Response({"error": "No such follow request."}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -852,13 +864,11 @@ def list_comments(request, post_id):
 @permission_classes([IsAuthenticated])
 def create_comment(request, post_id):
     """
-    Creates a new Comment on a PUBLIC post. 
+    Creates a new Comment on a post.
     Ensures the post exists and sets the comment's author to the requesting user.
     """
-    try:
-        post = Post.objects.get(id=post_id, visibility="PUBLIC")
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    # Look up the post only by its ID (removing the visibility filter)
+    post = get_object_or_404(Post, id=post_id)
     
     serializer = CommentSerializer(data=request.data)
     if serializer.is_valid():

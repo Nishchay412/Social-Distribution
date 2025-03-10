@@ -41,7 +41,8 @@ from .views import (
     list_pending_users,
     stream_posts,
     register_user_as_admin,
-    get_non_followees
+    get_non_followees,
+    friend_post_detail
 )
 
 urlpatterns = [
@@ -72,6 +73,7 @@ urlpatterns = [
     path('followers/<str:username>/', get_followers, name='get_followers'),  # Get list of followers for a user
     path('followees/<str:username>/', get_followees, name='get_followees'),  # Get list of users the given user is following
     path('users/friends/', get_friends, name='get_friends'),  # Get list of friends
+    path('profile/<str:username>/cancel-follow-request/',cancel_follower_request,name='cancel_follower_request'),
 
     # Admin user update endpoint from main branch
     path('users/exclude-self/<str:username>/update-user/', admin_update_user, name='admin_update_user'),
@@ -98,6 +100,7 @@ urlpatterns = [
     path('friends/add/<str:username>/', add_friend, name='add_friend'),
     path('friends/posts/', friends_posts, name='friends-posts'),
     path('friends/', list_friends, name='list-friends'),
+    path('friends/posts/<uuid:post_id>/', friend_post_detail, name='friend-post-detail'),
     path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),
 
     # ✅ Likes Endpoints (QingqiuTan)
