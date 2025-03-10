@@ -120,7 +120,7 @@ export default function Login() {
                             className="py-2 mt-2 text-blue-500 cursor-pointer"
                             onClick={navigate_login}   // ✅ Correct use of navigate_signup
                         >
-                            Log In
+                            Sign UP
                         </button>
                         </div>
                 </form>
