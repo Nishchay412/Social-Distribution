@@ -421,9 +421,27 @@ def accept_follower_request (request, username):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+def deny_follow_request(request, username):
+    """
+    Deny Follow Request
+    'receiver' is the User we no longer want to follow but still have a pending follow request
+    'sender' is the User who is cancelling the friend request
+    """
+    # Get sender and receiver of the follow request
+    sender = get_object_or_404(User, username=username)
+    receiver = get_object_or_404(User, username=request.user)
+
+    try: # delete Notif Request                                                                          
+        Notif.objects.filter(receiver_id=receiver.id, sender_id=sender.id).delete() 
+        return Response({"message":"Follow Request Denied!"}, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({"error":"Unable to Deny Follow Request."}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def cancel_follower_request(request, username):
     """
-    Cancel Friend Request
+    Cancel Follow Request
     'receiver' is the User we no longer want to follow but still have a pending follow request
     'sender' is the User who is cancelling the friend request
     """

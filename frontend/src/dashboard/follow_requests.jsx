@@ -5,7 +5,7 @@ import { Header } from "./leftpanel"; import { TopPanel } from "./toppanel";
 /*  Notifications - Follow Requests
     @TODO 
     - add notifs for likes + comments?
-    - add functionality for allow or deny requests
+    - fix UIUX for buttons
 
     Notification currently displays list of Follow Requests for User currently logged in.
     Each Follow Request has a button to accept or deny the request.
@@ -49,7 +49,6 @@ export function Follow_Requests() {
         fetchFollowRequests();
     }, [])
 
-
     const acceptFollowRequest = async (username) => {
         try {
             const response = await fetch(`http://127.0.0.1:8000/notifs/follow-requests/${username}/accept/`, {
@@ -60,7 +59,6 @@ export function Follow_Requests() {
                 },
             });
             const data = await response.json();
-            console.log(data)
             // Follow Requests retrieved successfully
             if (response.ok) {
                 setNotifs(l => l.filter(notif => notif.sender_username !== username));
@@ -71,6 +69,28 @@ export function Follow_Requests() {
             setError("Failed accept follow request. Please try again.");
         }
     };
+
+    const denyFollowRequest = async (username) => {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/notifs/follow-requests/${username}/deny/`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`,
+                    "Content-Type": "application/json", 
+                },
+            });
+            const data = await response.json();
+            // Follow Requests retrieved successfully
+            if (response.ok) {
+                setNotifs(l => l.filter(notif => notif.sender_username !== username));
+              } else {
+                setError(data.error || "Follow Request was not accepted.");
+              }
+        } catch {
+            setError("Failed accept follow request. Please try again.");
+        }
+    };
+
 
     // Render the Follow Reqeusts
     return(
@@ -104,7 +124,9 @@ export function Follow_Requests() {
                                             <button
                                                 onClick = {() => acceptFollowRequest([notif.sender_username])}
                                             > ✅ </button>
-                                            <button> ❌ </button>
+                                            <button
+                                                onClick = {() => denyFollowRequest([notif.sender_username])}
+                                            > ❌ </button>
                                         </div>
                                     </li>
                                 ))}
