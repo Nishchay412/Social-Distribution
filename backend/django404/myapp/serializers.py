@@ -7,6 +7,7 @@ import markdown
 User = get_user_model()
 
 class RegisterUserSerializer(serializers.ModelSerializer):
+    """ Serializer for User model with password hashing. """
     password = serializers.CharField(write_only=True, min_length=6)
     
     class Meta:
@@ -125,8 +126,8 @@ class LikeSerializer(serializers.ModelSerializer):
 
 
 class CommentLikeSerializer(serializers.ModelSerializer):
+    """ Serializer for CommentLike model with author_username as a read-only field. """
     author_username = serializers.ReadOnlyField(source='author.username')
-
     class Meta:
         model = CommentLike
         fields = ['id', 'author_username', 'comment', 'created']

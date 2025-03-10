@@ -17,6 +17,9 @@ class CommentAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.user) # Force authentication for the test client
 
     def test_list_comments(self):
+        """
+        Test listing comments on a post.
+        """
         Comment.objects.create(post=self.post, author=self.user, text='First comment')# Create a comment
         Comment.objects.create(post=self.post, author=self.user, text='Second comment')# Create another comment
 
@@ -36,6 +39,9 @@ class CommentAPITestCase(APITestCase):
         self.assertTrue(Comment.objects.filter(text='My new comment').exists())# Assert that the comment was created in the database
 
     def test_toggle_comment_like(self):
+        """
+        Test toggling a like on a comment.
+        """
         # Create a comment to test like toggling.
         comment = Comment.objects.create(post=self.post, author=self.user, text='Toggle comment')
     
