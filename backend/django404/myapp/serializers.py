@@ -108,6 +108,9 @@ class NotifSerializer(serializers.ModelSerializer):
 
     @author Christine Bao
     """
+    sender_username = serializers.ReadOnlyField(source='sender.username')
+
+    
     class Meta:
         model = Notif
-        fields = ['receiver', 'sender', 'notif_type', 'post', 'comment', 'created_at']
+        fields = ['id','receiver', 'sender_username', 'notif_type', 'post', 'comment', 'created_at']

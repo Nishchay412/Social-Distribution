@@ -379,7 +379,9 @@ def get_follower_request_list(request):
             )
 
         serializer = NotifSerializer(follower_request_list, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
+
     except:
         return Response({"error":"Error: Unable to retrieve follower requests"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -398,7 +400,7 @@ def accept_follower_request (request, username):
     # Get followee and follower
     followee = get_object_or_404(User, username=request.user)
     follower = get_object_or_404(User, username=username)
-
+    
     # Cannot follow yourself
     if follower.id == followee.id:
         return Response({"error": "Cannot follow yourself."}, status=status.HTTP_403_FORBIDDEN)

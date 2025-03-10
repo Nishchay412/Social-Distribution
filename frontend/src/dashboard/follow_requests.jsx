@@ -34,7 +34,6 @@ export function Follow_Requests() {
                     },
                 });
                 const data = await response.json();
-                
                 // Follow Requests retrieved successfully
                 if (response.ok) {
                     setNotifs(data);
@@ -49,6 +48,29 @@ export function Follow_Requests() {
 
         fetchFollowRequests();
     }, [])
+
+
+    const acceptFollowRequest = async (username) => {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/notifs/follow-requests/${username}/accept/`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`,
+                    "Content-Type": "application/json", 
+                },
+            });
+            const data = await response.json();
+            console.log(data)
+            // Follow Requests retrieved successfully
+            if (response.ok) {
+                setNotifs();
+              } else {
+                setError(data.error || "Follow Request was not accepted.");
+              }
+        } catch {
+            setError("Failed accept follow request. Please try again.");
+        }
+    };
 
     // Render the Follow Reqeusts
     return(
@@ -76,8 +98,14 @@ export function Follow_Requests() {
                         ) : (
                             <ul className="space-y-6">
                                 {notifs.map((notif) => (
-                                    <li key={notif.id} className="bg-white p-4 rounded shadow">
-                                        <h3 className="text-xl font-semibold">{notif.sender} wants to follow you!</h3>
+                                    <li key={notif.id} className="bg-white p-4 rounded shadows flex items-stretch">
+                                        <h3 className="items-start text-xl font-semibold">{notif.sender_username} wants to follow you!</h3>
+                                        <div className="items-end">
+                                            <button
+                                                onClick = {() => acceptFollowRequest([notif.sender_username])}
+                                            > ✅ </button>
+                                            <button> ❌ </button>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
