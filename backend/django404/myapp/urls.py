@@ -56,6 +56,8 @@ urlpatterns = [
     # ✅ User Profile Endpoints
     path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
     path('update-profile/', update_user_profile, name='update-profile'),
+    path('api/admin/pending-users/', list_pending_users, name='list_pending_users'),
+    path('api/admin/approve-user/<str:username>/', approve_user, name='approve_user'),
     
     # User Relationship Endpoints (by Christine Bao)
     path('<str:username>/relationship/', get_relationship, name='get_relationship'),  # Get relationship between user and logged-in user
