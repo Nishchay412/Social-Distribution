@@ -14,7 +14,7 @@ class User(AbstractUser):
     friends = models.ManyToManyField("self", blank=True, symmetrical=True)
     is_approved = models.BooleanField(default=True)  # New users need approval
     is_admin = models.BooleanField(default=False)  # Admins can manage users/nodes
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False, editable = True)
 
     def __str__(self):
         return self.username
