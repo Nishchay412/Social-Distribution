@@ -19,7 +19,7 @@ import Pending_Button from "./ButtonComponents/pending_button";
     @author Christine Bao
 */
 
-const Profile_Button = () => {
+const Relation_Button = () => {
     const { username } = useParams();
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ const Profile_Button = () => {
                     },
                 });
                 const data = await response.json();
-                
+                console.log(data)
                 if (response.ok){
                     if (data['relation'] =="YOURSELF"){
                         changeButtonText("EDIT");
@@ -86,4 +86,4 @@ const Profile_Button = () => {
     )
 };
 
-export default Profile_Button;
+export default Relation_Button;
