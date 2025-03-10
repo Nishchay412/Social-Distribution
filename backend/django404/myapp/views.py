@@ -94,6 +94,16 @@ def login_user(request):
 
     return Response({"error": "Invalid username or password"}, status=400)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def friend_post_detail(request, post_id):
+    """
+    Returns the details of a single friend's post.
+    """
+    post = get_object_or_404(Post, id=post_id)
+    serializer = PostSerializer(post, context={'request': request})
+    return Response(serializer.data)
+
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])

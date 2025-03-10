@@ -41,7 +41,8 @@ from .views import (
     list_pending_users,
     stream_posts,
     register_user_as_admin,
-    get_non_followees
+    get_non_followees,
+    friend_post_detail
 )
 
 urlpatterns = [
@@ -98,6 +99,7 @@ urlpatterns = [
     path('friends/add/<str:username>/', add_friend, name='add_friend'),
     path('friends/posts/', friends_posts, name='friends-posts'),
     path('friends/', list_friends, name='list-friends'),
+    path('friends/posts/<uuid:post_id>/', friend_post_detail, name='friend-post-detail'),
     path('users/non-friends/', list_non_friend_users, name='list-non-friend-users'),
 
     # ✅ Likes Endpoints (QingqiuTan)
