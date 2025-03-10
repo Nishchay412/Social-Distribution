@@ -704,26 +704,29 @@ def list_friends(request):
 @permission_classes([IsAuthenticated])
 def friends_posts(request):
     """
-    TODO - to be changed
-    Get the posts made by friends of the authenticated user
+    Show the posts made by all the users the authenticated user is following.
     """
     user = request.user
-    friends = user.friends.all()
+    # First, get all follow relationships where the current user is the follower.
+    followees_ids = Following.objects.filter(follower=user).values_list("followee_id", flat=True)
 
-    # Show only PUBLIC, UNLISTED, or FRIENDS posts (excluding DELETED and DRAFT).
+    # Then, filter posts by authors in followees_ids, only returning PUBLIC, UNLISTED, or FRIENDS.
+    # Exclude DELETED and DRAFT.
     posts = (
         Post.objects
             .filter(
-                author__in=friends,
+                author_id__in=followees_ids,
                 visibility__in=["PUBLIC", "UNLISTED", "FRIENDS"]
             )
             .exclude(visibility="DELETED")
-            .exclude(visibility="DRAFT")  # <--- Exclude drafts
+            .exclude(visibility="DRAFT")
             .order_by("-published")
     )
 
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=200)
+
+
 # register an user while being an admin --> same functionality just the view needs to be for isadminonly
 
 @api_view(['POST'])
