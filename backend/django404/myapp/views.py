@@ -264,12 +264,13 @@ def list_posts(request):
 @permission_classes([IsAuthenticated])  
 def retrieve_post(request, post_id):
     """
-    Retrieves a single Post by its ID. Respects privacy settings:
+    Retrieves a single Post by its ID, excluding soft-deleted posts.
+    Respects privacy settings:
     - If the Post is marked 'PRIVATE', only the author can view it.
     """
     try:
-        post = Post.objects.get(id=post_id)
-        
+        post = Post.objects.get(id=post_id, deleted_at__isnull=True)  # Exclude soft-deleted posts
+
         # Allow authors to see their own private posts
         if post.visibility == 'PRIVATE' and post.author != request.user:
             return Response({"error": "This post is private."}, status=status.HTTP_403_FORBIDDEN)
@@ -610,4 +611,30 @@ def toggle_like(request, post_id):
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def list_deleted_posts(request):
+    """
+    Lists all soft-deleted posts (Admin-only).
+    These posts still exist in the database but are not visible to regular users.
+    """
+    deleted_posts = Post.objects.filter(deleted_at__isnull=False).order_by('-deleted_at')
+    serializer = PostSerializer(deleted_posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def restore_post(request, post_id):
+    """
+    Restores a soft-deleted post (Admin-only).
+    This sets `deleted_at = None`, making the post visible again.
+    """
+    post = get_object_or_404(Post, id=post_id, deleted_at__isnull=False)
+
+    # Restore the post
+    post.deleted_at = None
+    post.save()
+    
+    return Response({"message": f"Post '{post.title}' restored."}, status=status.HTTP_200_OK)
 
