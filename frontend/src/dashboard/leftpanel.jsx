@@ -20,7 +20,9 @@ export function Header() {
       }
 
       // Clear tokens from localStorage
-      ["access_token", "refresh_token", "email", "firstname", "lastname", "username"].forEach(item => localStorage.removeItem(item));
+      ["access_token", "refresh_token", "email", "firstname", "lastname", "username"].forEach(
+        (item) => localStorage.removeItem(item)
+      );
 
       // Redirect to login page
       navigate("/login");
@@ -35,11 +37,10 @@ export function Header() {
 
   const headerelements = [
     { id: 1, name: "Home", img: "/homeicon.png", action: null },
-    { id: 2, name: "Profile", img: "/userprofile.png", action: handleUserProfile},
-    { id: 3, name: "Notifs", action: handleNotifs},
+    { id: 2, name: "Profile", img: "/userprofile.png", action: handleUserProfile },
+    { id: 3, name: "Notifs", action: handleNotifs },
     { id: 4, name: "Settings", img: "/settings.png", action: null },
     { id: 5, name: "Log Out", img: "/logout.png", action: handleLogout },
-    
   ];
 
   const [users, setUsers] = useState([]);
@@ -56,7 +57,7 @@ export function Header() {
     navigate(`/profile/${username}`);
   };
 
-  // Fetch people you may know
+  // Fetch people you may know using the updated non-followees endpoint
   useEffect(() => {
     const fetchUsers = async () => {
       const accessToken = localStorage.getItem("access_token");
@@ -67,7 +68,7 @@ export function Header() {
       }
 
       try {
-        const response = await fetch("http://127.0.0.1:8000/users/non-friends", {
+        const response = await fetch("http://127.0.0.1:8000/users/non-followees/", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -90,7 +91,7 @@ export function Header() {
     fetchUsers();
   }, []);
 
-  // Fetch friends list
+  // Fetch friends list using the new endpoint
   useEffect(() => {
     const fetchFriends = async () => {
       const accessToken = localStorage.getItem("access_token");
@@ -134,7 +135,7 @@ export function Header() {
             onClick={item.action}
           >
             <span>{item.name}</span>
-            <img src={item.img} alt={item.name} className="w-6 h-6" />
+            {item.img && <img src={item.img} alt={item.name} className="w-6 h-6" />}
           </div>
         ))}
       </div>

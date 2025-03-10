@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import Profile_Button from "../Following/ProfileButton";
+import ReactMarkdown from "react-markdown";
+import Follow_Button from "../Following/ButtonComponents/follow_button";
 
 export function Friend_Profile() {
   const { username } = useParams(); // e.g., /profile/:username
@@ -8,7 +9,6 @@ export function Friend_Profile() {
   const [userData, setUserData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
-  const [friendStatus, setFriendStatus] = useState(""); // To display result of adding friend
   const [loading, setLoading] = useState(true);
 
   // Retrieve the token from localStorage for authenticated requests
@@ -67,29 +67,6 @@ export function Friend_Profile() {
     }
   }, [username, token]);
 
-  // Handle adding friend
-  const handleAddFriend = async () => {
-    try {
-      const response = await fetch(`http://127.0.0.1:8000/friends/add/${username}/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || "Failed to add friend");
-      }
-
-      setFriendStatus("Friend added successfully!");
-    } catch (err) {
-      console.error("Error adding friend:", err);
-      setFriendStatus(err.message);
-    }
-  };
-
   // Show loading state while profile data is being fetched
   if (loading) {
     return (
@@ -112,8 +89,9 @@ export function Friend_Profile() {
   return (
     <div className="flex justify-center items-center min-h-screen">
       <div className="border-2 p-12 rounded shadow-lg flex flex-col items-center w-96">
-        {/* Follow Button from Following dir */}
-        <Profile_Button/>
+        {/* Use the imported Follow_Button component */}
+        <Follow_Button />
+
         {/* Profile Image */}
         <img
           src={
@@ -141,17 +119,8 @@ export function Friend_Profile() {
           </p>
         </div>
 
-        {/* Add Friend Button */}
-        <button
-          onClick={handleAddFriend}
-          className="mt-4 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded"
-        >
-          Add Friend
-        </button>
-
-        {/* Friend Status Message */}
-        {friendStatus && <p className="mt-2 text-sm">{friendStatus}</p>}
-
+        {/* Display friend status messages from Follow_Button if needed */}
+        
         {/* Display the user's posts */}
         <div className="text-left w-full space-y-2 mt-6">
           <h3 className="text-xl font-bold mb-2">Posts by {userData.username}:</h3>

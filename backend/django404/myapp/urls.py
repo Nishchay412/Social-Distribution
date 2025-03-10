@@ -40,7 +40,8 @@ from .views import (
     approve_user,
     list_pending_users,
     stream_posts,
-    register_user_as_admin
+    register_user_as_admin,
+    get_non_followees
 )
 
 urlpatterns = [
@@ -75,6 +76,7 @@ urlpatterns = [
 
     # User Posts by Username
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),
+    path('users/non-followees/', get_non_followees, name='get_non_followees'),
 
     # ✅ Post Endpoints (QingqiuTan/Nishchay Ranjan/Riyasat Zaman)
     path('posts/', list_posts, name='list-posts'),

@@ -618,6 +618,25 @@ def get_followees(request, username):
     except:
         return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
 
+User = get_user_model()
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_non_followees(request):
+    """
+    Returns a list of all users that the current user is not following.
+    Excludes the current user from the list.
+    """
+    current_user = request.user
+    # Get IDs of all users that the current user is following
+    followed_user_ids = Following.objects.filter(follower=current_user).values_list('followee_id', flat=True)
+    
+    # Query all users excluding those already followed and excluding self
+    non_followees = User.objects.exclude(id__in=followed_user_ids).exclude(id=current_user.id)
+    
+    serializer = RegisterUserSerializer(non_followees, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_friends(request):
