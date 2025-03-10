@@ -63,7 +63,7 @@ export function Follow_Requests() {
             console.log(data)
             // Follow Requests retrieved successfully
             if (response.ok) {
-                setNotifs();
+                setNotifs(l => l.filter(notif => notif.sender_username !== username));
               } else {
                 setError(data.error || "Follow Request was not accepted.");
               }
