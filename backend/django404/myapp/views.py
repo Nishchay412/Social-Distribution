@@ -745,28 +745,50 @@ def register_user_as_admin(request):
 
 from django.db.models import Q
 
+from django.db.models import Q
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Post, Following
+from .serializers import PostSerializer
+
+from django.db.models import Q
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Post, Following
+from .serializers import PostSerializer
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def stream_posts(request):
     """
-    TODO - to be changed to accomadate new Following model for followers-only and friends-only posts
+    Returns a stream of posts (excluding your own) including:
+      - PUBLIC posts (visible to everyone, excluding your own)
+      - UNLISTED posts made by users you follow (via the Following model)
+      - FRIENDS posts made by users you follow
+    Excludes posts with visibility "DELETED" and sorts posts by the most recent update.
     """
     user = request.user
-    # Get your user's friends (assuming a self-referential many-to-many field)
-    friends = user.friends.all()
 
-    # Build the query for posts to include in the stream:
+    # Get IDs of all followees for the current user.
+    followee_ids = Following.objects.filter(follower=user).values_list("followee_id", flat=True)
+
     posts = Post.objects.filter(
-        Q(visibility="PUBLIC") |
-        Q(visibility="UNLISTED") |  # If unlisted posts should be visible to everyone with the link, include them here
-        Q(visibility="FRIENDS", author__in=friends) |
-        Q(visibility="PRIVATE", author=user)
-    ).exclude(visibility="DELETED").order_by("-published")
+        (
+          Q(visibility="PUBLIC") & ~Q(author=user)
+        ) |
+        (
+          Q(visibility="UNLISTED", author__in=followee_ids)
+        ) |
+        (
+          Q(visibility="FRIENDS", author__in=followee_ids)
+        )
+    ).exclude(visibility="DELETED").order_by("-updated")
 
-    # (Assume you have a PostSerializer to serialize these posts)
-    from .serializers import PostSerializer
     serializer = PostSerializer(posts, many=True, context={'request': request})
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # ✅ Requires authentication
