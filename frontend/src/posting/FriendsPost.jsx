@@ -200,54 +200,68 @@ function FriendsPosts() {
                     </div>
                     <span>{post.likes_count || 0} Likes</span>
                   </div>
-                  {/* Share Options */}
-                  {visibleSharePostId === post.id && (
-                    <div className="flex flex-col gap-2 mt-2 p-3 bg-gray-100 rounded-lg shadow">
-                      <span className="text-sm font-semibold">Share this post:</span>
-                      <div className="flex gap-3">
-                        <a
-                          href={twitterShareUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline"
-                        >
-                          Twitter
-                        </a>
-                        <a
-                          href={facebookShareUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          Facebook
-                        </a>
-                        <a
-                          href={whatsappShareUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-500 hover:underline"
-                        >
-                          WhatsApp
-                        </a>
-                        <a
-                          href={linkedinShareUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-700 hover:underline"
-                        >
-                          LinkedIn
-                        </a>
-                      </div>
+                  {/* Render share button only if the post is UNLISTED */}
+                  {post.visibility === "UNLISTED" && (
+                    <>
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(shareUrl);
-                          alert("Link copied to clipboard!");
-                        }}
-                        className="text-gray-700 hover:underline"
+                        onClick={() =>
+                          setVisibleSharePostId(
+                            visibleSharePostId === post.id ? null : post.id
+                          )
+                        }
+                        className="flex items-center gap-1 mt-2 hover:text-gray-800 transition"
                       >
-                        Copy Link
+                        🔄 Share
                       </button>
-                    </div>
+                      {visibleSharePostId === post.id && (
+                        <div className="flex flex-col gap-2 mt-2 p-3 bg-gray-100 rounded-lg shadow">
+                          <span className="text-sm font-semibold">Share this post:</span>
+                          <div className="flex gap-3">
+                            <a
+                              href={twitterShareUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:underline"
+                            >
+                              Twitter
+                            </a>
+                            <a
+                              href={facebookShareUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              Facebook
+                            </a>
+                            <a
+                              href={whatsappShareUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-500 hover:underline"
+                            >
+                              WhatsApp
+                            </a>
+                            <a
+                              href={linkedinShareUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-700 hover:underline"
+                            >
+                              LinkedIn
+                            </a>
+                          </div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(shareUrl);
+                              alert("Link copied to clipboard!");
+                            }}
+                            className="text-gray-700 hover:underline"
+                          >
+                            Copy Link
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                   {/* Comments Section */}
                   <div className="mt-4 text-left">
