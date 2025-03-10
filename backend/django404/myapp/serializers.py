@@ -24,7 +24,7 @@ class FollowingSerializer(serializers.ModelSerializer):
     """
     follower_username = serializers.ReadOnlyField(source='follower.username')
     followee_username = serializers.ReadOnlyField(source='followee.username')
-    
+
     class Meta:
         model = Following
         fields  = ['friends', 'follower_username', 'followee_username', 'followed_at']

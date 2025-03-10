@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function User_Profile() {
     const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ export function User_Profile() {
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     
     const accessToken = localStorage.getItem("access_token"); // ✅ Get token
 
@@ -115,6 +117,9 @@ export function User_Profile() {
         }
     };
 
+    const handleFollowerList = async (username) => await navigate(`${username}/followers`)
+    const handleFolloweeList = async (username) => await navigate(`${username}/followees`)
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
@@ -201,6 +206,10 @@ export function User_Profile() {
                             <span className="ml-2">{formData.email}</span>
                         )}
                     </div>
+                    <span>
+                        <strong onClick={() => handleFolloweeList(formData.username)}> Following </strong> 
+                        <strong onClick={() => handleFollowerList(formData.username)}> Followers </strong> 
+                    </span>
                 </div>
 
                 {/* ✅ Edit/Save Button */}

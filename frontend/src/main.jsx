@@ -7,6 +7,8 @@ import { Dashboard } from './dashboard/dashboard';
 import { Admin_Dashboard } from './Node_Management/AdminDashboard.jsx';
 import Login from './authentication/Login';
 import { User_Profile } from './dashboard/user_profile';
+import { Follower_List } from './Following/FollowersList.jsx';
+import { Followee_List } from './Following/FolloweesList.jsx';
 import { Friend_Profile } from './dashboard/friend_user_profile';
 import { Follow_Requests } from './dashboard/follow_requests.jsx';
 import AuthorList from './posting/AuthorList';
@@ -75,6 +77,14 @@ const router = createBrowserRouter([
   {
     path: "/profile",
     element: <User_Profile />,
+  },
+  {
+    path:"/profile/:username/followers",
+    element:<Follower_List/>,
+  },
+  {
+    path:"/profile/:username/followees",
+    element:<Followee_List/>,
   },
   {
     path: "/profile/:username",  // ✅ Dynamic Route for Friend's Profile

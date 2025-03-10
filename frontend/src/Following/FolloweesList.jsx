@@ -3,32 +3,32 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Header } from "../dashboard/leftpanel";
 import { TopPanel } from "../dashboard/toppanel";
 
-/*  List of Followers
+/*  List of Followees
     @TODO 
     - add notifs for likes + comments?
     - fix UIUX 
     - add pagination later for more users
 
-    Get list of users who follows logged in user
+    Get list of users who are followed by logged in user
    
     @author Christine Bao
 */
 
-export function Follower_List() {
-    const { username} = useParams();
+export function Followee_List() {
+    const {username} = useParams();
     const navigate = useNavigate();
-    const [followers, setFollowers] = useState([]);
+    const [followees, setFollowees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const accessToken = localStorage.getItem("access_token");
 
     // fill setFollowers with follow_request NOTIF
     useEffect(() => {
-        const fetchFollowerList= async () => {
+        const fetchFolloweeList= async () => {
             setLoading(true);
             console.log(username)
             try {
-                const response = await fetch(`http://127.0.0.1:8000/followers/${username}/`, {
+                const response = await fetch(`http://127.0.0.1:8000/followees/${username}/`, {
                     method: "GET",
                     headers: {
                         "Authorization": `Bearer ${accessToken}`,
@@ -39,7 +39,7 @@ export function Follower_List() {
                 console.log(data)
                 // Follow Requests retrieved successfully
                 if (response.ok) {
-                    setFollowers(data);
+                    setFollowees(data);
                   } else {
                     setError(data.error || "Follow Requests not found.");
                   }
@@ -49,14 +49,13 @@ export function Follower_List() {
                 setLoading(false);
             }};
 
-        fetchFollowerList();
+        fetchFolloweeList();
     }, [username])
 
-
     return(
- <div className="min-h-screen">
-    {/* Top Panel (Navigation, Search, Profile) */}
-    <TopPanel />
+    <div className="min-h-screen">
+        {/* Top Panel (Navigation, Search, Profile) */}
+        <TopPanel />
         {/* Main Layout */}
         <div className="flex mt-4">
             {/* Sidebar (Navigation, Contacts) */}
@@ -73,14 +72,15 @@ export function Follower_List() {
                         <p className="text-blue-500"> Fetching Followers... </p>
                     ) : error ? ( // Error State if an error occurs while fetching Follow Request
                         <p className="text-red-500">{error}</p>
-                    ) : followers.length === 0 ? (
+                    ) : followees.length === 0 ? (
                         <p>Nobody's Here Yet</p>
                     ) : (
                         <ul className="space-y-6">
-                            {followers.map((follower) => (
-                                <li key={follower.id} className="bg-white p-4 rounded shadows flex items-stretch">
-                                    <h3 className="items-start text-xl font-semibold"                                    >
-                                        {follower.follower_username}
+                            {followees.map((followee) => (
+                                <li key={followee.id} className="bg-white p-4 rounded shadows flex items-stretch">
+                                    <h3 className="items-start text-xl font-semibold"
+                                    >
+                                        {followee.follower_username}
                                     </h3>
                                 </li>
                             ))}

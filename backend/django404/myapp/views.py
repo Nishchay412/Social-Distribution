@@ -611,15 +611,13 @@ def get_followees(request, username):
     try:
         followers = (
             Following.objects
-                .filter(following_id = author.id)
+                .filter(follower_id = author.id)
                 .order_by("-followed_at")
         )
         serializer = FollowingSerializer(followers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except:
         return Response({"message":"Error: Cannot retrieve followers"}, status=status.HTTP_400_BAD_REQUEST)
-
-User = get_user_model()
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
