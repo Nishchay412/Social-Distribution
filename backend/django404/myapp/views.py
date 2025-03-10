@@ -424,6 +424,21 @@ def friends_posts(request):
 
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=200)
+# register an user while being an admin --> same functionality just the view needs to be for isadminonly
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])  
+def register_user_as_admin(request):
+    """
+    Registers user and creates a serilizer for it
+    Needs username, first name, last name, email, and password
+    Saves user to database
+    """
+    serializer = RegisterUserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "User registered successfully"}, status=201)
+    return Response(serializer.errors, status=400)
 
 from django.db.models import Q
 

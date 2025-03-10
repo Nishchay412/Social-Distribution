@@ -22,6 +22,7 @@ import User_Management from './Node_Management/UserManagement';
 import AdminSignup from './Node_Management/AdminSignup';
 import Admin_Edit_User from './Node_Management/AdminEditUser';
 import AdminPendingUsers from './Node_Management/AdminPendingUsers';
+import AdminRegisterUser from './Node_Management/AdminRegisterUser';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -60,6 +61,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/admin-register-user",
+    element: <AdminRegisterUser />,
   },
   
   {

@@ -30,7 +30,8 @@ from .views import (
     approve_user,
     list_pending_users,
     toggle_comment_like,
-    stream_posts
+    stream_posts,
+    register_user_as_admin
 
 )
 
@@ -41,6 +42,7 @@ urlpatterns = [
     path('logout/', logout_user, name='logout'),
     path('posts/drafts/', draft_posts, name='draft-posts'),
     path('posts/stream/', stream_posts, name='stream-posts'),
+    path('register-admin/', register_user_as_admin, name='register_user_as_admin'),
 
     # ✅ User Profile Endpoints
     path('profile/<str:username>/', user_profile_by_username, name='user-profile-by-username'),
