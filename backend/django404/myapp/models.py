@@ -209,3 +209,16 @@ class CommentLike(models.Model):
 
     def __str__(self):
         return f"{self.author.username} liked comment {self.comment.id}"
+    
+class RemoteNode(models.Model):
+    """
+    Stores credentials and info for a remote node that we trust for node-to-node communication.
+    For Basic Auth, we store username & password. The 'host' is the base URL.
+    """
+    host = models.URLField(unique=True)
+    username = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.host

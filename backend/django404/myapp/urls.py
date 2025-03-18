@@ -1,4 +1,5 @@
 from django.urls import path
+from django.contrib import admin
 from .views import (
     register_user,
     login_user,
@@ -42,7 +43,9 @@ from .views import (
     stream_posts,
     register_user_as_admin,
     get_non_followees,
-    friend_post_detail
+    friend_post_detail,
+    InboxAPIView,
+
 )
 
 urlpatterns = [
@@ -113,4 +116,8 @@ urlpatterns = [
     path('users/exclude-self/', list_users_excluding_self, name='list_users_excluding_self'),
     path('users/exclude-self/<str:username>/update-user/', update_user_profile, name='admin_update_user'), 
     path('users/exclude-self/<str:username>/delete-user/', delete_user_by_username, name='delete_user'),
+
+    # ✅ Cybera 
+    path('authors/<str:author_id>/inbox', InboxAPIView.as_view(), name='inbox'),
+
 ]

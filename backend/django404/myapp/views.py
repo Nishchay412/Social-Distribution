@@ -6,15 +6,19 @@ from rest_framework.parsers import MultiPartParser, FormParser  # For handling i
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterUserSerializer, PostSerializer, CommentSerializer, LikeSerializer, FollowingSerializer, NotifSerializer, CommentLikeSerializer
-from .models import Post, Comment, Like, Following, Notif, CommentLike
+from .models import Post, Comment, Like, Following, Notif, CommentLike, RemoteNode
 import base64
 import uuid
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
+from base64 import b64decode
+import requests
+from requests.auth import HTTPBasicAuth
+
 
 
 User = get_user_model()
@@ -969,4 +973,79 @@ def toggle_comment_like(request, post_id, comment_id):
     else:
         CommentLike.objects.create(comment=comment, author=request.user)
         return Response({"message": "You liked this comment."}, status=status.HTTP_201_CREATED)
+    
+def check_basic_auth(request):
+    """
+    Extract 'Authorization: Basic ...' header and check against RemoteNode table
+    Return True if it's valid, False if invalid/no credentials.
+    """
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    if not auth_header.startswith('Basic '):
+        return False
+    
+    # Basic <base64encoded>
+    encoded = auth_header.split(' ')[1]
+    decoded = b64decode(encoded).decode('utf-8')  # "username:password"
+    node_username, node_password = decoded.split(':', 1)
+
+    # Check if this pair matches an active RemoteNode
+    try:
+        rn = RemoteNode.objects.get(node_username=node_username, node_password=node_password, is_active=True)
+        # Could also check request.get_host() matches rn.host, if you want stricter checking
+        return True
+    except RemoteNode.DoesNotExist:
+        return False
+    
+class InboxAPIView(APIView):
+    """
+    Example: /authors/<author_id>/inbox (POST)
+    Accepts posts, likes, comments, follow requests, etc. from remote nodes.
+    """
+    def post(self, request, author_id):
+        # 1) Check Basic Auth
+        if not check_basic_auth(request):
+            return Response({"error": "Invalid or missing Basic Auth."}, status=status.HTTP_403_FORBIDDEN)
+
+        # 2) Parse the JSON to see if it's a post, like, comment, follow, etc.
+        body_type = request.data.get('type', '').lower()
+        # handle each type
+        if body_type == 'post':
+            # store the post in our DB...
+            return Response({"message": "Post received"}, status=status.HTTP_201_CREATED)
+        elif body_type == 'follow':
+            # store follow request...
+            return Response({"message": "Follow request received"}, status=status.HTTP_201_CREATED)
+        # etc.
+        return Response({"error": "Unknown object type"}, status=status.HTTP_400_BAD_REQUEST)
+    
+def send_to_remote_inbox(remote_author_full_id, obj):
+    """
+    remote_author_full_id might look like: "https://some-node.com/authors/123"
+    We'll parse out the base host or do a DB lookup to find the RemoteNode credentials.
+    Then do a POST to <that-node>/authors/123/inbox
+    """
+    # 1) parse the author ID to isolate the base host or find the host in your DB
+    #    e.g. host = "https://some-node.com"
+    host = parse_host_from_full_author_id(remote_author_full_id)
+
+    try:
+        rn = RemoteNode.objects.get(host=host, is_active=True)
+    except RemoteNode.DoesNotExist:
+        print(f"No matching RemoteNode for host={host}")
+        return
+
+    # 2) Construct the inbox URL
+    # remote_author_full_id is something like "https://some-node.com/authors/123"
+    # => We'll do {that}/inbox
+    inbox_url = f"{remote_author_full_id}/inbox"
+    
+    # 3) Send POST with Basic Auth
+    auth = HTTPBasicAuth(rn.node_username, rn.node_password)
+    
+    try:
+        response = requests.post(inbox_url, json=obj, auth=auth)
+        if response.status_code not in [200, 201]:
+            print("Error sending data to remote:", response.text)
+    except Exception as e:
+        print("Network error:", str(e))
 
