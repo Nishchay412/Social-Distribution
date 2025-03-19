@@ -1018,6 +1018,11 @@ class InboxAPIView(APIView):
         # etc.
         return Response({"error": "Unknown object type"}, status=status.HTTP_400_BAD_REQUEST)
     
+def parse_host_from_full_author_id(remote_author_full_id):
+    from urllib.parse import urlparse
+    parsed = urlparse(remote_author_full_id)
+    return f"{parsed.scheme}://{parsed.netloc}"
+
 def send_to_remote_inbox(remote_author_full_id, obj):
     """
     remote_author_full_id might look like: "https://some-node.com/authors/123"
