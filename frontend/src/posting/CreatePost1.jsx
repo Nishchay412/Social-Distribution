@@ -10,7 +10,7 @@ export function CreatePost1(){
   const [visibility, setVisibility] = useState('PUBLIC');  // ✅ Default to PUBLIC
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
-    const API_BASE_URL = "http://127.0.0.1:8000/posts/create/";  // ✅ Ensure correct API endpoint
+    const API_BASE_URL = "http://[2605:fd00:4:1001:f816:3eff:feff:3793]:8000/posts/create/";  // ✅ Ensure correct API endpoint
 
   const getAuthToken = () => localStorage.getItem("access_token");
 
