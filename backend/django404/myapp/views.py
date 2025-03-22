@@ -15,10 +15,27 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.permissions import IsAdminUser
+
 
 
 User = get_user_model()
 
+# Define common responses for reuse
+user_registration_responses = {
+    201: openapi.Response('User registered successfully'),
+    400: openapi.Response('Validation errors')
+}
+
+@swagger_auto_schema(
+    method='post',
+    request_body=RegisterUserSerializer,
+    responses=user_registration_responses,
+    operation_summary="Register a new user",
+    operation_description="Registers a new user with username, first name, last name, email, and password."
+)
 
 # User Authentication Views
 @api_view(['POST'])
@@ -34,7 +51,14 @@ def register_user(request):
         serializer.save()
         return Response({"message": "User registered successfully"}, status=201)
     return Response(serializer.errors, status=400)
-from rest_framework.permissions import IsAdminUser
+
+@swagger_auto_schema(
+    method='post',
+    request_body=RegisterUserSerializer,
+    responses=user_registration_responses,
+    operation_summary="Register a new admin user",
+    operation_description="Registers a new admin user. Only admin users can access this endpoint."
+)
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -50,6 +74,23 @@ def register_admin_user(request):
         return Response({"message": "User registered successfully"}, status=201)
     return Response(serializer.errors, status=400)
 
+@swagger_auto_schema(
+    method='post',
+    operation_summary="User Login",
+    operation_description="Logs in a user using username and password, returning JWT tokens if credentials are valid and the account is approved.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'username': openapi.Schema(type=openapi.TYPE_STRING, description="The user's username"),
+            'password': openapi.Schema(type=openapi.TYPE_STRING, description="The user's password")
+        }
+    ),
+    responses={
+        200: openapi.Response('Login successful'),
+        400: openapi.Response('Invalid username or password'),
+        403: openapi.Response('Account pending approval')
+    }
+)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -94,6 +135,16 @@ def login_user(request):
 
     return Response({"error": "Invalid username or password"}, status=400)
 
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Get Friend's Post Detail",
+    operation_description="Retrieve the details of a friend's post by its ID.",
+    responses={
+        200: openapi.Response('Post details'),
+        404: openapi.Response('Post not found')
+    }
+)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def friend_post_detail(request, post_id):
@@ -104,6 +155,15 @@ def friend_post_detail(request, post_id):
     serializer = PostSerializer(post, context={'request': request})
     return Response(serializer.data)
 
+@swagger_auto_schema(
+    method='post',
+    operation_summary="Approve User",
+    operation_description="Approves a user account by setting is_approved to True. Only admin users can perform this action.",
+    responses={
+        200: openapi.Response('User approved'),
+        400: openapi.Response('User already approved or invalid request')
+    }
+)
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -120,6 +180,13 @@ def approve_user(request, username):
     user.save()
     return Response({"detail": f"User {user.username} approved."}, status=200)
 
+@swagger_auto_schema(
+    method='get',
+    operation_summary="List Pending Users",
+    operation_description="Lists all users that are not yet approved.",
+    responses={200: openapi.Response('List of pending users')}
+)
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def list_pending_users(request):
@@ -130,6 +197,21 @@ def list_pending_users(request):
     serializer = RegisterUserSerializer(pending_users, many=True)
     return Response(serializer.data, status=200)
 
+@swagger_auto_schema(
+    method='post',
+    operation_summary="Logout User",
+    operation_description="Logs out the user by blacklisting the provided refresh token.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "refresh": openapi.Schema(type=openapi.TYPE_STRING, description="Refresh token to blacklist")
+        }
+    ),
+    responses={
+        200: openapi.Response('Logout successful'),
+        400: openapi.Response('Invalid token')
+    }
+)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
@@ -143,7 +225,19 @@ def logout_user(request):
     except Exception:
         return Response({"error": "Invalid token."}, status=400)
 
-#  User Profile Views
+# =========================
+# User Profile Views
+# =========================
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Get User Profile by Username",
+    operation_description="Retrieve a user profile by their username.",
+    responses={
+        200: openapi.Response('User profile data'),
+        404: openapi.Response('User not found')
+    }
+)
+
 @api_view(['GET'])
 @permission_classes([AllowAny])  
 def user_profile_by_username(request, username):
