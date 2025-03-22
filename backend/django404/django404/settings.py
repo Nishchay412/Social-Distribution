@@ -100,8 +100,12 @@ WSGI_APPLICATION = 'django404.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'verdigris',      # Your new database name
+        'USER': '404group',       # Your new PostgreSQL user
+        'PASSWORD': 'postgres',   # The password for 404group
+        'HOST': 'localhost',      # Assuming PostgreSQL is running locally
+        'PORT': '5432',           # Default PostgreSQL port
     }
 }
 #chnge
