@@ -28,9 +28,8 @@ DEBUG = False
 STATIC_URL = '/static/'
 STATIC_ROOT = str(BASE_DIR / 'staticfiles')
 
-ALLOWED_HOSTS = [
-     '2605:fd00:4:1001:f816:3eff:fe8c:5c2d',
- ]
+ALLOWED_HOSTS = ['localhost', '2605:fd00:4:1001:f816:3eff:fe8c:5c2d']
+
 
 AUTH_USER_MODEL = 'myapp.User'
 # Application definition
