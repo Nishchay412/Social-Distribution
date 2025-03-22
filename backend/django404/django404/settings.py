@@ -23,9 +23,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(q7a3&88((h*iiibynt7lckjb+dk$dptv=!1-b3n^1f%a@by=c'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+STATIC_URL = '/static/'
+STATIC_ROOT = str(BASE_DIR / 'staticfiles')
+
+ALLOWED_HOSTS = [
+     '2605:fd00:4:1001:f816:3eff:fe8c:5c2d',
+ ]
 
 AUTH_USER_MODEL = 'myapp.User'
 # Application definition
