@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(q7a3&88((h*iiibynt7lckjb+dk$dptv=!1-b3n^1f%a@by=c'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -57,7 +57,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-DEBUG = False
 
 ROOT_URLCONF = 'django404.urls'
 CORS_ALLOW_ALL_ORIGINS = True
@@ -105,9 +104,8 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-ALLOWED_HOSTS = [
-    '2605:fd00:4:1001:f816:3eff:fe8c:5c2d',
-]
+#chnge
+
 import os 
 MEDIA_URL = '/media/'  # URL to access media files in development
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Directory where uploaded files are stored
@@ -146,11 +144,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = str(BASE_DIR / 'staticfiles')
-
-
-
+STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
