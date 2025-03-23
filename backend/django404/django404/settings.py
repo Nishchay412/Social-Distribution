@@ -117,7 +117,7 @@ DATABASES = {
         'PORT': '5432',           # Default PostgreSQL port
     }
 }
-#chnge
+#
 
 import os 
 MEDIA_URL = '/media/'  # URL to access media files in development
