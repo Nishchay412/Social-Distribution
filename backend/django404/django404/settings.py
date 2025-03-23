@@ -32,6 +32,10 @@ ALLOWED_HOSTS = [
     '2605:fd00:4:1001:f816:3eff:fe8c:5c2d',       # Bracketless form
     '[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]',    # Bracketed form
     '370bd.yeg.rac.sh',
+    '3713a.yeg.rac.sh',
+    '2605:fd00:4:1001:f816:3eff:fecc:9717',
+    '[2605:fd00:4:1001:f816:3eff:fecc:9717]'
+
 ]
 
 
