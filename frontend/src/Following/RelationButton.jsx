@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import Follow_Button from "./ButtonComponents/follow_button";
 import Unfollow_Button from "./ButtonComponents/unfollow_button";
 import Pending_Button from "./ButtonComponents/pending_button";
-import { API_BASE_URL } from "../../../config";
+import { API_BASE_URL } from "../../config";
 /*  Profile Button
     @TODO 
     - Page has to be refreshed to show Button
@@ -32,7 +32,7 @@ const Relation_Button = () => {
         const fetchRelationship = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`${API_BASE_URL}/${username}/relationship`, {
+                const response = await fetch(`http://127.0.0.1:8000/${username}/relationship`, {
                     method: "GET",
                     headers: {
                         "Authorization": `Bearer ${accessToken}`,

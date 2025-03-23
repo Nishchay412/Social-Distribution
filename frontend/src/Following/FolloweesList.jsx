@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Header } from "../dashboard/leftpanel";
 import { TopPanel } from "../dashboard/toppanel";
-import { API_BASE_URL } from "../../../config";
+
+import { API_BASE_URL } from "../../config";
 
 /*  List of Followees
     @TODO 
