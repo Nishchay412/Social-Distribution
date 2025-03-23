@@ -25,6 +25,12 @@ class User(AbstractUser):
     is_admin = models.BooleanField(default=False)  # Admins can manage users/nodes
     # New users need approval (default set to False)
     is_approved = models.BooleanField(default=False, editable=True)
+    home_node = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Identifier or URL of the node where this user is registered"
+    )
 
     def __str__(self):
         return self.username
