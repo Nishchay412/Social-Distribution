@@ -10,9 +10,9 @@ function getImageUrl(path) {
   if (path.startsWith("http")) return path;
   if (path.startsWith("/media") || path.startsWith("media")) {
     const normalized = path.replace(/^\/+/, "");
-    return `http://127.0.0.1:8000/${normalized}`;
+    return `${API_BASE_URL}/${normalized}`;
   }
-  return `http://127.0.0.1:8000/media/${path}`;
+  return `${API_BASE_URL}/media/${path}`;
 }
 
 const PublicPosts = () => {
@@ -23,7 +23,7 @@ const PublicPosts = () => {
   const [commentsByPostId, setCommentsByPostId] = useState({});
   const [visibleSharePostId, setVisibleSharePostId] = useState(null);
 
-  const API_URL = "http://127.0.0.1:8000/api/posts/public/";
+  const API_URL = "${API_BASE_URL}/api/posts/public/";
   const token = localStorage.getItem("access_token");
 
   useEffect(() => {
@@ -49,7 +49,7 @@ const PublicPosts = () => {
   const handleLikeComment = async (postId, commentId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comments/${commentId}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${postId}/comments/${commentId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -67,7 +67,7 @@ const PublicPosts = () => {
   const handleLike = async (postId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${postId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -94,7 +94,7 @@ const PublicPosts = () => {
     if (!commentText.trim()) return;
     try {
       const res = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comments/create/`,
+        `${API_BASE_URL}/posts/${postId}/comments/create/`,
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

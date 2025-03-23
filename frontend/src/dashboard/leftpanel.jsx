@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config";
 
 export function Header() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/logout/", {
+      const response = await fetch("${API_BASE_URL}/logout/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +69,7 @@ export function Header() {
       }
 
       try {
-        const response = await fetch("http://127.0.0.1:8000/users/non-followees/", {
+        const response = await fetch("${API_BASE_URL}/users/non-followees/", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -102,7 +103,7 @@ export function Header() {
       }
 
       try {
-        const response = await fetch("http://127.0.0.1:8000/users/friends", {
+        const response = await fetch("${API_BASE_URL}/users/friends", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,

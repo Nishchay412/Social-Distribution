@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Header } from "../dashboard/leftpanel";
 import { TopPanel } from "../dashboard/toppanel";
+import { API_BASE_URL } from "../../../config";
 
 /*  List of Followees
     @TODO 
@@ -28,7 +29,7 @@ export function Followee_List() {
             setLoading(true);
             console.log(username)
             try {
-                const response = await fetch(`http://127.0.0.1:8000/followees/${username}/`, {
+                const response = await fetch(`${API_BASE_URL}/followees/${username}/`, {
                     method: "GET",
                     headers: {
                         "Authorization": `Bearer ${accessToken}`,

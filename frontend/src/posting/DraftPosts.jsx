@@ -8,10 +8,10 @@ function getImageUrl(path) {
   if (path.startsWith("http")) return path;
   if (path.startsWith("/media") || path.startsWith("media")) {
     const normalized = path.replace(/^\/+/, ""); // remove leading slash
-    return `http://127.0.0.1:8000/${normalized}`;
+    return `${API_BASE_URL}/${normalized}`;
   }
   // Fallback: assume the image is stored in the media folder
-  return `http://127.0.0.1:8000/media/${path}`;
+  return `${API_BASE_URL}/media/${path}`;
 }
 
 function DraftPosts() {
@@ -23,7 +23,7 @@ function DraftPosts() {
   useEffect(() => {
     const fetchDraftPosts = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/posts/drafts/", {
+        const response = await axios.get("${API_BASE_URL}/posts/drafts/", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

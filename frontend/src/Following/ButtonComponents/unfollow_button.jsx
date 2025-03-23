@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { API_BASE_URL } from "../../../config";
 
 /*  Unfollow Button
     @TODO - add a hover state
@@ -16,7 +17,7 @@ const Unfollow_Button = () => {
     //Unfollow User
     const createFollowRequest = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/profile/${username}/unfollow/`, {
+            const response = await fetch(`${API_BASE_URL}/profile/${username}/unfollow/`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,

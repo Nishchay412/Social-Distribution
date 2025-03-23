@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import ReactMarkdown from "react-markdown";
-
-import { API_BASE_URL } from '../../config';
 import { API_BASE_URL } from '../../config';
 // Helper function to build the correct image URL
 function getImageUrl(path) {
@@ -11,9 +9,9 @@ function getImageUrl(path) {
   if (path.startsWith("http")) return path;
   if (path.startsWith("/media") || path.startsWith("media")) {
     const normalized = path.replace(/^\/+/, ""); // remove leading slash
-    return `http://127.0.0.1:8000/${normalized}`;
+    return `${API_BASE_URL}/${normalized}`;
   }
-  return `http://127.0.0.1:8000/media/${path}`;
+  return `${API_BASE_URL}/media/${path}`;
 }
 
 function PostDetails() {
@@ -32,7 +30,7 @@ function PostDetails() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/posts/${id}/`, {
+        const response = await fetch(`${API_BASE_URL}/posts/${id}/`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -59,12 +57,12 @@ function PostDetails() {
   const handleLike = async () => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/posts/${id}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${id}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Re-fetch post details to update likes count
-      const response = await axios.get(`http://127.0.0.1:8000/posts/${id}/`, {
+      const response = await axios.get(`${API_BASE_URL}/posts/${id}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPost(response.data);
@@ -78,7 +76,7 @@ function PostDetails() {
     if (!commentText.trim()) return;
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/posts/${id}/comments/create/`,
+        `${API_BASE_URL}/posts/${id}/comments/create/`,
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

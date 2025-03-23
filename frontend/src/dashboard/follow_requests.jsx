@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "./leftpanel"; import { TopPanel } from "./toppanel";
+import { API_BASE_URL } from "../../config";
 
 /*  Notifications - Follow Requests
     @TODO 
@@ -26,7 +27,7 @@ export function Follow_Requests() {
         const fetchFollowRequests = async () => {
             setLoading(true);
             try {
-                const response = await fetch("http://127.0.0.1:8000/notifs/follow-requests/", {
+                const response = await fetch("${API_BASE_URL}/notifs/follow-requests/", {
                     method: "GET",
                     headers: {
                         "Authorization": `Bearer ${accessToken}`,
@@ -51,7 +52,7 @@ export function Follow_Requests() {
 
     const acceptFollowRequest = async (username) => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/notifs/follow-requests/${username}/accept/`, {
+            const response = await fetch(`${API_BASE_URL}/notifs/follow-requests/${username}/accept/`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,
@@ -72,7 +73,7 @@ export function Follow_Requests() {
 
     const denyFollowRequest = async (username) => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/notifs/follow-requests/${username}/deny/`, {
+            const response = await fetch(`${API_BASE_URL}/notifs/follow-requests/${username}/deny/`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,

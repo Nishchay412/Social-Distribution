@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../../config";
 
 const AdminPendingUsers = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -13,7 +14,7 @@ const AdminPendingUsers = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/admin/pending-users/", {
+      const response = await fetch("${API_BASE_URL}/api/admin/pending-users/", {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}` // or use Bearer if using JWT
@@ -36,7 +37,7 @@ const AdminPendingUsers = () => {
   const approveUser = async (userId) => {
     setError("");
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/approve-user/${userId}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/approve-user/${userId}/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

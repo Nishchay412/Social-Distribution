@@ -8,6 +8,7 @@ import Stream from "../posting/Stream";
 import MyPosts from "../posting/Personalposts";
 import FriendsPosts from "../posting/FriendsPost";
 import DraftPosts from "../posting/DraftPosts"; // New component for draft posts
+import { API_BASE_URL } from "../../config";
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function Dashboard() {
   // Logout handler
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/logout/", {
+      const response = await fetch("${API_BASE_URL}/logout/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

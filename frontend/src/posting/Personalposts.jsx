@@ -12,10 +12,10 @@ function getImageUrl(path) {
   }
   if (path.startsWith("/media") || path.startsWith("media")) {
     const normalized = path.replace(/^\/+/, ""); // remove leading slash
-    return `http://127.0.0.1:8000/${normalized}`;
+    return `${API_BASE_URL}/${normalized}`;
   }
   // Fallback: assume we need "/media/" in front
-  return `http://127.0.0.1:8000/media/${path}`;
+  return `${API_BASE_URL}/media/${path}`;
 }
 
 const MyPosts = () => {
@@ -37,7 +37,7 @@ const MyPosts = () => {
     const fetchMyPosts = async () => {
       setLoading(true);
       try {
-        const response = await axios.get("http://127.0.0.1:8000/posts/my/", {
+        const response = await axios.get("${API_BASE_URL}/posts/my/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPosts(response.data);
@@ -55,12 +55,12 @@ const MyPosts = () => {
   const handleLike = async (postId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${postId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Re-fetch posts to update like counts
-      const response = await axios.get("http://127.0.0.1:8000/posts/my/", {
+      const response = await axios.get("${API_BASE_URL}/posts/my/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(response.data);
@@ -72,12 +72,12 @@ const MyPosts = () => {
   const handleLikeComment = async (postId, commentId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comments/${commentId}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${postId}/comments/${commentId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Re-fetch the posts to update comment likes
-      const response = await axios.get("http://127.0.0.1:8000/posts/my/", {
+      const response = await axios.get("${API_BASE_URL}/posts/my/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(response.data);
@@ -101,7 +101,7 @@ const MyPosts = () => {
 
     try {
       const res = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comments/create/`,
+        `${API_BASE_URL}/posts/${postId}/comments/create/`,
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -133,7 +133,7 @@ const MyPosts = () => {
   const handleSaveEdit = async (postId) => {
     try {
       const response = await axios.patch(
-        `http://127.0.0.1:8000/posts/${postId}/edit/`,
+        `${API_BASE_URL}/posts/${postId}/edit/`,
         editingData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -154,7 +154,7 @@ const MyPosts = () => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
     try {
       const response = await axios.delete(
-        `http://127.0.0.1:8000/posts/${postId}/delete/`,
+        `${API_BASE_URL}/posts/${postId}/delete/`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status === 200) {

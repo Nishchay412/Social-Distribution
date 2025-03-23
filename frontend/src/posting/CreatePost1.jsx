@@ -1,6 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { API_BASE_URL } from '../../config';
 
 export function CreatePost1(){
     
@@ -10,7 +11,7 @@ export function CreatePost1(){
   const [visibility, setVisibility] = useState('PUBLIC');  // ✅ Default to PUBLIC
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
-    const API_BASE_URL = "http://127.0.0.1:8000/posts/create/";  // ✅ Ensure correct API endpoint
+    const API_BASE_URL = "${API_BASE_URL}/posts/create/";  // ✅ Ensure correct API endpoint
 
   const getAuthToken = () => localStorage.getItem("access_token");
 

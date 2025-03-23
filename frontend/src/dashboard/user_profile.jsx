@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config";
 
 export function User_Profile() {
     const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ export function User_Profile() {
                 const username = localStorage.getItem("username"); // ✅ Get username from storage
                 if (!username) throw new Error("No username found in localStorage");
     
-                const response = await fetch(`http://127.0.0.1:8000/profile/${username}/`, {
+                const response = await fetch(`${API_BASE_URL}/profile/${username}/`, {
                     headers: {
                         "Authorization": `Bearer ${accessToken}`,  // ✅ Add JWT token
                     },
@@ -91,7 +92,7 @@ export function User_Profile() {
                 formDataToSend.append("profile_picture", blob, "profile.jpg");
             }
 
-            const response = await fetch("http://127.0.0.1:8000/update-profile/", {
+            const response = await fetch("${API_BASE_URL}/update-profile/", {
                 method: "PATCH",
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,

@@ -9,9 +9,9 @@ function getImageUrl(path) {
   if (path.startsWith("http")) return path;
   if (path.startsWith("/media") || path.startsWith("media")) {
     const normalized = path.replace(/^\/+/, ""); // remove leading slash(es)
-    return `http://127.0.0.1:8000/${normalized}`;
+    return `${API_BASE_URL}/${normalized}`;
   }
-  return `http://127.0.0.1:8000/media/${path}`;
+  return `${API_BASE_URL}/media/${path}`;
 }
 
 function FriendsPosts() {
@@ -25,7 +25,7 @@ function FriendsPosts() {
   const [visibleSharePostId, setVisibleSharePostId] = useState(null);
 
   const token = localStorage.getItem("access_token");
-  const API_URL_FRIENDS = "http://127.0.0.1:8000/friends/posts/";
+  const API_URL_FRIENDS = "${API_BASE_URL}/friends/posts/";
 
   // Fetch friends posts from the backend
   const fetchFriendsPosts = async () => {
@@ -58,7 +58,7 @@ function FriendsPosts() {
     try {
       console.log("Liking post:", postId);
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${postId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -78,7 +78,7 @@ function FriendsPosts() {
     try {
       console.log("Liking comment:", commentId, "for post:", postId);
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comments/${commentId}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${postId}/comments/${commentId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -108,7 +108,7 @@ function FriendsPosts() {
     try {
       console.log("Submitting comment for post:", postId, "with text:", commentText);
       const res = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comments/create/`,
+        `${API_BASE_URL}/posts/${postId}/comments/create/`,
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

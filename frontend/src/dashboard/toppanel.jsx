@@ -1,6 +1,6 @@
 import React from "react";
 
-
+import { API_BASE_URL } from "../../config";
 export function TopPanel(){
     const profilepic = localStorage.getItem("profilepic")
     const first_name = localStorage.getItem("firstname")

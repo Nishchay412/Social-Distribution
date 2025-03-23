@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import Relation_Button from "../Following/RelationButton";
+import { API_BASE_URL } from "../../config";
 
 export function Friend_Profile() {
   const { username } = useParams(); // e.g., /profile/:username
@@ -18,7 +19,7 @@ export function Friend_Profile() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/profile/${username}/`);
+        const response = await fetch(`${API_BASE_URL}/profile/${username}/`);
         const data = await response.json();
 
         if (response.ok) {
@@ -41,7 +42,7 @@ export function Friend_Profile() {
     const fetchUserPosts = async () => {
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/users/${username}/posts/`,
+          `${API_BASE_URL}/api/users/${username}/posts/`,
           {
             headers: {
               Authorization: `Bearer ${token}`, // Include the Bearer token

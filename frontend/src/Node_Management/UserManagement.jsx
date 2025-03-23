@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Admin_Edit_User from "./AdminEditUser";
+import { API_BASE_URL } from "../../config";
 
 
 
@@ -32,7 +33,7 @@ const User_Management = () => {
     const handleDelete = async (username) => {
         try {
           const res = await fetch(
-            `http://127.0.0.1:8000/users/exclude-self/${username}/delete-user/`,
+            `${API_BASE_URL}/users/exclude-self/${username}/delete-user/`,
             {
               method: "DELETE",
               headers: {
@@ -61,7 +62,7 @@ const User_Management = () => {
             setLoading(true);
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/users/exclude-self/", {
+                const response = await fetch("${API_BASE_URL}/users/exclude-self/", {
                     method: "GET",
                     headers: {
                     "Authorization": `Bearer ${accessToken}`,

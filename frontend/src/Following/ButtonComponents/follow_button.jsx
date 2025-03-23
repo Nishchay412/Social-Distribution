@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-
+import { API_BASE_URL } from "../../../config";
 /*  Follow Button
     @TODO - add a hover state
     Appears if you are not following this user or have no outgoing follow request to this user
@@ -15,7 +15,7 @@ const Follow_Button = () => {
     //Follow User
     const createFollowRequest = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/profile/${username}/follow-request/`, {
+            const response = await fetch(`${API_BASE_URL}/profile/${username}/follow-request/`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,

@@ -8,9 +8,9 @@ function getImageUrl(path) {
   if (path.startsWith("http")) return path;
   if (path.startsWith("/media") || path.startsWith("media")) {
     const normalized = path.replace(/^\/+/, ""); // remove any leading slash(es)
-    return `http://127.0.0.1:8000/${normalized}`;
+    return `${API_BASE_URL}/${normalized}`;
   }
-  return `http://127.0.0.1:8000/media/${path}`;
+  return `${API_BASE_URL}/media/${path}`;
 }
 
 const Stream = () => {
@@ -31,7 +31,7 @@ const Stream = () => {
   useEffect(() => {
     const fetchStreamPosts = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/posts/stream", {
+        const response = await axios.get("${API_BASE_URL}/posts/stream", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPosts(response.data);
@@ -55,12 +55,12 @@ const Stream = () => {
   const handleLike = async (postId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${postId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Refresh posts to update like counts.
-      const response = await axios.get("http://127.0.0.1:8000/posts/stream", {
+      const response = await axios.get("${API_BASE_URL}/posts/stream", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(response.data);
@@ -73,12 +73,12 @@ const Stream = () => {
   const handleLikeComment = async (postId, commentId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comments/${commentId}/likes/toggle/`,
+        `${API_BASE_URL}/posts/${postId}/comments/${commentId}/likes/toggle/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Refresh posts to update comment like counts.
-      const response = await axios.get("http://127.0.0.1:8000/posts/stream", {
+      const response = await axios.get("${API_BASE_URL}/posts/stream", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(response.data);
@@ -101,7 +101,7 @@ const Stream = () => {
     if (!commentText.trim()) return;
     try {
       const res = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comments/create/`,
+        `${API_BASE_URL}/posts/${postId}/comments/create/`,
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

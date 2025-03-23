@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_BASE_URL } from "../../config";
 
 function Admin_Edit_User({ onClose, user }) {
   const [error, setError] = useState(null);
@@ -52,7 +53,7 @@ function Admin_Edit_User({ onClose, user }) {
 
       // Updated URL: using the self-update endpoint
       const response = await fetch(
-        `http://127.0.0.1:8000/users/exclude-self/${user.username}/update-user/`,
+        `${API_BASE_URL}/users/exclude-self/${user.username}/update-user/`,
         {
           method: "PATCH",
           headers: {

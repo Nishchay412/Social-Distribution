@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config";
 
 export default function AdminSignup() {
     const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ export default function AdminSignup() {
         try {
             const token = localStorage.getItem("access_token");
 
-const response = await fetch("http://127.0.0.1:8000/api/admin-register/", {
+const response = await fetch("${API_BASE_URL}/api/admin-register/", {
     method: "POST",
     headers: {
         "Content-Type": "application/json",

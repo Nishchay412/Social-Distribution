@@ -24,7 +24,7 @@ function EditPost() {
                 const token = localStorage.getItem('access_token');
                 if (!token) throw new Error("No authentication token found.");
 
-                const response = await axios.get(`http://127.0.0.1:8000/api/posts/${postId}/`, {
+                const response = await axios.get(`${API_BASE_URL}/api/posts/${postId}/`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -54,7 +54,7 @@ function EditPost() {
                 formData.append('image', newImage);
             }
 
-            await axios.put(`http://127.0.0.1:8000/api/posts/${postId}/update/`, formData, {
+            await axios.put(`${API_BASE_URL}/api/posts/${postId}/update/`, formData, {
                 headers: {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "multipart/form-data",
