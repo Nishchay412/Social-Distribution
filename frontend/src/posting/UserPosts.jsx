@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-
+import { API_BASE_URL } from '../../config';
 const UserPosts = () => {
     const { username } = useParams();
     const [posts, setPosts] = useState([]);

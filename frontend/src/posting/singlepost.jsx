@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import ReactMarkdown from "react-markdown";
 
-
+import { API_BASE_URL } from '../../config';
+import { API_BASE_URL } from '../../config';
 // Helper function to build the correct image URL
 function getImageUrl(path) {
   if (!path) return "";

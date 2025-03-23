@@ -15,6 +15,15 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+from dotenv import load_dotenv
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+NODE_API_KEY = os.environ.get("NODE_API_KEY")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -35,8 +44,18 @@ ALLOWED_HOSTS = [
     '3713a.yeg.rac.sh',
     '2605:fd00:4:1001:f816:3eff:fecc:9717',
     '[2605:fd00:4:1001:f816:3eff:fecc:9717]'
-
 ]
+
+NODE_CONFIG = {
+    'node1': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]:8000',
+        'api_key': NODE_API_KEY,
+    },
+    'node2': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fecc:9717]:8000',
+        'api_key': NODE_API_KEY,
+    },
+}
 
 
 

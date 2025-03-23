@@ -1,6 +1,7 @@
 import axios from 'axios';
 import ReactMarkdown from "react-markdown";
 
+import { API_BASE_URL } from '../../config';
 // Base API client with interceptors
 const apiClient = axios.create({
   baseURL: "http://127.0.0.1:8000",  // Adjust if using a different backend URL

@@ -849,6 +849,103 @@ def friends_posts(request):
     return Response(serializer.data, status=200)
 
 
+
+
+
+
+from django.conf import settings
+import requests
+
+def get_node_url_for_user(username):
+    """
+    Determine the node URL for a given user.
+    This could look up the user in your local database and return their `home_node` value.
+    If not found locally, you might use a central mapping.
+    """
+    try:
+        user = User.objects.get(username=username)
+        # Return the node identifier (e.g., 'node1' or 'node2') from the user's home_node field.
+        return user.home_node
+    except User.DoesNotExist:
+        # If the user is not found locally, you need a strategy to decide which node they belong to.
+        # For example, you could use a central directory or a naming convention.
+        # Here we assume if not found locally, they're on node2.
+        return 'node2'
+
+def send_remote_follow_request(target_username, sender):
+    """
+    Send a follow request to a remote node's API endpoint.
+    """
+    # Determine the target node (identifier) for the user.
+    target_node_id = get_node_url_for_user(target_username)
+    node_config = settings.NODE_CONFIG.get(target_node_id)
+    if not node_config:
+        return {"error": "Target node configuration not found."}
+    
+    # Build the URL to the remote endpoint.
+    endpoint = f"{node_config['url']}/create_follow_request/{target_username}/"
+    
+    # Prepare headers with the shared API key.
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {node_config['api_key']}"
+    }
+    
+    # Construct a payload. This example sends the sender's username.
+    payload = {
+        "sender_username": sender.username,
+        # Include additional fields if needed.
+    }
+    
+    try:
+        response = requests.post(endpoint, json=payload, headers=headers)
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_follow_request(request, username):
+    """
+    Create a follow request. If the target user exists locally, process normally.
+    If not, send a remote request to the appropriate node.
+    """
+    sender = request.user
+    
+    try:
+        # Try to retrieve the target user locally.
+        receiver = User.objects.get(username=username)
+        is_local = True
+    except User.DoesNotExist:
+        is_local = False
+    
+    if not is_local:
+        # Send the follow request to the remote node.
+        remote_response = send_remote_follow_request(username, sender)
+        return Response(remote_response, status=status.HTTP_200_OK)
+    
+    # Proceed with the local logic if the user is found locally.
+    if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id).exists():
+        return Response({"message": "You already sent them a follow request!"}, status=status.HTTP_204_NO_CONTENT)
+    
+    if receiver.id == sender.id: 
+        return Response({"message": "You cannot send yourself a follow request!"}, status=status.HTTP_403_FORBIDDEN)
+    
+    if Following.objects.filter(followee_id=receiver.id, follower_id=sender.id).exists():
+        return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
+    
+    data = {"receiver": receiver.id, "sender": sender.id, "notif_type": "FOLLOW_REQUEST"}
+    try:
+        serializer = NotifSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(receiver_id=receiver.id, sender_id=sender.id, notif_type="FOLLOW_REQUEST")
+            return Response({"message": "Follow Request Sent!"}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": f"Follow Request couldn't be made: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 # register an user while being an admin --> same functionality just the view needs to be for isadminonly
 
 @api_view(['POST'])
