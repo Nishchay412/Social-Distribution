@@ -14,15 +14,14 @@ export default function Login() {
 
     // ✅ Correct navigate_signup function
     const navigate_login = () => {
-        navigate("/sign-up");  // ✅ Call navigate to go to /login
+        navigate("/sign-up");  // ✅ Call navigate to go to /sign-up
     };
     const navigate_dashboard = () => {
-        navigate("/dashboard");  // ✅ Call navigate to go to /login
+        navigate("/dashboard");  // ✅ Call navigate to go to /dashboard
     };
     const navigate_admin_dashboard = () => {
-        navigate("/admin-dashboard"); // Call naviage to go to /admin-dashboard if user is an admin
-    }
-
+        navigate("/admin-dashboard"); // Call navigate to go to /admin-dashboard if user is an admin
+    };
 
     // Handle input changes
     const handleChange = (e) => {
@@ -36,7 +35,8 @@ export default function Login() {
         setSuccess(null);
     
         try {
-            const response = await fetch("http://127.0.0.1:8000/login/", {
+            // Use the API base URL from the environment variable
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/login/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -52,26 +52,22 @@ export default function Login() {
             } else {
                 setSuccess("Login successful! 🎉");
                 
-                if (data.user.admin){
+                if (data.user.admin) {
                     setSuccess("Admin Detected 🔐");
                     navigate_admin_dashboard();
-                }else{
+                } else {
                     setSuccess("Login successful! 🎉");
                     navigate_dashboard();
                 }
-                localStorage.setItem("username",data.user.username)
-                localStorage.setItem("firstname",data.user.first_name)
-                localStorage.setItem("lastname",data.user.last_name)
-                localStorage.setItem("email",data.user.email)
-                localStorage.setItem("profilepic",data.user.profile_image)
-
+                localStorage.setItem("username", data.user.username);
+                localStorage.setItem("firstname", data.user.first_name);
+                localStorage.setItem("lastname", data.user.last_name);
+                localStorage.setItem("email", data.user.email);
+                localStorage.setItem("profilepic", data.user.profile_image);
 
                 // Store JWT Tokens in localStorage for authentication
                 localStorage.setItem("access_token", data.access);
                 localStorage.setItem("refresh_token", data.refresh);
-
-                // Redirect to dashboard after login
-                
             }
         } catch (error) {
             console.error("Network error:", error);
@@ -113,16 +109,14 @@ export default function Login() {
                         Login
                     </button>
                     <div className="flex items-center justify-center gap-2 ">
-                        <h1 className="mt-2">
-                            New User?
-                        </h1>
+                        <h1 className="mt-2">New User?</h1>
                         <button 
                             className="py-2 mt-2 text-blue-500 cursor-pointer"
-                            onClick={navigate_login}   // ✅ Correct use of navigate_signup
+                            onClick={navigate_login}
                         >
                             Sign UP
                         </button>
-                        </div>
+                    </div>
                 </form>
             </div>
         </div>
