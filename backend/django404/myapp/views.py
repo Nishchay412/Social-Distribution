@@ -964,7 +964,7 @@ def stream_posts(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  # ✅ Requires authentication
+@permission_classes([AllowAny])
 def list_users_excluding_self(request):
     """
     Lists all users excluding the authenticated user.
