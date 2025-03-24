@@ -14,7 +14,7 @@ const AdminPendingUsers = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("${API_BASE_URL}/api/admin/pending-users/", {
+      const response = await fetch(`${API_BASE_URL}/api/admin/pending-users/`, {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}` // or use Bearer if using JWT
