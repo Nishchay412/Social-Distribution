@@ -964,7 +964,7 @@ def stream_posts(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])  # ✅ Requires authentication
 def list_users_excluding_self(request):
     """
     Lists all users excluding the authenticated user.
@@ -1010,7 +1010,7 @@ class RemoteListAllUsersView(APIView):
             return Response({"error": f"Exception occurred: {str(e)}"}, status=500)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny]) 
 def list_all_users(request):
     """
     Lists all users.
