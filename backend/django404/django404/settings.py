@@ -18,7 +18,7 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file
+# Load environment variables from .env file (if any)
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 NODE_API_KEY = os.environ.get("NODE_API_KEY")
 
@@ -31,11 +31,11 @@ STATIC_ROOT = str(BASE_DIR / 'staticfiles')
 
 ALLOWED_HOSTS = [
     '2605:fd00:4:1001:f816:3eff:fe8c:5c2d',       # Node 1 IPv6 (unbracketed)
-    '[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]',     # Node 1 IPv6 (bracketed)
+    '[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]',       # Node 1 IPv6 (bracketed)
     '370bd.yeg.rac.sh',
     '3713a.yeg.rac.sh',
-    '2605:fd00:4:1001:f816:3eff:fecc:9717',        # Node 2 IPv6 (unbracketed)
-    '[2605:fd00:4:1001:f816:3eff:fecc:9717]'       # Node 2 IPv6 (bracketed)
+    '2605:fd00:4:1001:f816:3eff:fecc:9717',         # Node 2 IPv6 (unbracketed)
+    '[2605:fd00:4:1001:f816:3eff:fecc:9717]'        # Node 2 IPv6 (bracketed)
 ]
 
 # Node configuration for inter-node communication
@@ -52,11 +52,11 @@ NODE_CONFIG = {
 
 # Automatically determine the current instance using the server's hostname.
 current_hostname = socket.gethostname()
-# Map your Cybera instance hostnames to node identifiers.
-# Replace "cybera-node1-hostname" and "cybera-node2-hostname" with your actual hostnames.
+# Map your internal hostnames to node identifiers.
+# Make sure these keys exactly match what socket.gethostname() returns.
 HOSTNAME_TO_INSTANCE = {
-    "cybera-node1-hostname": "node1",
-    "cybera-node2-hostname": "node2",
+    "404groupproject": "node1",
+    "404groupproject-1": "node2",
 }
 
 # Determine the instance; default to node1 if not found.
@@ -64,21 +64,33 @@ INSTANCE_NAME = HOSTNAME_TO_INSTANCE.get(current_hostname, "node1")
 
 # Configure the DATABASES setting based on the INSTANCE_NAME.
 if INSTANCE_NAME == "node1":
-   DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'verdigris',      # Your new database name
-        'USER': '404group',       # Your new PostgreSQL user
-        'PASSWORD': 'postgres',   # The password for 404group
-        'HOST': 'localhost',      # Assuming PostgreSQL is running locally
-        'PORT': '5432',           # Default PostgreSQL port
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris',      # Database for Node 1
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',      # Adjust if needed (e.g., if using DATABASE_URL on Heroku)
+            'PORT': '5432',
+        }
     }
-}
 elif INSTANCE_NAME == "node2":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'verdigris_node2',  # Database for Node 2
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+else:
+    # Fallback configuration if instance is not recognized.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris',
             'USER': '404group',
             'PASSWORD': 'postgres',
             'HOST': 'localhost',
