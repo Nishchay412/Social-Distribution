@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { API_BASE_URL } from '../../config';
 // Base API client with interceptors
 const apiClient = axios.create({
-  baseURL: '${API_BASE_URL}',  // Adjust if using a different backend URL
+  baseURL: `${API_BASE_URL}`,  // Adjust if using a different backend URL
   headers: {
     "Content-Type": "application/json",
   },
@@ -98,7 +98,7 @@ export async function fetchPosts() {
 export async function createPostFetch(postData) {
   try {
     const token = getAuthToken();
-    const response = await fetch('${API_BASE_URL}/posts/create/', {
+    const response = await fetch(`${API_BASE_URL}/posts/create/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,

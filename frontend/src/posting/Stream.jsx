@@ -60,7 +60,7 @@ const Stream = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Refresh posts to update like counts.
-      const response = await axios.get('${API_BASE_URL}/posts/stream', {
+      const response = await axios.get(`${API_BASE_URL}/posts/stream`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(response.data);

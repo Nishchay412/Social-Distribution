@@ -9,7 +9,7 @@ export function Admin_Dashboard() {
     // Logout as Admin/Superuser
     const handleLogout = async () => {
         try {
-            const response = await fetch('${API_BASE_URL}/logout/', {
+            const response = await fetch(`${API_BASE_URL}/logout/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

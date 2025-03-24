@@ -11,7 +11,7 @@ export function CreatePost1(){
   const [visibility, setVisibility] = useState('PUBLIC');  // ✅ Default to PUBLIC
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
-    const API_BASE_URL = "${API_BASE_URL}/posts/create/";  // ✅ Ensure correct API endpoint
+  const API_BASE_URL = `${API_BASE_URL}/posts/create/`;  // ✅ Ensure correct API endpoint
 
   const getAuthToken = () => localStorage.getItem("access_token");
 

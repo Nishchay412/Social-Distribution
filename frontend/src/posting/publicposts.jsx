@@ -23,7 +23,7 @@ const PublicPosts = () => {
   const [commentsByPostId, setCommentsByPostId] = useState({});
   const [visibleSharePostId, setVisibleSharePostId] = useState(null);
 
-  const API_URL = '${API_BASE_URL}/api/posts/public/';
+  const API_URL = `${API_BASE_URL}/api/posts/public/`;
   const token = localStorage.getItem("access_token");
 
   useEffect(() => {

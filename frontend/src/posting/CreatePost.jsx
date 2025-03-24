@@ -12,7 +12,7 @@ export function CreatePost() {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
 
-  const API_BASE_URL = '${API_BASE_URL}/posts/create/';
+  const API_BASE_URL = `${API_BASE_URL}/posts/create/`;
 
   // Retrieve user's profile picture and first name from local storage
   const profilePic = localStorage.getItem("profilepic") || "/default-avatar.png";

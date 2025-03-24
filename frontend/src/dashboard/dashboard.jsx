@@ -10,6 +10,7 @@ import FriendsPosts from "../posting/FriendsPost";
 import DraftPosts from "../posting/DraftPosts"; // New component for draft posts
 import { API_BASE_URL } from "../../config";
 
+
 export function Dashboard() {
   const navigate = useNavigate();
   const [selectedFeed, setSelectedFeed] = useState("public"); // Default feed
@@ -21,7 +22,7 @@ export function Dashboard() {
   // Logout handler
   const handleLogout = async () => {
     try {
-      const response = await fetch("${API_BASE_URL}/logout/", {
+      const response = await fetch(`${API_BASE_URL}/logout/`      , {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -27,7 +27,7 @@ export function Follow_Requests() {
         const fetchFollowRequests = async () => {
             setLoading(true);
             try {
-                const response = await fetch('${API_BASE_URL}/notifs/follow-requests/', {
+                const response = await fetch(`${API_BASE_URL}/notifs/follow-requests/`, {
                     method: "GET",
                     headers: {
                         "Authorization": `Bearer ${accessToken}`,

@@ -92,7 +92,7 @@ export function User_Profile() {
                 formDataToSend.append("profile_picture", blob, "profile.jpg");
             }
 
-            const response = await fetch('${API_BASE_URL}/update-profile/', {
+            const response = await fetch(`${API_BASE_URL}/update-profile/`, {
                 method: "PATCH",
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,

@@ -26,7 +26,7 @@ const AdminRegisterUser = () => {
     setError("");
     try {
       const response = await axios.post(
-        '${API_BASE_URL}/register-admin/',
+        `${API_BASE_URL}/register-admin/`,
         formData,
         {
           headers: {
