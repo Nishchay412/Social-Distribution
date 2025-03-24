@@ -31,14 +31,14 @@ STATIC_ROOT = str(BASE_DIR / 'staticfiles')
 
 ALLOWED_HOSTS = [
     '2605:fd00:4:1001:f816:3eff:fe8c:5c2d',       # Node 1 IPv6 (unbracketed)
-    '[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]',       # Node 1 IPv6 (bracketed)
+    '[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]',     # Node 1 IPv6 (bracketed)
     '370bd.yeg.rac.sh',
     '3713a.yeg.rac.sh',
     '2605:fd00:4:1001:f816:3eff:fecc:9717',         # Node 2 IPv6 (unbracketed)
     '[2605:fd00:4:1001:f816:3eff:fecc:9717]'        # Node 2 IPv6 (bracketed)
 ]
 
-# Node configuration for inter-node communication
+# Node configuration for inter-node communication (used by utility functions)
 NODE_CONFIG = {
     'node1': {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]:8000',
@@ -49,54 +49,6 @@ NODE_CONFIG = {
         'api_key': NODE_API_KEY,
     },
 }
-
-# Automatically determine the current instance using the server's hostname.
-current_hostname = socket.gethostname()
-# Map your internal hostnames to node identifiers.
-# Make sure these keys exactly match what socket.gethostname() returns.
-HOSTNAME_TO_INSTANCE = {
-    "404groupproject": "node1",
-    "404groupproject-1": "node2",
-}
-
-# Determine the instance; default to node1 if not found.
-INSTANCE_NAME = HOSTNAME_TO_INSTANCE.get(current_hostname, "node1")
-
-# Configure the DATABASES setting based on the INSTANCE_NAME.
-if INSTANCE_NAME == "node1":
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'verdigris',      # Database for Node 1
-            'USER': '404group',
-            'PASSWORD': 'postgres',
-            'HOST': 'localhost',      # Adjust if needed (e.g., if using DATABASE_URL on Heroku)
-            'PORT': '5432',
-        }
-    }
-elif INSTANCE_NAME == "node2":
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'verdigris_node2',  # Database for Node 2
-            'USER': '404group',
-            'PASSWORD': 'postgres',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
-else:
-    # Fallback configuration if instance is not recognized.
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'verdigris',
-            'USER': '404group',
-            'PASSWORD': 'postgres',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
 
 # Application definition
 AUTH_USER_MODEL = 'myapp.User'
@@ -118,7 +70,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Must come early in the middleware chain
+    'corsheaders.middleware.CorsMiddleware',  # Must come early
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -161,6 +113,58 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django404.wsgi.application'
 
+# ---- Database Configuration Based on Instance ----
+# Use socket.gethostname() to automatically detect the current machine's hostname.
+current_hostname = socket.gethostname()
+print("Current hostname:", current_hostname)  # Debug log; remove in production
+
+# Map your Cybera instance hostnames to identifiers.
+# Replace these keys with the actual hostnames returned by socket.gethostname() on your Cybera instances.
+HOSTNAME_TO_INSTANCE = {
+    "404groupproject": "node1",      # For example, Node 1's hostname
+    "404groupproject-1": "node2",    # Node 2's hostname
+}
+
+# Determine the instance based on the current hostname. Default to node1 if not found.
+INSTANCE_NAME = HOSTNAME_TO_INSTANCE.get(current_hostname, "node1")
+print("INSTANCE_NAME determined as:", INSTANCE_NAME)  # Debug log
+
+# Set up DATABASES based on INSTANCE_NAME.
+if INSTANCE_NAME == "node1":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris',  # Database for Node 1
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+elif INSTANCE_NAME == "node2":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris_node2',  # Database for Node 2
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris_default',
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+# ------------------------------------------------------
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -187,5 +191,4 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
