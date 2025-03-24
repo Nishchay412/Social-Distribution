@@ -978,6 +978,16 @@ def list_users_excluding_self(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_all_users(request):
+    """
+    Lists all users.
+    """
+    users = User.objects.all()  # Retrieves all users
+    serializer = RegisterUserSerializer(users, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])  # ✅ Requires authentication
 def list_non_friend_users(request):
     """

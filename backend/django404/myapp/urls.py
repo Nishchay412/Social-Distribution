@@ -44,7 +44,8 @@ from .views import (
     get_non_followees,
     friend_post_detail,
     RemoteUsersView,
-    HelloView
+    HelloView,
+    list_all_users
 )
 
 urlpatterns = [
@@ -76,6 +77,8 @@ urlpatterns = [
     path('followees/<str:username>/', get_followees, name='get_followees'),  # Get list of users the given user is following
     path('users/friends/', get_friends, name='get_friends'),  # Get list of friends
     path('profile/<str:username>/cancel-follow-request/',cancel_follower_request,name='cancel_follower_request'),
+    path('list-all-users/', list_all_users, name='list_all_users'),
+
 
     # Admin user update endpoint from main branch
     path('users/exclude-self/<str:username>/update-user/', admin_update_user, name='admin_update_user'),
