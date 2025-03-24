@@ -19,7 +19,7 @@ export function Dashboard() {
   const navigateToProfile = () => navigate("/profile");
   const navigateToMyPosts = () => navigate("/my-posts");
 
-  // Logout handler
+  // Logout handlerAP
   const handleLogout = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/logout/`      , {
