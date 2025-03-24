@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../config";
+import { API_BASE_URL } from "../../config";
 
 
 const CreatePost = () => {
@@ -11,8 +11,8 @@ const CreatePost = () => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
 
-  // Build the endpoint URL using API_URL from config
-  const createPostEndpoint = `${API_URL}/posts/create/`;
+  // Build the endpoint URL using API_BASE_URL from config
+  const createPostEndpoint = `${API_BASE_URL}/posts/create/`;
 
   const getAuthToken = () => localStorage.getItem("access_token");
 
