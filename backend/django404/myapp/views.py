@@ -977,6 +977,38 @@ def list_users_excluding_self(request):
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+class RemoteListAllUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Determine current instance name; default to "node1" if not set.
+        current_instance = getattr(settings, "INSTANCE_NAME", "node1")
+        
+        # Choose the remote node: if we're node1, target node2; if node2, target node1.
+        if current_instance == "node1":
+            remote_node = settings.NODE_CONFIG.get("node2")
+        elif current_instance == "node2":
+            remote_node = settings.NODE_CONFIG.get("node1")
+        else:
+            return Response({"error": "Current node is not recognized."}, status=500)
+
+        if not remote_node:
+            return Response({"error": "Remote node configuration not found."}, status=500)
+
+        # Build the URL to the remote node's endpoint.
+        url = f"{remote_node['url']}/list-all-users/"
+        headers = {
+            "X-Node-Api-Key": remote_node['api_key']
+        }
+
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            if response.status_code == 200:
+                return Response(response.json(), status=200)
+            return Response({"error": "Failed to fetch users from remote node."}, status=response.status_code)
+        except Exception as e:
+            return Response({"error": f"Exception occurred: {str(e)}"}, status=500)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_all_users(request):

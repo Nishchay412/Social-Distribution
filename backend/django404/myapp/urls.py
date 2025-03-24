@@ -45,7 +45,8 @@ from .views import (
     friend_post_detail,
     RemoteUsersView,
     HelloView,
-    list_all_users
+    list_all_users,
+    RemoteListAllUsersView
 )
 
 urlpatterns = [
@@ -120,4 +121,5 @@ urlpatterns = [
     path('users/exclude-self/<str:username>/update-user/', update_user_profile, name='admin_update_user'), 
     path('users/exclude-self/<str:username>/delete-user/', delete_user_by_username, name='delete_user'),
     path('get-remote-users/', RemoteUsersView.as_view(), name='get_remote_users'),
+    path('remote-list-all-users/', RemoteListAllUsersView.as_view(), name='remote_list_all_users'),
 ]
