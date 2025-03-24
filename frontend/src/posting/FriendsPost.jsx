@@ -25,7 +25,7 @@ function FriendsPosts() {
   const [visibleSharePostId, setVisibleSharePostId] = useState(null);
 
   const token = localStorage.getItem("access_token");
-  const API_URL_FRIENDS = "${API_BASE_URL}/friends/posts/";
+  const API_URL_FRIENDS = '${API_BASE_URL}/friends/posts/';
 
   // Fetch friends posts from the backend
   const fetchFriendsPosts = async () => {

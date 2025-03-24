@@ -23,7 +23,7 @@ function DraftPosts() {
   useEffect(() => {
     const fetchDraftPosts = async () => {
       try {
-        const response = await axios.get("${API_BASE_URL}/posts/drafts/", {
+        const response = await axios.get('${API_BASE_URL}/posts/drafts/', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

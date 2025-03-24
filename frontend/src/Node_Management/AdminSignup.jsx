@@ -27,7 +27,7 @@ export default function AdminSignup() {
         try {
             const token = localStorage.getItem("access_token");
 
-const response = await fetch("${API_BASE_URL}/api/admin-register/", {
+const response = await fetch('${API_BASE_URL}/api/admin-register/', {
     method: "POST",
     headers: {
         "Content-Type": "application/json",

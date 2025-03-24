@@ -62,7 +62,7 @@ const User_Management = () => {
             setLoading(true);
 
             try {
-                const response = await fetch("${API_BASE_URL}/users/exclude-self/", {
+                const response = await fetch('${API_BASE_URL}/users/exclude-self/', {
                     method: "GET",
                     headers: {
                     "Authorization": `Bearer ${accessToken}`,

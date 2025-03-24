@@ -37,7 +37,7 @@ const MyPosts = () => {
     const fetchMyPosts = async () => {
       setLoading(true);
       try {
-        const response = await axios.get("${API_BASE_URL}/posts/my/", {
+        const response = await axios.get('${API_BASE_URL}/posts/my/', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPosts(response.data);
@@ -60,7 +60,7 @@ const MyPosts = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Re-fetch posts to update like counts
-      const response = await axios.get("${API_BASE_URL}/posts/my/", {
+      const response = await axios.get('${API_BASE_URL}/posts/my/', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(response.data);
@@ -77,7 +77,7 @@ const MyPosts = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Re-fetch the posts to update comment likes
-      const response = await axios.get("${API_BASE_URL}/posts/my/", {
+      const response = await axios.get('${API_BASE_URL}/posts/my/', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(response.data);

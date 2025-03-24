@@ -32,7 +32,7 @@ const Relation_Button = () => {
         const fetchRelationship = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://127.0.0.1:8000/${username}/relationship`, {
+                const response = await fetch(`${API_BASE_URL}/${username}/relationship`, {
                     method: "GET",
                     headers: {
                         "Authorization": `Bearer ${accessToken}`,

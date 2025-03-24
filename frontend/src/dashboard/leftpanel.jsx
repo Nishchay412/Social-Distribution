@@ -7,7 +7,7 @@ export function Header() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("${API_BASE_URL}/logout/", {
+      const response = await fetch('${API_BASE_URL}/logout/', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export function Header() {
       }
 
       try {
-        const response = await fetch("${API_BASE_URL}/users/non-followees/", {
+        const response = await fetch('${API_BASE_URL}/users/non-followees/', {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -103,7 +103,7 @@ export function Header() {
       }
 
       try {
-        const response = await fetch("${API_BASE_URL}/users/friends", {
+        const response = await fetch('${API_BASE_URL}/users/friends', {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
