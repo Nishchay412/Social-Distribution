@@ -43,7 +43,8 @@ from .views import (
     register_user_as_admin,
     get_non_followees,
     friend_post_detail,
-    RemoteUsersView
+    RemoteUsersView,
+    HelloView
 )
 
 urlpatterns = [
@@ -78,6 +79,7 @@ urlpatterns = [
 
     # Admin user update endpoint from main branch
     path('users/exclude-self/<str:username>/update-user/', admin_update_user, name='admin_update_user'),
+    path('hello/', HelloView.as_view(), name='hello'),
 
     # User Posts by Username
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),

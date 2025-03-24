@@ -839,7 +839,12 @@ class RemoteUsersView(APIView):
             return Response({"error": f"Exception occurred: {str(e)}"}, status=500)
         
 
-        
+class HelloView(APIView):
+    # Allow anyone to access this endpoint
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({"message": "Hello"})
 
 
 
