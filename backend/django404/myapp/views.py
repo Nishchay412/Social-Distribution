@@ -502,6 +502,9 @@ def get_relationship(request, username):
 
     return Response({"message":"This is a user is no one special.", "relation":"NOBODY"}, status=status.HTTP_200_OK)
 
+
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_follow_request(request, username):
@@ -532,6 +535,86 @@ def create_follow_request(request, username):
             return Response({"message":"Follow Request Sent!"}, status=status.HTTP_200_OK)
     except:
         return Response({"error":"Follow Request couldn't be made"}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+def get_local_user_by_username(username):
+    try:
+        return User.objects.get(username=username)
+    except User.DoesNotExist:
+        return None
+
+from django.conf import settings
+import requests
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_follow_request_inter_node(request, username):
+    """
+    Create a follow request.
+    - If the target user is local, process as usual.
+    - If the target user is remote, forward the request to the appropriate node.
+    """
+    sender = get_object_or_404(User, username=request.user)
+    receiver = get_local_user_by_username(username)
+    
+    # Process the local case
+    if receiver:
+        # Check if follow request already exists
+        if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id).exists():
+            return Response({"message": "You already sent them a follow request!"}, status=status.HTTP_204_NO_CONTENT)
+        # Prevent sending to self
+        if receiver.id == sender.id:
+            return Response({"message": "You cannot send yourself a follow request!"}, status=status.HTTP_403_FORBIDDEN)
+        # Check if already following
+        if Following.objects.filter(followee_id=receiver.id, follower_id=sender.id).exists():
+            return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
+        
+        data = {"receiver": receiver.id, "sender": sender.id, "notif_type": "FOLLOW_REQUEST"}
+        try:
+            serializer = NotifSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save(receiver_id=receiver.id, sender_id=sender.id, notif_type='FOLLOW_REQUEST')
+                return Response({"message": "Follow Request Sent!"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": f"Follow Request couldn't be made: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # If receiver is not local, forward the request to the remote node.
+    current_instance = getattr(settings, "INSTANCE_NAME", "node1")
+    remote_node = None
+    if current_instance == "node1":
+        remote_node = settings.NODE_CONFIG.get("node2")
+    elif current_instance == "node2":
+        remote_node = settings.NODE_CONFIG.get("node1")
+    
+    if not remote_node:
+        return Response({"error": "Remote node configuration not found."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    # Build the remote URL (assuming the remote node has an endpoint set up similarly)
+    remote_url = f"{remote_node['url']}/create-follow-request/{username}/"
+    
+    # Include any data the remote endpoint might need, e.g., sender's username.
+    payload = {"sender_username": request.user}
+    
+    headers = {
+        "X-Node-Api-Key": remote_node['api_key']
+    }
+    
+    try:
+        remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
+        if remote_response.status_code == 200:
+            return Response(remote_response.json(), status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Failed to send remote follow request."}, status=remote_response.status_code)
+    except Exception as e:
+        return Response({"error": f"Exception occurred during remote call: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -837,6 +920,9 @@ class RemoteUsersView(APIView):
             return Response({"error": "Failed to fetch users from node2."}, status=response.status_code)
         except Exception as e:
             return Response({"error": f"Exception occurred: {str(e)}"}, status=500)
+
+
+
         
 
 class HelloView(APIView):

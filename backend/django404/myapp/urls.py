@@ -46,7 +46,8 @@ from .views import (
     RemoteUsersView,
     HelloView,
     list_all_users,
-    RemoteListAllUsersView
+    RemoteListAllUsersView,
+    create_follow_request_inter_node
 )
 
 urlpatterns = [
@@ -88,6 +89,7 @@ urlpatterns = [
     # User Posts by Username
     path('api/users/<str:username>/posts/', list_user_posts_by_username, name='list-user-posts-by-username'),
     path('users/non-followees/', get_non_followees, name='get_non_followees'),
+    
 
     # ✅ Post Endpoints (QingqiuTan/Nishchay Ranjan/Riyasat Zaman)
     path('posts/', list_posts, name='list-posts'),
@@ -122,4 +124,9 @@ urlpatterns = [
     path('users/exclude-self/<str:username>/delete-user/', delete_user_by_username, name='delete_user'),
     path('get-remote-users/', RemoteUsersView.as_view(), name='get_remote_users'),
     path('remote-list-all-users/', RemoteListAllUsersView.as_view(), name='remote_list_all_users'),
+
+
+
+    path('create-follow-request-inter-node/<str:username>/', create_follow_request_inter_node, name='create_follow_request_inter_node'),
 ]
+
