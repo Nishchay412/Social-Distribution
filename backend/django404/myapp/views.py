@@ -810,6 +810,41 @@ def add_friend(request, username):
     target_user.friends.add(request.user)
 
 
+
+from rest_framework.views import APIView
+from django.conf import settings
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+import requests
+
+class RemoteUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        remote_node = settings.NODE_CONFIG.get("node2")
+        if not remote_node:
+            return Response({"error": "Node 2 configuration not found in settings."}, status=500)
+
+        url = f"{remote_node['url']}/users/"
+        headers = {
+            "X-Node-Api-Key": remote_node['api_key']
+        }
+
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            if response.status_code == 200:
+                return Response(response.json(), status=200)
+            return Response({"error": "Failed to fetch users from node2."}, status=response.status_code)
+        except Exception as e:
+            return Response({"error": f"Exception occurred: {str(e)}"}, status=500)
+        
+
+
+
+    
+
+
+
 from .serializers import RegisterUserSerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

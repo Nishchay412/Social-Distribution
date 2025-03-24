@@ -42,7 +42,8 @@ from .views import (
     stream_posts,
     register_user_as_admin,
     get_non_followees,
-    friend_post_detail
+    friend_post_detail,
+    RemoteUsersView
 )
 
 urlpatterns = [
@@ -113,4 +114,5 @@ urlpatterns = [
     path('users/exclude-self/', list_users_excluding_self, name='list_users_excluding_self'),
     path('users/exclude-self/<str:username>/update-user/', update_user_profile, name='admin_update_user'), 
     path('users/exclude-self/<str:username>/delete-user/', delete_user_by_username, name='delete_user'),
+    path('get-remote-users/', RemoteUsersView.as_view(), name='get_remote_users'),
 ]
