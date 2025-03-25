@@ -579,6 +579,42 @@ def get_local_user_by_username(username):
     except User.DoesNotExist:
         return None
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def aggregated_remote_list_all_users(request):
+    """
+    Aggregates all users from all remote nodes.
+    It iterates through all nodes in settings.NODE_CONFIG that are not the current node,
+    fetches the users from each remote endpoint (/list-all-users/), and returns the combined list.
+    """
+    current_instance = getattr(settings, "INSTANCE_NAME", "node1")
+    aggregated_data = []
+    
+    # Filter out the current node from the NODE_CONFIG.
+    remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
+    
+    for node_key, node in remote_nodes.items():
+        url = f"{node['url']}/list-all-users/"
+        headers = {"X-Node-Api-Key": node['api_key']}
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                # Optionally tag the results with the remote node key.
+                for user in data:
+                    user["remote_node"] = node_key
+                aggregated_data.extend(data)
+        except Exception as e:
+            # You may log the exception here.
+            pass
+
+    return Response(aggregated_data, status=200)
+
+
+def get_destination_node_from_request():
+    # For testing, we assume the target user is on node2.
+    return "node2"
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_follow_request_inter_node(request, username):

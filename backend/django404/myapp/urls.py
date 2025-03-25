@@ -49,7 +49,8 @@ from .views import (
     RemoteListAllUsersView,
     create_follow_request_inter_node,
     remote_create_follow_request,
-    remote_get_follower_requests
+    remote_get_follower_requests,
+    aggregated_remote_list_all_users
 )
 
 urlpatterns = [
@@ -126,8 +127,7 @@ urlpatterns = [
     path('users/exclude-self/<str:username>/delete-user/', delete_user_by_username, name='delete_user'),
     path('get-remote-users/', RemoteUsersView.as_view(), name='get_remote_users'),
     path('remote-list-all-users/', RemoteListAllUsersView.as_view(), name='remote_list_all_users'),
-
-
+    path('aggregated-remote-users/', aggregated_remote_list_all_users, name='aggregated_remote_list_all_users'),
 
     path('create-follow-request-inter-node/<str:username>/', create_follow_request_inter_node, name='create_follow_request_inter_node'),
     path('create-follow-request/<str:username>/', remote_create_follow_request, name='remote_create_follow_request'),
