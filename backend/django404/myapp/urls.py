@@ -48,7 +48,8 @@ from .views import (
     list_all_users,
     RemoteListAllUsersView,
     create_follow_request_inter_node,
-    remote_create_follow_request
+    remote_create_follow_request,
+    remote_get_follower_requests
 )
 
 urlpatterns = [
