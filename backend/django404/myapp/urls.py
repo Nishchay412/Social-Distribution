@@ -47,7 +47,8 @@ from .views import (
     HelloView,
     list_all_users,
     RemoteListAllUsersView,
-    create_follow_request_inter_node
+    create_follow_request_inter_node,
+    remote_create_follow_request
 )
 
 urlpatterns = [
@@ -127,6 +128,8 @@ urlpatterns = [
 
 
 
+    
     path('create-follow-request-inter-node/<str:username>/', create_follow_request_inter_node, name='create_follow_request_inter_node'),
+    path('create-follow-request/<str:username>/', remote_create_follow_request, name='remote_create_follow_request'),
 ]
 

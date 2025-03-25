@@ -551,30 +551,60 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
+# views.py
+
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+import requests
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+
+# Assume you have imported your models and serializers:
+# from myapp.models import User, Notif, Following
+# from myapp.serializers import NotifSerializer
+
+def get_local_user_by_username(username):
+    """
+    Helper function to check if a user exists on the local database.
+    """
+    try:
+        return User.objects.get(username=username)
+    except User.DoesNotExist:
+        return None
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_follow_request_inter_node(request, username):
     """
-    Create a follow request.
-    - If the target user is local, process as usual.
-    - If the target user is remote, forward the request to the appropriate node.
+    Inter-node follow request endpoint on the sending node.
+    - If the target user exists locally, process the follow request normally.
+    - If not, forward the request to the remote node.
     """
+    # Get the sender from the request (authenticated via JWT)
     sender = get_object_or_404(User, username=request.user)
+    # Check if the target user exists locally on this node.
     receiver = get_local_user_by_username(username)
     
-    # Process the local case
+    # --- LOCAL PROCESSING ---
     if receiver:
-        # Check if follow request already exists
+        # Check if a follow request already exists
         if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id).exists():
             return Response({"message": "You already sent them a follow request!"}, status=status.HTTP_204_NO_CONTENT)
-        # Prevent sending to self
+        # Prevent sending a request to oneself
         if receiver.id == sender.id:
             return Response({"message": "You cannot send yourself a follow request!"}, status=status.HTTP_403_FORBIDDEN)
         # Check if already following
         if Following.objects.filter(followee_id=receiver.id, follower_id=sender.id).exists():
             return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
         
-        data = {"receiver": receiver.id, "sender": sender.id, "notif_type": "FOLLOW_REQUEST"}
+        data = {
+            "receiver": receiver.id,
+            "sender": sender.id,
+            "notif_type": "FOLLOW_REQUEST"
+        }
         try:
             serializer = NotifSerializer(data=data)
             if serializer.is_valid():
@@ -583,7 +613,8 @@ def create_follow_request_inter_node(request, username):
         except Exception as e:
             return Response({"error": f"Follow Request couldn't be made: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
     
-    # If receiver is not local, forward the request to the remote node.
+    # --- REMOTE PROCESSING (Forwarding) ---
+    # Determine which node is remote based on the current instance.
     current_instance = getattr(settings, "INSTANCE_NAME", "node1")
     remote_node = None
     if current_instance == "node1":
@@ -594,13 +625,13 @@ def create_follow_request_inter_node(request, username):
     if not remote_node:
         return Response({"error": "Remote node configuration not found."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    # Build the remote URL (assuming the remote node has an endpoint set up similarly)
+    # Build the remote URL. This should point to the remote node's remote endpoint.
     remote_url = f"{remote_node['url']}/create-follow-request/{username}/"
     
-    # Include any data the remote endpoint might need, e.g., sender's username.
+    # IMPORTANT: Build the payload with sender's username (a string, not a User object)
     payload = {"sender_username": request.user.username}
-
     
+    # Include the API key header for inter-node authentication.
     headers = {
         "X-Node-Api-Key": remote_node['api_key']
     }
@@ -613,6 +644,49 @@ def create_follow_request_inter_node(request, username):
             return Response({"error": "Failed to send remote follow request."}, status=remote_response.status_code)
     except Exception as e:
         return Response({"error": f"Exception occurred during remote call: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ------------------------------------------------------------------
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Inter-node calls don't require a JWT on the remote side.
+def remote_create_follow_request(request, username):
+    """
+    Remote endpoint on the receiving node for follow requests forwarded from another node.
+    Expects JSON payload with "sender_username".
+    """
+    # Optionally, verify the inter-node API key
+    provided_key = request.headers.get("X-Node-Api-Key")
+    if provided_key != settings.NODE_API_KEY:
+        return Response({"error": "Invalid API key"}, status=403)
+    
+    # Get the target (receiver) on this node.
+    receiver = get_object_or_404(User, username=username)
+    
+    # Get sender's username from payload.
+    sender_username = request.data.get("sender_username")
+    if not sender_username:
+        return Response({"error": "Sender username missing."}, status=400)
+    sender = get_object_or_404(User, username=sender_username)
+    
+    # Check if a follow request already exists.
+    if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id).exists():
+        return Response({"message": "Follow request already sent."}, status=204)
+    
+    data = {
+        "receiver": receiver.id,
+        "sender": sender.id,
+        "notif_type": "FOLLOW_REQUEST"
+    }
+    try:
+        serializer = NotifSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(receiver_id=receiver.id, sender_id=sender.id, notif_type="FOLLOW_REQUEST")
+            return Response({"message": "Remote follow request received!"}, status=200)
+        else:
+            return Response(serializer.errors, status=400)
+    except Exception as e:
+        return Response({"error": f"Failed to create remote follow request: {str(e)}"}, status=400)
+
 
 
 
