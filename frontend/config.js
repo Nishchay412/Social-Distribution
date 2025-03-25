@@ -15,7 +15,7 @@ if (host.includes("fe8c:5c2d")) {
 } 
 else if (host.includes("fe2b:1955")){
   //For Node 6
-  API_BASE_URL = "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000/";
+  API_BASE_URL = "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000";
 }
 else {
   // Fallback – adjust as needed
