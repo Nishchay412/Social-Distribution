@@ -598,7 +598,8 @@ def create_follow_request_inter_node(request, username):
     remote_url = f"{remote_node['url']}/create-follow-request/{username}/"
     
     # Include any data the remote endpoint might need, e.g., sender's username.
-    payload = {"sender_username": request.user}
+    payload = {"sender_username": request.user.username}
+
     
     headers = {
         "X-Node-Api-Key": remote_node['api_key']
