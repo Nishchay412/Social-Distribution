@@ -42,11 +42,11 @@ ALLOWED_HOSTS = [
 NODE_CONFIG = {
     'node1': {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]:8000',
-        'api_key': NODE_API_KEY,
+        'api_key': 'eca92496df745dc547e3f6a4e19005fee588f1da05af9eebc84d7bc04d608c9d',
     },
     'node2': {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fecc:9717]:8000',
-        'api_key': NODE_API_KEY,
+        'api_key': 'eca92496df745dc547e3f6a4e19005fee588f1da05af9eebc84d7bc04d608c9d',
     },
 }
 
