@@ -696,6 +696,28 @@ def remote_create_follow_request(request, username):
 
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])  # No JWT required for inter-node calls.
+def remote_get_follower_requests(request):
+    """
+    Remote endpoint to return follower request notifications for a given receiver.
+    Expects a query parameter 'receiver' (the username of the receiver).
+    Uses the API key to authenticate the inter-node call.
+    """
+    provided_key = request.headers.get("X-Node-Api-Key")
+    if provided_key != settings.NODE_API_KEY:
+        return Response({"error": "Invalid API key"}, status=403)
+    
+    # Receiver username must be passed as a query parameter.
+    receiver_username = request.query_params.get("receiver")
+    if not receiver_username:
+        return Response({"error": "Receiver username missing."}, status=400)
+    
+    receiver = get_object_or_404(User, username=receiver_username)
+    notifs = Notif.objects.filter(receiver=receiver.id).order_by("-created_at")
+    serializer = NotifSerializer(notifs, many=True)
+    return Response(serializer.data, status=200)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

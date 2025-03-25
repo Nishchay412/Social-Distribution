@@ -130,6 +130,7 @@ urlpatterns = [
 
     path('create-follow-request-inter-node/<str:username>/', create_follow_request_inter_node, name='create_follow_request_inter_node'),
     path('create-follow-request/<str:username>/', remote_create_follow_request, name='remote_create_follow_request'),
+    path('remote-get-follower-requests/', remote_get_follower_requests, name='remote_get_follower_requests'),
     
     
     
