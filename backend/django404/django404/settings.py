@@ -37,7 +37,9 @@ ALLOWED_HOSTS = [
     '2605:fd00:4:1001:f816:3eff:fecc:9717',         # Node 2 IPv6 (unbracketed)
     '[2605:fd00:4:1001:f816:3eff:fecc:9717]' , # Node 2 IPv6 (bracketed)
      '2605:fd00:4:1001:f816:3eff:fef6:3793',#node 3
-    '[2605:fd00:4:1001:f816:3eff:fef6:3793]',      
+    '[2605:fd00:4:1001:f816:3eff:fef6:3793]',
+    '2605:fd00:4:1001:f816:3eff:fe2b:1955',
+    '[2605:fd00:4:1001:f816:3eff:fe2b:1955]' # node 4    
 ]
 
 # Node configuration for inter-node communication (used by utility functions)
@@ -52,6 +54,10 @@ NODE_CONFIG = {
     },
     'node3': {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fef6:3793]:8000',
+        'api_key': NODE_API_KEY,
+    },
+    'node6': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000/',
         'api_key': NODE_API_KEY,
     },
 }
@@ -92,6 +98,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://[2605:fd00:4:1001:f816:3eff:fef6:3793]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fecc:9717]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]:8000",
+    "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000"
+
 ]
 CORS_ALLOW_CREDENTIALS = True
 REST_FRAMEWORK = {
@@ -137,7 +145,9 @@ HOSTNAME_TO_INSTANCE = {
     "404groupproject": "node1",      # For example, Node 1's hostname
     "404groupproject-1": "node2",# Node 2's hostname
     "qingqiu404test":"node3",  
-    "83c98358ca70": "node3" # Node 3's hostname
+    "83c98358ca70": "node3",
+    "yc": "node6",
+     # Node 3's hostname
 }
 
 # Determine the instance based on the current hostname. Default to node1 if not found.

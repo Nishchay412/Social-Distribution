@@ -12,7 +12,12 @@ if (host.includes("fe8c:5c2d")) {
 } else if (host.includes("fef6:3793")) {
   // For Node 3
   API_BASE_URL = "http://[2605:fd00:4:1001:f816:3eff:fef6:3793]:8000";
-} else {
+} 
+else if (host.includes("fe2b:1955")){
+  //For Node 6
+  API_BASE_URL = "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000/";
+}
+else {
   // Fallback – adjust as needed
   API_BASE_URL = "http://localhost:8000";
 }
