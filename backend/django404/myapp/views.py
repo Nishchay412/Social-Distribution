@@ -799,6 +799,73 @@ def get_follower_request_list(request):
     except:
         return Response({"error":"Error: Unable to retrieve follower requests"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def accept_follow_request_inter_node(request, username):
+    """
+    Accept a follow request in an inter-node scenario.
+    
+    - The current logged-in user (followee) accepts the follow request.
+    - If the sender (follower) does not exist locally, create a stub user.
+    - Ensure that a follow request notification exists.
+    - Create a Following relationship.
+      If the relationship is mutual, mark it as friends.
+    - Delete the follow request notification.
+    """
+    # Get the followee (the currently authenticated user)
+    followee = get_object_or_404(User, username=request.user)
+    
+    # Attempt to retrieve the sender (follower) from the local DB.
+    # If the sender doesn't exist (i.e. it's a remote user), create a stub.
+    try:
+        follower = User.objects.get(username=username)
+    except User.DoesNotExist:
+        follower = User.objects.create(username=username)
+        # Optionally, add extra fields (first_name, last_name, etc.) if available
+        # and mark the user as a stub (e.g., follower.is_stub = True).
+    
+    # Check if a follow request notification exists.
+    if not Notif.objects.filter(
+        receiver_id=followee.id, 
+        sender_id=follower.id, 
+        notif_type="FOLLOW_REQUEST"
+    ).exists():
+        return Response({"error": "No follow request found to accept."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Prevent following yourself.
+    if follower.id == followee.id:
+        return Response({"error": "Cannot follow yourself."}, status=status.HTTP_403_FORBIDDEN)
+    
+    # Prevent duplicate following.
+    if Following.objects.filter(followee_id=followee.id, follower_id=follower.id).exists():
+        return Response({"error": "Already following this user."}, status=status.HTTP_403_FORBIDDEN)
+    
+    data = {"followee": followee.id, "follower": follower.id}
+    try:
+        # If mutual following exists, mark the relationship as friends.
+        if Following.objects.filter(followee_id=follower.id, follower_id=followee.id).exists():
+            relationship = Following.objects.get(followee_id=follower.id, follower_id=followee.id)
+            relationship.friends = "YES"
+            relationship.save()
+            data["friends"] = "YES"
+        
+        serializer = FollowingSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(followee_id=followee.id, follower_id=follower.id)
+            # Delete the notification.
+            Notif.objects.filter(
+                receiver_id=followee.id, 
+                sender_id=follower.id, 
+                notif_type="FOLLOW_REQUEST"
+            ).delete()
+            return Response({"message": "Follow request accepted. You are now following this user."}, status=200)
+        else:
+            return Response(serializer.errors, status=400)
+    except Exception as e:
+        return Response({"error": f"Something went wrong, user not followed: {str(e)}"}, status=400)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def accept_follower_request (request, username):
