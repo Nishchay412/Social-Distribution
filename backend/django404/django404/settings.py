@@ -35,7 +35,9 @@ ALLOWED_HOSTS = [
     '370bd.yeg.rac.sh',
     '3713a.yeg.rac.sh',
     '2605:fd00:4:1001:f816:3eff:fecc:9717',         # Node 2 IPv6 (unbracketed)
-    '[2605:fd00:4:1001:f816:3eff:fecc:9717]'        # Node 2 IPv6 (bracketed)
+    '[2605:fd00:4:1001:f816:3eff:fecc:9717]' , # Node 2 IPv6 (bracketed)
+     '2605:fd00:4:1001:f816:3eff:fef6:3793',#node 3
+    '[2605:fd00:4:1001:f816:3eff:fef6:3793]',      
 ]
 
 # Node configuration for inter-node communication (used by utility functions)
@@ -47,6 +49,10 @@ NODE_CONFIG = {
     'node2': {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fecc:9717]:8000',
         'api_key': 'eca92496df745dc547e3f6a4e19005fee588f1da05af9eebc84d7bc04d608c9d',
+    },
+    'node3': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fef6:3793]:8000',
+        'api_key': NODE_API_KEY,
     },
 }
 
@@ -80,7 +86,14 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'django404.urls'
 CORS_ALLOW_ALL_ORIGINS = True
-
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://[2605:fd00:4:1001:f816:3eff:fef6:3793]:8000",
+    "http://[2605:fd00:4:1001:f816:3eff:fecc:9717]:8000",
+    "http://[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]:8000",
+]
+CORS_ALLOW_CREDENTIALS = True
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -122,7 +135,9 @@ print("Current hostname:", current_hostname)  # Debug log; remove in production
 # Replace these keys with the actual hostnames returned by socket.gethostname() on your Cybera instances.
 HOSTNAME_TO_INSTANCE = {
     "404groupproject": "node1",      # For example, Node 1's hostname
-    "404groupproject-1": "node2",    # Node 2's hostname
+    "404groupproject-1": "node2",# Node 2's hostname
+    "qingqiu404test":"node3",  
+    "83c98358ca70": "node3" # Node 3's hostname
 }
 
 # Determine the instance based on the current hostname. Default to node1 if not found.
@@ -152,6 +167,17 @@ elif INSTANCE_NAME == "node2":
             'PORT': '5432',
         }
     }
+elif INSTANCE_NAME == "node3":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris_node3',  # Database for Node 3
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }  
 else:
     DATABASES = {
         'default': {
