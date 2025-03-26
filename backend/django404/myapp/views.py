@@ -16,8 +16,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from rest_framework.permissions import IsAdminUser
 
 
 
@@ -588,27 +586,28 @@ def aggregated_remote_list_all_users(request):
     fetches the users from each remote endpoint (/list-all-users/), and returns the combined list.
     """
     current_instance = getattr(settings, "INSTANCE_NAME", "node1")
-    aggregated_data = []
     
-    # Filter out the current node from the NODE_CONFIG.
+    # # Filter out the current node from the NODE_CONFIG.
     remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
     
     for node_key, node in remote_nodes.items():
         url = f"{node['url']}/list-all-users/"
+        api_keys.append(node['api_key'])
         headers = {"X-Node-Api-Key": node['api_key']}
         try:
             response = requests.get(url, headers=headers, timeout=5)
+
             if response.status_code == 200:
                 data = response.json()
+                
                 # Optionally tag the results with the remote node key.
                 for user in data:
                     user["remote_node"] = node_key
+
                 aggregated_data.extend(data)
         except Exception as e:
             # You may log the exception here.
             pass
-
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -787,8 +786,6 @@ def remote_create_follow_request(request, username):
             return Response(serializer.errors, status=400)
     except Exception as e:
         return Response({"error": f"Failed to create remote follow request: {str(e)}"}, status=400)
-
-
 
 
 @api_view(['GET'])
@@ -1230,10 +1227,6 @@ class RemoteUsersView(APIView):
         except Exception as e:
             return Response({"error": f"Exception occurred: {str(e)}"}, status=500)
 
-
-
-        
-
 class HelloView(APIView):
     # Allow anyone to access this endpoint
     permission_classes = [AllowAny]
@@ -1552,132 +1545,313 @@ def toggle_comment_like(request, post_id, comment_id):
         CommentLike.objects.create(comment=comment, author=request.user)
         return Response({"message": "You liked this comment."}, status=status.HTTP_201_CREATED)
 
+##############################################################################################################
+#Remote api endpoints
+##############################################################################################################
+class CrossNodePostViewSet(viewsets.ModelViewSet):
+    """
+    Enhanced Post ViewSet with cross-node capabilities.
+    """
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    serializer_class = CrossNodePostSerializer
+    
+    def get_queryset(self):
+        # Filter out deleted posts for normal listing
+        if self.action == 'list':
+            return Post.objects.filter(deleted_at__isnull=True).exclude(visibility='DELETED')
+        
+        # For other actions, include all posts
+        return Post.objects.all()
+    
+    def perform_create(self, serializer):
+        post = serializer.save()
+        # Queue post for distribution to followers
+        self.sync_post_to_followers(post)
+    
+    def perform_update(self, serializer):
+        post = serializer.save()
+        # Queue post updates for distribution
+        self.sync_post_to_followers(post)
+    
+    def perform_destroy(self, instance):
+        # Soft delete the post and mark for sync
+        instance.deleted_at = timezone.now()
+        instance.visibility = 'DELETED'
+        instance.needs_sync = True
+        instance.save()
+        # Distribute deletion to followers
+        self.sync_post_to_followers(instance)
+    
+    @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None):
+        """Restore a soft-deleted post"""
+        post = self.get_object()
+        
+        # Check if it's actually deleted
+        if not post.is_deleted():
+            return Response({"detail": "Post is not deleted"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Restore the post
+        post.deleted_at = None
+        post.visibility = 'PUBLIC'  # Or maybe restore to original visibility
+        post.needs_sync = True
+        post.save()
+        
+        # Sync the restored post
+        self.sync_post_to_followers(post)
+        
+        return Response({"detail": "Post restored successfully"})
+    
+    def sync_post_to_followers(self, post):
+        """
+        Sync post to remote followers
+        In a production environment, this would be a background task
+        """
+        try:
+            # Skip for non-local posts or private posts
+            if not post.local_copy or post.visibility in ['PRIVATE', 'DRAFT']:
+                return
+            
+            # Get remote followers based on visibility
+            remote_followers = RemoteFollower.objects.filter(local_user=post.author)
+            
+            # Skip if no followers
+            if not remote_followers.exists():
+                return
+            
+            # Group followers by node
+            followers_by_node = {}
+            for follower in remote_followers:
+                if follower.remote_node not in followers_by_node:
+                    followers_by_node[follower.remote_node] = []
+                followers_by_node[follower.remote_node].append(follower.remote_username)
+            
+            # Get active nodes
+            active_nodes = Node.objects.filter(is_active=True)
+            node_configs = {}
+            
+            # Convert Node models to config dictionary
+            for node in active_nodes:
+                node_configs[node.id] = {
+                    'url': node.base_url,
+                    'username': node.username,
+                    'password': node.password  # Assuming this is stored securely
+                }
+            
+            # For each node with followers
+            for node_id, followers in followers_by_node.items():
+                # Skip if already synced and no changes needed
+                if node_id in post.remote_nodes_sent and not post.needs_sync:
+                    continue
+                
+                # Get node configuration
+                node_config = node_configs.get(node_id)
+                if not node_config:
+                    logger.error(f"No configuration found for node: {node_id}")
+                    continue
+                
+                # Prepare post data
+                post_data = post.to_dict()
+                post_data['followers'] = followers
+                
+                # Add image if exists and post not deleted
+                if post.image and not post.is_deleted():
+                    post_data['image_content'] = self.get_base64_file(post.image)
+                
+                # Send to remote node
+                self.send_post_to_remote_node(node_id, node_config, post_data, post)
+            
+            # Mark post as no longer needing sync
+            post.needs_sync = False
+            post.save(update_fields=['needs_sync', 'updated'])
+                
+        except Exception as e:
+            logger.error(f"Error syncing post {post.id} to followers: {str(e)}")
+    
+    def get_base64_file(self, file_field):
+        """Convert file to base64 for transmission"""
+        try:
+            file_field.open()
+            file_content = file_field.read()
+            file_field.close()
+            return base64.b64encode(file_content).decode('utf-8')
+        except Exception as e:
+            logger.error(f"Error encoding file: {str(e)}")
+            return None
+    
+    def send_post_to_remote_node(self, node_id, node_config, post_data, post):
+        """Send post to a remote node"""
+        remote_url = f"{node_config['url']}/receive-post/"
+        
+        # Authentication method depends on your implementation
+        # Option 1: Use API key authentication
+        headers = {
+            "X-Node-Api-Key": node_config.get('api_key', ''),
+            "Content-Type": "application/json"
+        }
+        
+        # Option 2: Use basic auth or token auth as needed
+        auth = None
+        if 'username' in node_config and 'password' in node_config:
+            auth = (node_config['username'], node_config['password'])
+        
+        try:
+            # Use appropriate auth method
+            if auth:
+                response = requests.post(
+                    remote_url, 
+                    json=post_data,
+                    auth=auth,
+                    timeout=10
+                )
+            else:
+                response = requests.post(
+                    remote_url, 
+                    json=post_data,
+                    headers=headers,
+                    timeout=10
+                )
+            
+            if response.status_code == 200:
+                # Record that we've sent to this node
+                post.add_remote_node_sent(node_id)
+                logger.info(f"Successfully sent post {post.id} to node {node_id}")
+            else:
+                logger.error(f"Failed to send post to node {node_id}: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            logger.error(f"Exception sending post to node {node_id}: {str(e)}")
 
+@api_view(['POST'])
+def receive_post(request):
+    """
+    Endpoint to receive posts from remote nodes
+    """
+    # Validate authentication
+    # Option 1: API key validation
+    api_key = request.headers.get('X-Node-Api-Key')
+    if api_key:
+        # Find the node with this API key
+        try:
+            node = Node.objects.get(api_key=api_key, is_active=True)
+            sender_node_id = node.id
+        except Node.DoesNotExist:
+            return Response({"error": "Invalid API key"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    # Option 2: Basic auth validation (use your preferred auth method)
+    elif request.user.is_authenticated:
+        # Check if user is a node
+        try:
+            node = Node.objects.get(username=request.user.username, is_active=True)
+            sender_node_id = node.id
+        except Node.DoesNotExist:
+            return Response({"error": "Not authorized as a node"}, status=status.HTTP_401_UNAUTHORIZED)
+    else:
+        return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    # Deserialize the post data
+    serializer = RemotePostSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Save the post
+        post = serializer.save()
+        
+        # Handle post deletion
+        if post.is_deleted():
+            logger.info(f"Received deletion for post {post.id} from node {sender_node_id}")
+        else:
+            logger.info(f"Received post {post.id} from node {sender_node_id}")
+        
+        return Response(
+            {"message": "Post received successfully", "post_id": str(post.id)}, 
+            status=status.HTTP_200_OK
+        )
+                        
+    except Exception as e:
+        logger.error(f"Error processing remote post: {str(e)}")
+        return Response(
+            {"error": f"Error processing post: {str(e)}"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_follow_request_inter_node_by_ipv6(request, user_ipv6):
-    """
-    Inter-node follow request endpoint on the sending node that uses the target's IPv6 address
-    as the unique identifier.
+def register_remote_follower(request):
+    """Register a remote follower for a local user"""
+    remote_username = request.data.get('username')
+    remote_node = request.data.get('node')
     
-    - Looks up the receiver using its IPv6 address.
-    - If found locally, processes the follow request.
-    - If not, iterates over remote nodes and forwards the request until one of them processes it.
-    """
-    # Get the sender (the authenticated user on the current node)
-    sender = get_object_or_404(User, username=request.user.username)
+    if not remote_username or not remote_node:
+        return Response(
+            {"error": "Username and node are required"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
-    # Attempt to find the receiver locally by IPv6.
     try:
-        receiver = User.objects.get(ipv6=user_ipv6)
-    except User.DoesNotExist:
-        receiver = None
-
-    # --- LOCAL PROCESSING ---
-    if receiver:
-        if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id).exists():
-            return Response({"message": "You already sent them a follow request!"}, status=status.HTTP_204_NO_CONTENT)
-        if receiver.id == sender.id:
-            return Response({"message": "You cannot send a follow request to yourself!"}, status=status.HTTP_403_FORBIDDEN)
-        if Following.objects.filter(followee_id=receiver.id, follower_id=sender.id).exists():
-            return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
+        # Find the node
+        node = Node.objects.get(id=remote_node, is_active=True)
         
-        data = {
-            "receiver": receiver.id,
-            "sender": sender.id,
-            "notif_type": "FOLLOW_REQUEST"
-        }
-        try:
-            serializer = NotifSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save(receiver_id=receiver.id, sender_id=sender.id, notif_type="FOLLOW_REQUEST")
-                return Response({"message": "Follow Request Sent!"}, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"error": f"Follow Request couldn't be made: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # --- REMOTE PROCESSING (Forwarding) ---
-    # Build dictionary of all remote nodes (all nodes except the current one)
-    current_instance = getattr(settings, "INSTANCE_NAME", "node1")
-    remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
-    
-    # Build the payload (only the sender's username is required as identification on the remote side)
-    payload = {"sender_username": request.user.username}
-    headers_template = {"X-Node-Api-Key": None}
-    
-    # Iterate over remote nodes until one successfully processes the request.
-    for node_key, node in remote_nodes.items():
-        # The remote node should expose a similar endpoint that accepts the user's IPv6.
-        remote_url = f"{node['url']}/create-follow-request-by-ipv6/{user_ipv6}/"
-        headers = headers_template.copy()
-        headers["X-Node-Api-Key"] = node['api_key']
-        try:
-            remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
-            if remote_response.status_code == 200:
-                return Response(remote_response.json(), status=status.HTTP_200_OK)
-        except requests.exceptions.RequestException:
-            # If the remote node is unreachable, try the next one.
-            continue
-
-    # If no remote node returned success:
-    return Response({
-        "error": "Target user not found on any reachable remote node."
-    }, status=status.HTTP_404_NOT_FOUND)
+        # Create the remote follower
+        RemoteFollower.objects.get_or_create(
+            local_user=request.user,
+            remote_username=remote_username,
+            remote_node=remote_node
+        )
+        
+        return Response(
+            {"message": "Remote follower registered successfully"}, 
+            status=status.HTTP_201_CREATED
+        )
+    except Node.DoesNotExist:
+        return Response(
+            {"error": f"Node {remote_node} not found or inactive"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"Error registering follower: {str(e)}"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Remote endpoint does not require JWT.
-def remote_create_follow_request_by_ipv6(request, user_ipv6):
-    """
-    Remote endpoint on the receiving node for processing forwarded friend requests
-    identified solely by the target user's IPv6 address.
+@permission_classes([IsAuthenticated])
+def unregister_remote_follower(request):
+    """Unregister a remote follower"""
+    remote_username = request.data.get('username')
+    remote_node = request.data.get('node')
     
-    Expects:
-      - The target user's IPv6 in the URL.
-      - A JSON payload containing "sender_username".
+    if not remote_username or not remote_node:
+        return Response(
+            {"error": "Username and node are required"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
-    The function verifies the inter-node API key, looks up the target user by IPv6,
-    and then either finds or creates the sender (as a stub if needed) before processing
-    the follow request.
-    """
-    # Verify the inter-node API key.
-    provided_key = request.headers.get("X-Node-Api-Key")
-    if provided_key != settings.NODE_API_KEY:
-        return Response({"error": "Invalid API key"}, status=403)
-    
-    # Look up the target user on the local database by IPv6.
-    receiver = get_object_or_404(User, ipv6=user_ipv6)
-    
-    # Get the sender's username from the payload.
-    sender_username = request.data.get("sender_username")
-    if not sender_username:
-        return Response({"error": "Sender username missing."}, status=400)
-    
-    # Look up the sender by username; if not found, create a stub user.
     try:
-        sender = User.objects.get(username=sender_username)
-    except User.DoesNotExist:
-        sender = User.objects.create(username=sender_username)
-    
-    # Check if a follow request already exists.
-    if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id).exists():
-        return Response({"message": "Follow request already sent."}, status=204)
-    
-    # Process the follow request.
-    data = {
-        "receiver": receiver.id,
-        "sender": sender.id,
-        "notif_type": "FOLLOW_REQUEST"
-    }
-    try:
-        serializer = NotifSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save(receiver_id=receiver.id, sender_id=sender.id, notif_type="FOLLOW_REQUEST")
-            return Response({"message": "Remote follow request received!"}, status=200)
+        # Find and delete the follower
+        follower = RemoteFollower.objects.filter(
+            local_user=request.user,
+            remote_username=remote_username,
+            remote_node=remote_node
+        ).first()
+        
+        if follower:
+            follower.delete()
+            return Response(
+                {"message": "Remote follower unregistered successfully"}, 
+                status=status.HTTP_200_OK
+            )
         else:
-            return Response(serializer.errors, status=400)
+            return Response(
+                {"error": "Follower not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
     except Exception as e:
-        return Response({"error": f"Failed to create remote follow request: {str(e)}"}, status=400)
+        return Response(
+            {"error": f"Error unregistering follower: {str(e)}"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+

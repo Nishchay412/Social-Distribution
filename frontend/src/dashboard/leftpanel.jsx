@@ -82,13 +82,13 @@ export function Header() {
         }
 
         const data = await response.json();
+        console.log(data);
         setUsers(data);
       } catch (error) {
         console.error("Error fetching users:", error);
         setError("Failed to fetch users. Please try again.");
       }
     };
-
     fetchUsers();
   }, []);
 
