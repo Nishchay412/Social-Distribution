@@ -608,7 +608,49 @@ def aggregated_remote_list_all_users(request):
             # You may log the exception here.
             pass
 
-    return Response(aggregated_data, status=200)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def aggregated_list_all_users(request):
+    """
+    Aggregates user lists from all nodes:
+      - Gets local users from the current node.
+      - Iterates over all remote nodes (all keys in NODE_CONFIG except the current one),
+        fetches the users from each remote endpoint (/list-all-users/),
+        and returns the combined list.
+    """
+    aggregated_data = []
+
+    # 1. Get local users.
+    local_users = User.objects.all()
+    local_serializer = RegisterUserSerializer(local_users, many=True)
+    local_data = local_serializer.data
+    # Optionally tag local users as coming from the current node.
+    for user in local_data:
+        user["remote_node"] = settings.INSTANCE_NAME
+    aggregated_data.extend(local_data)
+
+    # 2. Get remote users.
+    current_instance = getattr(settings, "INSTANCE_NAME", "node1")
+    remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
+
+    for node_key, node in remote_nodes.items():
+        url = f"{node['url']}/list-all-users/"
+        headers = {"X-Node-Api-Key": node['api_key']}
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                # Tag each remote user with the node key.
+                for user in data:
+                    user["remote_node"] = node_key
+                aggregated_data.extend(data)
+        except Exception as e:
+            # Optionally log the error
+            pass
+
+    return Response(aggregated_data, status=status.HTTP_200_OK)
 
 
 def get_destination_node_from_request():

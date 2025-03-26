@@ -131,6 +131,8 @@ urlpatterns = [
     path('aggregated-remote-users/', aggregated_remote_list_all_users, name='aggregated_remote_list_all_users'),
     path('accept-follow-request-inter-node/<str:username>/', accept_follow_request_inter_node, name='accept_follow_request_inter_node'),
 
+    path('aggregated-all-users/', aggregated_list_all_users, name='aggregated_all_users'),
+
 
     path('create-follow-request-inter-node/<str:username>/', create_follow_request_inter_node, name='create_follow_request_inter_node'),
     path('create-follow-request/<str:username>/', remote_create_follow_request, name='remote_create_follow_request'),
