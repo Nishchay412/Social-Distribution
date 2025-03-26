@@ -758,8 +758,9 @@ def get_destination_node_from_request_1(username):
 def create_follow_request_inter_node_1(request, username):
     """
     Inter-node follow request endpoint on the sending node.
+    
     - If the target user exists locally, process the follow request normally.
-    - If the target user is not local, forward the request to the remote node.
+    - If the target user is not local, try each remote node until one responds.
     """
     # Get the sender (the authenticated user on the current node)
     sender = get_object_or_404(User, username=request.user)
@@ -791,31 +792,30 @@ def create_follow_request_inter_node_1(request, username):
     # --- REMOTE PROCESSING (Forwarding) ---
     current_instance = getattr(settings, "INSTANCE_NAME", "node1")
     
-    # Use the updated helper function to determine destination node
-    destination_node = get_destination_node_from_request_1(username)
-    
-    # Don't send to ourselves
-    if destination_node == current_instance:
-        return Response({"error": "User not found on this network."}, status=status.HTTP_404_NOT_FOUND)
-    
-    # Get remote node configuration
-    remote_node = settings.NODE_CONFIG.get(destination_node)
-    
-    if not remote_node:
-        return Response({"error": f"Configuration for {destination_node} not found."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    remote_url = f"{remote_node['url']}/create-follow-request/{username}/"
+    # Instead of using the helper function to pick one node,
+    # we try all remote nodes (i.e., all keys in NODE_CONFIG except the current one).
+    remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
     payload = {"sender_username": request.user.username}
-    headers = {"X-Node-Api-Key": remote_node['api_key']}
     
-    try:
-        remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
-        if remote_response.status_code == 200:
-            return Response(remote_response.json(), status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Failed to send remote follow request."}, status=remote_response.status_code)
-    except Exception as e:
-        return Response({"error": f"Exception occurred during remote call: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    headers_template = {"X-Node-Api-Key": None}
+    remote_response = None
+    for node_key, node in remote_nodes.items():
+        remote_url = f"{node['url']}/create-follow-request/{username}/"
+        headers = headers_template.copy()
+        headers["X-Node-Api-Key"] = node['api_key']
+        try:
+            remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
+            if remote_response.status_code == 200:
+                # Successfully sent the request to a remote node.
+                return Response(remote_response.json(), status=status.HTTP_200_OK)
+            # Optionally log the failed response
+        except requests.exceptions.RequestException as e:
+            # Log or print the exception if needed
+            continue  # Try the next remote node
+    
+    # If we reached here, none of the remote nodes responded successfully.
+    return Response({"error": "User not found on any remote node or all remote nodes unreachable."},
+                    status=status.HTTP_404_NOT_FOUND)
 
 
 # ------------------------------------------------------------------
