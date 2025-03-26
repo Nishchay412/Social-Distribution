@@ -53,7 +53,9 @@ from .views import (
     aggregated_remote_list_all_users,
     accept_follow_request_inter_node,
     aggregated_list_all_users,
-    create_follow_request_inter_node_1
+    create_follow_request_inter_node_1,
+    create_follow_request_inter_node_by_ipv6,
+    remote_create_follow_request_by_ipv6
 )
 
 urlpatterns = [
@@ -141,6 +143,19 @@ urlpatterns = [
     path('create-follow-request-inter-node/<str:username>/', create_follow_request_inter_node, name='create_follow_request_inter_node'),
     path('create-follow-request/<str:username>/', remote_create_follow_request, name='remote_create_follow_request'),
     path('remote-get-follower-requests/', remote_get_follower_requests, name='remote_get_follower_requests'),
+
+
+
+    path(
+        'create-follow-request-by-ipv6/<str:user_ipv6>/',
+        create_follow_request_inter_node_by_ipv6,
+        name='create_follow_request_by_ipv6'
+    ),
+    # Remote endpoint on the receiving node.
+    path(
+        'remote-create-follow-request-by-ipv6/<str:user_ipv6>/',
+        remote_create_follow_request_by_ipv6,
+        name='remote_create_follow_request_by_ipv6')
     
     
     
