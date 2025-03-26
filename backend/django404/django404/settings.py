@@ -36,8 +36,8 @@ ALLOWED_HOSTS = [
     '3713a.yeg.rac.sh',
     '2605:fd00:4:1001:f816:3eff:fecc:9717',         # Node 2 IPv6 (unbracketed)
     '[2605:fd00:4:1001:f816:3eff:fecc:9717]' , # Node 2 IPv6 (bracketed)
-     '2605:fd00:4:1001:f816:3eff:fef6:3793',#node 3
-    '[2605:fd00:4:1001:f816:3eff:fef6:3793]',
+     '2605:fd00:4:1001:f816:3eff:fe3e:c88d',#node 3
+    '[2605:fd00:4:1001:f816:3eff:fe3e:c88d]',
     '2605:fd00:4:1001:f816:3eff:fe2b:1955',
     '[2605:fd00:4:1001:f816:3eff:fe2b:1955]' # node 4    
 ]
@@ -53,7 +53,7 @@ NODE_CONFIG = {
         'api_key': 'eca92496df745dc547e3f6a4e19005fee588f1da05af9eebc84d7bc04d608c9d',
     },
     'node3': {
-        'url': 'http://[2605:fd00:4:1001:f816:3eff:fef6:3793]:8000',
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe3e:c88d]:8000',
         'api_key': NODE_API_KEY,
     },
     'node6': {
@@ -95,7 +95,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://[2605:fd00:4:1001:f816:3eff:fef6:3793]:8000",
+    "http://[2605:fd00:4:1001:f816:3eff:fe3e:c88d]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fecc:9717]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000"
@@ -144,7 +144,7 @@ print("Current hostname:", current_hostname)  # Debug log; remove in production
 HOSTNAME_TO_INSTANCE = {
     "404groupproject": "node1",      # For example, Node 1's hostname
     "404groupproject-1": "node2",# Node 2's hostname
-    "qingqiu404test":"node3",  
+    "qingqiu404project":"node3",  
     "83c98358ca70": "node3",
     "yc": "node6",
      # Node 3's hostname

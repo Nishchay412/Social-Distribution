@@ -14,7 +14,7 @@ export default defineConfig({
     proxy: {
       // Proxy API requests to your backend
       '/api': {
-        target: 'http://[2605:fd00:4:1001:f816:3eff:fef6:3793]:8000',
+        target: 'http://[2605:fd00:4:1001:f816:3eff:fe3e:c88d]:8000',
         changeOrigin: true,
         secure: false,
       }
