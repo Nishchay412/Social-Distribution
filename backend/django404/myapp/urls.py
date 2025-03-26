@@ -52,7 +52,8 @@ from .views import (
     remote_get_follower_requests,
     aggregated_remote_list_all_users,
     accept_follow_request_inter_node,
-    aggregated_list_all_users
+    aggregated_list_all_users,
+    create_follow_request_inter_node_1
 )
 
 urlpatterns = [
@@ -133,6 +134,8 @@ urlpatterns = [
     path('accept-follow-request-inter-node/<str:username>/', accept_follow_request_inter_node, name='accept_follow_request_inter_node'),
 
     path('aggregated-all-users/', aggregated_list_all_users, name='aggregated_all_users'),
+    path('create-follow-request-inter-node_1/<str:username>/', create_follow_request_inter_node_1, name='create_follow_request_inter_node_1'),
+
 
 
     path('create-follow-request-inter-node/<str:username>/', create_follow_request_inter_node, name='create_follow_request_inter_node'),
