@@ -169,7 +169,8 @@ HOSTNAME_TO_INSTANCE = {
     "83c98358ca70": "node3",
     "verdigras":"node5",
     "yc": "node6",
-    "testnode":"node12"
+    "testnode":"node12",
+    "part3":"node4"
 }
 
 # Determine the instance based on the current hostname. Default to node1 if not found.
