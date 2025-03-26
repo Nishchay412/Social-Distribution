@@ -756,6 +756,7 @@ def get_destination_node_from_request_1(username):
     
     return f"node{node_number}"
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_follow_request_inter_node_1(request, username):
@@ -795,8 +796,8 @@ def create_follow_request_inter_node_1(request, username):
     # Determine the current instance (e.g., "node1", "node2", etc.)
     current_instance = getattr(settings, "INSTANCE_NAME", "node1")
     
-    # Determine the destination node based on the username
-    destination_node = get_destination_node_from_request(username)
+    # Determine the destination node using the correct function name
+    destination_node = get_destination_node_from_request_1(username)
     
     # Don't send to ourselves
     if destination_node == current_instance:
@@ -826,6 +827,7 @@ def create_follow_request_inter_node_1(request, username):
             return Response({"error": "Failed to send remote follow request."}, status=remote_response.status_code)
     except Exception as e:
         return Response({"error": f"Exception occurred during remote call: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 # ------------------------------------------------------------------
 
