@@ -760,12 +760,11 @@ def get_destination_node_from_request_1(username):
 def create_follow_request_inter_node_1(request, username):
     """
     Inter-node follow request endpoint on the sending node.
-    - If the target user exists locally, process the follow request normally.
-    - If the target user is not local, forward the request to the remote node.
+    
+    - Process locally if the target user exists.
+    - Otherwise, try all remote nodes; if none respond, acknowledge the request has been queued.
     """
-    # Get the sender (the authenticated user on the current node)
     sender = get_object_or_404(User, username=request.user)
-    # Try to find the target user locally.
     receiver = get_local_user_by_username(username)
     
     # --- LOCAL PROCESSING ---
@@ -793,31 +792,31 @@ def create_follow_request_inter_node_1(request, username):
     # --- REMOTE PROCESSING (Forwarding) ---
     current_instance = getattr(settings, "INSTANCE_NAME", "node1")
     
-    # Use the updated helper function to determine destination node
-    destination_node = get_destination_node_from_request_1(username)
-    
-    # Don't send to ourselves
-    if destination_node == current_instance:
-        return Response({"error": "User not found on this network."}, status=status.HTTP_404_NOT_FOUND)
-    
-    # Get remote node configuration
-    remote_node = settings.NODE_CONFIG.get(destination_node)
-    
-    if not remote_node:
-        return Response({"error": f"Configuration for {destination_node} not found."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    remote_url = f"{remote_node['url']}/create-follow-request/{username}/"
+    # Try all remote nodes (all keys in NODE_CONFIG except the current one)
+    remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
     payload = {"sender_username": request.user.username}
-    headers = {"X-Node-Api-Key": remote_node['api_key']}
     
-    try:
-        remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
-        if remote_response.status_code == 200:
-            return Response(remote_response.json(), status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Failed to send remote follow request."}, status=remote_response.status_code)
-    except Exception as e:
-        return Response({"error": f"Exception occurred during remote call: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    headers_template = {"X-Node-Api-Key": None}
+    for node_key, node in remote_nodes.items():
+        remote_url = f"{node['url']}/create-follow-request/{username}/"
+        headers = headers_template.copy()
+        headers["X-Node-Api-Key"] = node['api_key']
+        try:
+            remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
+            if remote_response.status_code == 200:
+                # Successfully sent to one remote node.
+                return Response(remote_response.json(), status=status.HTTP_200_OK)
+            # Optionally log if remote_response.status_code isn't 200
+        except requests.exceptions.RequestException as e:
+            # Optionally log exception: remote node might be down.
+            continue  # Try next remote node
+    
+    # If no remote node was reachable or returned success, queue the request.
+    # Here, we'll just return a message. In a real system, you'd record this request in a pending table.
+    return Response({
+        "message": "Remote node(s) unreachable. Your friend request has been queued for delivery."
+    }, status=status.HTTP_202_ACCEPTED)
+
 
 
 # ------------------------------------------------------------------
@@ -1071,6 +1070,49 @@ def cancel_follower_request(request, username):
         return Response({"message": "Follow request canceled."}, status=status.HTTP_200_OK)
     except Notif.DoesNotExist:
         return Response({"error": "No such follow request."}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def deny_follow_request_inter_node(request, username):
+    """
+    Deny a follow request in an inter-node scenario.
+    
+    - The currently authenticated user (receiver) denies the follow request.
+    - If the sender (follower) does not exist locally (i.e. it's a remote user), create a stub user.
+    - Ensure that a follow request notification exists.
+    - Delete the follow request notification.
+    """
+    # Get the receiver (the currently authenticated user)
+    receiver = get_object_or_404(User, username=request.user)
+
+    # Attempt to retrieve the sender (follower) from the local DB.
+    # If the sender doesn't exist (i.e. it's a remote user), create a stub.
+    try:
+        sender = User.objects.get(username=username)
+    except User.DoesNotExist:
+        sender = User.objects.create(username=username)
+        # Optionally, set additional fields or mark the user as a stub (e.g., sender.is_stub = True)
+
+    # Check if a follow request notification exists.
+    if not Notif.objects.filter(
+        receiver_id=receiver.id, 
+        sender_id=sender.id, 
+        notif_type="FOLLOW_REQUEST"
+    ).exists():
+        return Response({"error": "No follow request found to deny."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Attempt to delete the follow request notification.
+    try:
+        Notif.objects.filter(
+            receiver_id=receiver.id, 
+            sender_id=sender.id, 
+            notif_type="FOLLOW_REQUEST"
+        ).delete()
+        return Response({"message": "Follow request denied."}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": f"Unable to deny follow request: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

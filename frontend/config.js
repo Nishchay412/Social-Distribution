@@ -12,6 +12,9 @@ if (host.includes("fe8c:5c2d")) {
 } else if (host.includes("fe3e:c88d")) {
   // For Node 3
   API_BASE_URL = "http://[2605:fd00:4:1001:f816:3eff:fe3e:c88d]:8000";
+} else if (host.includes("fee4:209d")) {
+  //  For Node 4 (Riyasat Cybera instance)
+  API_BASE_URL = "http://[2605:fd00:4:1001:f816:3eff:fee4:209d]:8000"; 
 } else if (host.includes("fe30:2aee")) {
   // For Node 5
   API_BASE_URL = "http://[2605:fd00:4:1001:f816:3eff:fe30:2aee]:8000";

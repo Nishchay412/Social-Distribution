@@ -44,6 +44,8 @@ ALLOWED_HOSTS = [
     '[2605:fd00:4:1001:f816:3eff:fe30:2aee]',   # Node 5 IPv6 (bracketed) 
     '2605:fd00:4:1001:f816:3eff:fe1d:66cc',     # Node 12 IPv6 (unbracketed) 
     '[2605:fd00:4:1001:f816:3eff:fe1d:66cc]',   # Node 12 IPv6 (bracketed) 
+    '2605:fd00:4:1001:f816:3eff:fee4:209d',     # Node 4 (Riyasat) IPv6 (unbracketed)
+    '[2605:fd00:4:1001:f816:3eff:fee4:209d]',   # Node 4 (Riyasat) IPv6 (bracketed)
 
 ]
 
@@ -59,6 +61,10 @@ NODE_CONFIG = {
     },
     'node3': {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fe3e:c88d]:8000',
+        'api_key': NODE_API_KEY,
+    },
+    'node4': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fee4:209d]:8000',
         'api_key': NODE_API_KEY,
     },
     'node5': {
@@ -114,6 +120,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fe30:2aee]:8000",   # Node 5
     "http://[2605:fd00:4:1001:f816:3eff:fe1d:66cc]:8000",   # Node 12
+    "http://[2605:fd00:4:1001:f816:3eff:fee4:209d]:8000",   # Node 4 (riyasat)
 
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -163,7 +170,8 @@ HOSTNAME_TO_INSTANCE = {
     "83c98358ca70": "node3",
     "verdigras":"node5",
     "yc": "node6",
-    "testnode":"node12"
+    "testnode":"node12",
+    "part3":"node4"
 }
 
 # Determine the instance based on the current hostname. Default to node1 if not found.
@@ -225,7 +233,20 @@ elif INSTANCE_NAME == "node12":
             'HOST': 'localhost',
             'PORT': '5432',
         }
-    }   
+    }
+
+elif INSTANCE_NAME == "node4":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris_node4',  # Database for Node 4 (Riyasat)
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+           
 else:
     DATABASES = {
         'default': {
