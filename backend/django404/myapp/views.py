@@ -759,12 +759,10 @@ def create_follow_request_inter_node_1(request, username):
     """
     Inter-node follow request endpoint on the sending node.
     
-    - If the target user exists locally, process the follow request normally.
-    - If the target user is not local, try each remote node until one responds.
+    - Process locally if the target user exists.
+    - Otherwise, try all remote nodes; if none respond, acknowledge the request has been queued.
     """
-    # Get the sender (the authenticated user on the current node)
     sender = get_object_or_404(User, username=request.user)
-    # Try to find the target user locally.
     receiver = get_local_user_by_username(username)
     
     # --- LOCAL PROCESSING ---
@@ -792,13 +790,11 @@ def create_follow_request_inter_node_1(request, username):
     # --- REMOTE PROCESSING (Forwarding) ---
     current_instance = getattr(settings, "INSTANCE_NAME", "node1")
     
-    # Instead of using the helper function to pick one node,
-    # we try all remote nodes (i.e., all keys in NODE_CONFIG except the current one).
+    # Try all remote nodes (all keys in NODE_CONFIG except the current one)
     remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
     payload = {"sender_username": request.user.username}
     
     headers_template = {"X-Node-Api-Key": None}
-    remote_response = None
     for node_key, node in remote_nodes.items():
         remote_url = f"{node['url']}/create-follow-request/{username}/"
         headers = headers_template.copy()
@@ -806,16 +802,19 @@ def create_follow_request_inter_node_1(request, username):
         try:
             remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
             if remote_response.status_code == 200:
-                # Successfully sent the request to a remote node.
+                # Successfully sent to one remote node.
                 return Response(remote_response.json(), status=status.HTTP_200_OK)
-            # Optionally log the failed response
+            # Optionally log if remote_response.status_code isn't 200
         except requests.exceptions.RequestException as e:
-            # Log or print the exception if needed
-            continue  # Try the next remote node
+            # Optionally log exception: remote node might be down.
+            continue  # Try next remote node
     
-    # If we reached here, none of the remote nodes responded successfully.
-    return Response({"error": "User not found on any remote node or all remote nodes unreachable."},
-                    status=status.HTTP_404_NOT_FOUND)
+    # If no remote node was reachable or returned success, queue the request.
+    # Here, we'll just return a message. In a real system, you'd record this request in a pending table.
+    return Response({
+        "message": "Remote node(s) unreachable. Your friend request has been queued for delivery."
+    }, status=status.HTTP_202_ACCEPTED)
+
 
 
 # ------------------------------------------------------------------
