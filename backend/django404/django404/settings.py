@@ -44,6 +44,8 @@ ALLOWED_HOSTS = [
     '[2605:fd00:4:1001:f816:3eff:fe30:2aee]',   # Node 5 IPv6 (bracketed) 
     '2605:fd00:4:1001:f816:3eff:fe1d:66cc',     # Node 12 IPv6 (unbracketed) 
     '[2605:fd00:4:1001:f816:3eff:fe1d:66cc]',   # Node 12 IPv6 (bracketed) 
+    '2605:fd00:4:1001:f816:3eff:fee4:209d',     # Node 4 (Riyasat) IPv6 (unbracketed)
+    '[2605:fd00:4:1001:f816:3eff:fee4:209d]',   # Node 4 (Riyasat) IPv6 (bracketed)
 
 ]
 
@@ -59,6 +61,10 @@ NODE_CONFIG = {
     },
     'node3': {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fe3e:c88d]:8000',
+        'api_key': NODE_API_KEY,
+    },
+    'node4': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fee4:209d]:8000',
         'api_key': NODE_API_KEY,
     },
     'node5': {
@@ -225,7 +231,20 @@ elif INSTANCE_NAME == "node12":
             'HOST': 'localhost',
             'PORT': '5432',
         }
-    }   
+    }
+
+elif INSTANCE_NAME == "node4":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris_node4',  # Database for Node 4 (Riyasat)
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+           
 else:
     DATABASES = {
         'default': {
