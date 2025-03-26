@@ -995,6 +995,49 @@ def cancel_follower_request(request, username):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+def deny_follow_request_inter_node(request, username):
+    """
+    Deny a follow request in an inter-node scenario.
+    
+    - The currently authenticated user (receiver) denies the follow request.
+    - If the sender (follower) does not exist locally (i.e. it's a remote user), create a stub user.
+    - Ensure that a follow request notification exists.
+    - Delete the follow request notification.
+    """
+    # Get the receiver (the currently authenticated user)
+    receiver = get_object_or_404(User, username=request.user)
+
+    # Attempt to retrieve the sender (follower) from the local DB.
+    # If the sender doesn't exist (i.e. it's a remote user), create a stub.
+    try:
+        sender = User.objects.get(username=username)
+    except User.DoesNotExist:
+        sender = User.objects.create(username=username)
+        # Optionally, set additional fields or mark the user as a stub (e.g., sender.is_stub = True)
+
+    # Check if a follow request notification exists.
+    if not Notif.objects.filter(
+        receiver_id=receiver.id, 
+        sender_id=sender.id, 
+        notif_type="FOLLOW_REQUEST"
+    ).exists():
+        return Response({"error": "No follow request found to deny."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Attempt to delete the follow request notification.
+    try:
+        Notif.objects.filter(
+            receiver_id=receiver.id, 
+            sender_id=sender.id, 
+            notif_type="FOLLOW_REQUEST"
+        ).delete()
+        return Response({"message": "Follow request denied."}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": f"Unable to deny follow request: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def unfollow_user(request, username):
     """
     Unfollow a User
