@@ -120,6 +120,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fe30:2aee]:8000",   # Node 5
     "http://[2605:fd00:4:1001:f816:3eff:fe1d:66cc]:8000",   # Node 12
+    "http://[2605:fd00:4:1001:f816:3eff:fee4:209d]:8000",   # Node 4 (your node)
 
 ]
 CORS_ALLOW_CREDENTIALS = True
