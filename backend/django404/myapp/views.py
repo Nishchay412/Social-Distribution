@@ -742,19 +742,16 @@ def create_follow_request_inter_node(request, username):
 def get_destination_node_from_request_1(username):
     """
     Determine which node a user belongs to based on their username.
-    This function should be implemented to lookup or determine the correct destination node.
+    This function selects one of the keys from settings.NODE_CONFIG.
     """
-    # Get the number of nodes from the configuration
-    num_nodes = len(settings.NODE_CONFIG)
-    
-    # If there are no nodes configured, default to node1
-    if num_nodes == 0:
+    # Get the list of configured node keys.
+    nodes = list(settings.NODE_CONFIG.keys())
+    if not nodes:
         return "node1"
     
-    # Use modulo to distribute users evenly across the available nodes
-    node_number = (hash(username) % num_nodes) + 1
-    
-    return f"node{node_number}"
+    # Use modulo with the length of the nodes list to pick one.
+    index = hash(username) % len(nodes)
+    return nodes[index]
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -792,11 +789,10 @@ def create_follow_request_inter_node_1(request, username):
             return Response({"error": f"Follow Request couldn't be made: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
     
     # --- REMOTE PROCESSING (Forwarding) ---
-    # Determine the current instance (e.g., "node1", "node2", etc.)
     current_instance = getattr(settings, "INSTANCE_NAME", "node1")
     
-    # Determine the destination node based on the username
-    destination_node = get_destination_node_from_request(username)
+    # Use the updated helper function to determine destination node
+    destination_node = get_destination_node_from_request_1(username)
     
     # Don't send to ourselves
     if destination_node == current_instance:
@@ -808,15 +804,9 @@ def create_follow_request_inter_node_1(request, username):
     if not remote_node:
         return Response({"error": f"Configuration for {destination_node} not found."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    # Build the remote URL (assuming the remote node has an endpoint set up similarly)
     remote_url = f"{remote_node['url']}/create-follow-request/{username}/"
-    
-    # Build the payload with sender's username (as a string)
     payload = {"sender_username": request.user.username}
-    
-    headers = {
-        "X-Node-Api-Key": remote_node['api_key']
-    }
+    headers = {"X-Node-Api-Key": remote_node['api_key']}
     
     try:
         remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
@@ -826,6 +816,7 @@ def create_follow_request_inter_node_1(request, username):
             return Response({"error": "Failed to send remote follow request."}, status=remote_response.status_code)
     except Exception as e:
         return Response({"error": f"Exception occurred during remote call: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 # ------------------------------------------------------------------
 
