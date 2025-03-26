@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.permissions import IsAdminUser
+import requests
 
 
 
@@ -588,27 +589,28 @@ def aggregated_remote_list_all_users(request):
     fetches the users from each remote endpoint (/list-all-users/), and returns the combined list.
     """
     current_instance = getattr(settings, "INSTANCE_NAME", "node1")
-    aggregated_data = []
     
-    # Filter out the current node from the NODE_CONFIG.
+    # # Filter out the current node from the NODE_CONFIG.
     remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
     
     for node_key, node in remote_nodes.items():
         url = f"{node['url']}/list-all-users/"
+        api_keys.append(node['api_key'])
         headers = {"X-Node-Api-Key": node['api_key']}
         try:
             response = requests.get(url, headers=headers, timeout=5)
+
             if response.status_code == 200:
                 data = response.json()
+                
                 # Optionally tag the results with the remote node key.
                 for user in data:
                     user["remote_node"] = node_key
+
                 aggregated_data.extend(data)
         except Exception as e:
             # You may log the exception here.
             pass
-
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -866,8 +868,6 @@ def remote_create_follow_request(request, username):
             return Response(serializer.errors, status=400)
     except Exception as e:
         return Response({"error": f"Failed to create remote follow request: {str(e)}"}, status=400)
-
-
 
 
 @api_view(['GET'])
@@ -1264,10 +1264,6 @@ class RemoteUsersView(APIView):
             return Response({"error": "Failed to fetch users from node2."}, status=response.status_code)
         except Exception as e:
             return Response({"error": f"Exception occurred: {str(e)}"}, status=500)
-
-
-
-        
 
 class HelloView(APIView):
     # Allow anyone to access this endpoint

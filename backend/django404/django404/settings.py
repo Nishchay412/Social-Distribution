@@ -62,15 +62,15 @@ NODE_CONFIG = {
         'api_key': NODE_API_KEY,
     },
     'node5': {
-        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe30:2aee]:8000/',
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe30:2aee]:8000',
         'api_key': NODE_API_KEY,
     },
     'node6': {
-        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000/',
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000',
         'api_key': NODE_API_KEY,
     },
     'node12': {
-        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe1d:66cc]:8000/',
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe1d:66cc]:8000',
         'api_key': NODE_API_KEY,
     },
 }
