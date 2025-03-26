@@ -51,7 +51,8 @@ from .views import (
     remote_create_follow_request,
     remote_get_follower_requests,
     aggregated_remote_list_all_users,
-    accept_follow_request_inter_node
+    accept_follow_request_inter_node,
+    aggregated_list_all_users
 )
 
 urlpatterns = [
