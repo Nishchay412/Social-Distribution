@@ -544,7 +544,7 @@ def get_local_user_by_username(username):
         return None
 
 from django.conf import settings
-import requests
+# import requests
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -555,7 +555,7 @@ from django.shortcuts import get_object_or_404
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-import requests
+# import requests
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -1242,7 +1242,7 @@ from rest_framework.views import APIView
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-import requests
+# import requests
 
 class RemoteUsersView(APIView):
     permission_classes = [IsAuthenticated]
