@@ -161,8 +161,9 @@ HOSTNAME_TO_INSTANCE = {
     "404groupproject-1": "node2",# Node 2's hostname
     "qingqiu404project":"node3",  
     "83c98358ca70": "node3",
+    "verdigras":"node5",
     "yc": "node6",
-     # Node 3's hostname
+    "testnode":"node12"
 }
 
 # Determine the instance based on the current hostname. Default to node1 if not found.
