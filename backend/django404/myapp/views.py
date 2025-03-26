@@ -544,7 +544,7 @@ def get_local_user_by_username(username):
         return None
 
 from django.conf import settings
-import requests
+# import requests
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -555,7 +555,7 @@ from django.shortcuts import get_object_or_404
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-import requests
+# import requests
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -738,6 +738,85 @@ def create_follow_request_inter_node(request, username):
             return Response({"error": "Failed to send remote follow request."}, status=remote_response.status_code)
     except Exception as e:
         return Response({"error": f"Exception occurred during remote call: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+def get_destination_node_from_request_1(username):
+    """
+    Determine which node a user belongs to based on their username.
+    This function selects one of the keys from settings.NODE_CONFIG.
+    """
+    # Get the list of configured node keys.
+    nodes = list(settings.NODE_CONFIG.keys())
+    if not nodes:
+        return "node1"
+    
+    # Use modulo with the length of the nodes list to pick one.
+    index = hash(username) % len(nodes)
+    return nodes[index]
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_follow_request_inter_node_1(request, username):
+    """
+    Inter-node follow request endpoint on the sending node.
+    
+    - If the target user exists locally, process the follow request normally.
+    - If the target user is not local, try each remote node until one responds.
+    """
+    # Get the sender (the authenticated user on the current node)
+    sender = get_object_or_404(User, username=request.user)
+    # Try to find the target user locally.
+    receiver = get_local_user_by_username(username)
+    
+    # --- LOCAL PROCESSING ---
+    if receiver:
+        if Notif.objects.filter(sender_id=sender.id, receiver_id=receiver.id).exists():
+            return Response({"message": "You already sent them a follow request!"}, status=status.HTTP_204_NO_CONTENT)
+        if receiver.id == sender.id:
+            return Response({"message": "You cannot send yourself a follow request!"}, status=status.HTTP_403_FORBIDDEN)
+        if Following.objects.filter(followee_id=receiver.id, follower_id=sender.id).exists():
+            return Response({"error": "Already following this user"}, status=status.HTTP_403_FORBIDDEN)
+        
+        data = {
+            "receiver": receiver.id,
+            "sender": sender.id,
+            "notif_type": "FOLLOW_REQUEST"
+        }
+        try:
+            serializer = NotifSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save(receiver_id=receiver.id, sender_id=sender.id, notif_type="FOLLOW_REQUEST")
+                return Response({"message": "Follow Request Sent!"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": f"Follow Request couldn't be made: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # --- REMOTE PROCESSING (Forwarding) ---
+    current_instance = getattr(settings, "INSTANCE_NAME", "node1")
+    
+    # Instead of using the helper function to pick one node,
+    # we try all remote nodes (i.e., all keys in NODE_CONFIG except the current one).
+    remote_nodes = { key: node for key, node in settings.NODE_CONFIG.items() if key != current_instance }
+    payload = {"sender_username": request.user.username}
+    
+    headers_template = {"X-Node-Api-Key": None}
+    remote_response = None
+    for node_key, node in remote_nodes.items():
+        remote_url = f"{node['url']}/create-follow-request/{username}/"
+        headers = headers_template.copy()
+        headers["X-Node-Api-Key"] = node['api_key']
+        try:
+            remote_response = requests.post(remote_url, json=payload, headers=headers, timeout=5)
+            if remote_response.status_code == 200:
+                # Successfully sent the request to a remote node.
+                return Response(remote_response.json(), status=status.HTTP_200_OK)
+            # Optionally log the failed response
+        except requests.exceptions.RequestException as e:
+            # Log or print the exception if needed
+            continue  # Try the next remote node
+    
+    # If we reached here, none of the remote nodes responded successfully.
+    return Response({"error": "User not found on any remote node or all remote nodes unreachable."},
+                    status=status.HTTP_404_NOT_FOUND)
+
 
 # ------------------------------------------------------------------
 
@@ -1206,7 +1285,7 @@ from rest_framework.views import APIView
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-import requests
+# import requests
 
 class RemoteUsersView(APIView):
     permission_classes = [IsAuthenticated]

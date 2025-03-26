@@ -30,16 +30,23 @@ STATIC_URL = '/static/'
 STATIC_ROOT = str(BASE_DIR / 'staticfiles')
 
 ALLOWED_HOSTS = [
-    '2605:fd00:4:1001:f816:3eff:fe8c:5c2d',       # Node 1 IPv6 (unbracketed)
-    '[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]',     # Node 1 IPv6 (bracketed)
+    '2605:fd00:4:1001:f816:3eff:fe8c:5c2d',     # Node 1 IPv6 (unbracketed)
+    '[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]',   # Node 1 IPv6 (bracketed)
     '370bd.yeg.rac.sh',
     '3713a.yeg.rac.sh',
-    '2605:fd00:4:1001:f816:3eff:fecc:9717',         # Node 2 IPv6 (unbracketed)
-    '[2605:fd00:4:1001:f816:3eff:fecc:9717]' , # Node 2 IPv6 (bracketed)
-     '2605:fd00:4:1001:f816:3eff:fe3e:c88d',#node 3
-    '[2605:fd00:4:1001:f816:3eff:fe3e:c88d]',
-    '2605:fd00:4:1001:f816:3eff:fe2b:1955',
-    '[2605:fd00:4:1001:f816:3eff:fe2b:1955]' # node 4    
+    '2605:fd00:4:1001:f816:3eff:fecc:9717',     # Node 2 IPv6 (unbracketed)
+    '[2605:fd00:4:1001:f816:3eff:fecc:9717]' ,  # Node 2 IPv6 (bracketed)
+     '2605:fd00:4:1001:f816:3eff:fe3e:c88d',    # Node 3 IPv6 (unbracketed)
+    '[2605:fd00:4:1001:f816:3eff:fe3e:c88d]',   # Node 3 IPv6 (bracketed)
+    '2605:fd00:4:1001:f816:3eff:fe2b:1955',     # Node 4 IPv6 (unbracketed) 
+    '[2605:fd00:4:1001:f816:3eff:fe2b:1955]',   # Node 4 IPv6 (bracketed) 
+    '2605:fd00:4:1001:f816:3eff:fe30:2aee',     # Node 5 IPv6 (unbracketed) 
+    '[2605:fd00:4:1001:f816:3eff:fe30:2aee]',   # Node 5 IPv6 (bracketed) 
+    '2605:fd00:4:1001:f816:3eff:fe1d:66cc',     # Node 12 IPv6 (unbracketed) 
+    '[2605:fd00:4:1001:f816:3eff:fe1d:66cc]',   # Node 12 IPv6 (bracketed) 
+    '2605:fd00:4:1001:f816:3eff:fee4:209d',     # Node 4 (Riyasat) IPv6 (unbracketed)
+    '[2605:fd00:4:1001:f816:3eff:fee4:209d]',   # Node 4 (Riyasat) IPv6 (bracketed)
+
 ]
 
 # Node configuration for inter-node communication (used by utility functions)
@@ -56,8 +63,20 @@ NODE_CONFIG = {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fe3e:c88d]:8000',
         'api_key': NODE_API_KEY,
     },
+    'node4': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fee4:209d]:8000',
+        'api_key': NODE_API_KEY,
+    },
+    'node5': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe30:2aee]:8000/',
+        'api_key': NODE_API_KEY,
+    },
     'node6': {
         'url': 'http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000/',
+        'api_key': NODE_API_KEY,
+    },
+    'node12': {
+        'url': 'http://[2605:fd00:4:1001:f816:3eff:fe1d:66cc]:8000/',
         'api_key': NODE_API_KEY,
     },
 }
@@ -98,7 +117,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://[2605:fd00:4:1001:f816:3eff:fe3e:c88d]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fecc:9717]:8000",
     "http://[2605:fd00:4:1001:f816:3eff:fe8c:5c2d]:8000",
-    "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000"
+    "http://[2605:fd00:4:1001:f816:3eff:fe2b:1955]:8000",
+    "http://[2605:fd00:4:1001:f816:3eff:fe30:2aee]:8000",   # Node 5
+    "http://[2605:fd00:4:1001:f816:3eff:fe1d:66cc]:8000",   # Node 12
+    "http://[2605:fd00:4:1001:f816:3eff:fee4:209d]:8000",   # Node 4 (riyasat)
 
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -146,8 +168,10 @@ HOSTNAME_TO_INSTANCE = {
     "404groupproject-1": "node2",# Node 2's hostname
     "qingqiu404project":"node3",  
     "83c98358ca70": "node3",
+    "verdigras":"node5",
     "yc": "node6",
-     # Node 3's hostname
+    "testnode":"node12",
+    "part3":"node4"
 }
 
 # Determine the instance based on the current hostname. Default to node1 if not found.
@@ -187,7 +211,42 @@ elif INSTANCE_NAME == "node3":
             'HOST': 'localhost',
             'PORT': '5432',
         }
+    } 
+elif INSTANCE_NAME == "node5":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris_node5',  # Database for Node 3
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
     }  
+elif INSTANCE_NAME == "node12":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris_node12',  # Database for Node 3
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+
+elif INSTANCE_NAME == "node4":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'verdigris_node4',  # Database for Node 4 (Riyasat)
+            'USER': '404group',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+           
 else:
     DATABASES = {
         'default': {
